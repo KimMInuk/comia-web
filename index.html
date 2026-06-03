@@ -6115,6 +6115,7 @@
   }
   // 동행 방(모집글) 그룹챗 열기 — 멤버만(RLS). 채팅은 익명 핸들.
   async function openRoomChat(roomId, title) {
+    const _cb = document.getElementById('chatMsgs'); if (_cb) _cb.innerHTML = '<div class="chat-system">불러오는 중…</div>';  // 이전 방 대화 잔상 즉시 제거(렌더 전)
     const u = await requireLogin(); if (!u || !roomId) return;
     try {   // 폭파(종료)된 방 차단 — archived_at 있거나 접근권 없으면 입장 불가
       const { data: rm } = await sb.from('chat_rooms').select('archived_at').eq('id', roomId).maybeSingle();
@@ -6179,6 +6180,7 @@
   // --- 1:1 DM (실연결) ---
   let CUR_DM_ROOM = null, CUR_DM_CHANNEL = null, CUR_DM_APP = null, CUR_DM_PEER = null, CUR_DM_PEER_NICK = null;
   async function openDM(otherId, nick, ctxTitle, ctxSub, appId) {
+    const _db0 = document.getElementById('dmMsgs'); if (_db0) _db0.innerHTML = '<div class="chat-system">불러오는 중…</div>';  // 이전 대화 잔상 즉시 제거
     const u = await requireLogin(); if (!u) return;
     if (otherId === u.id) { toast('본인과는 대화할 수 없어요'); return; }
     try {
@@ -6199,6 +6201,7 @@
         const acts = ctx.querySelector('.ctx-actions');
         if (acts) acts.style.display = isOwnerReview ? 'flex' : 'none';
       }
+      const _db = document.getElementById('dmMsgs'); if (_db) _db.innerHTML = '<div class="chat-system">불러오는 중…</div>';  // 이전 대화 잔상 제거
       goto('screen-dm');
       await loadDmMessages(roomId, u.id);
       subscribeDm(roomId, u.id);
