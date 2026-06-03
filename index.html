@@ -182,12 +182,16 @@
   }
   .hero-title { color: #fff; }
   .hero-card:active { transform: scale(0.985); }
-  /* 히어로 캐러셀 (태그별 추천 7~8개 가로 스와이프) */
-  .hero-carousel { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  /* 히어로 캐러셀 (태그별 추천 7~8개 · 고정 배너 + 페이지 인디케이터) */
+  .hero-wrap { position: relative; }
+  .hero-carousel { display: flex; gap: 0; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .hero-carousel::-webkit-scrollbar { display: none; }
-  .hero-carousel .hero-card { flex: 0 0 87%; scroll-snap-align: center; margin: 0; min-height: 156px; display: flex; flex-direction: column; background-size: cover; background-position: center; }
+  .hero-carousel .hero-card { flex: 0 0 100%; scroll-snap-align: center; margin: 0; min-height: 156px; display: flex; flex-direction: column; background-size: cover; background-position: center; }
   .hero-carousel .hero-card .hero-cta { margin-top: auto; }
   .hero-tag { background: rgba(255,255,255,0.96); color: #1A1438; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 999px; letter-spacing: -0.2px; }
+  .hero-dots { position: absolute; right: 30px; bottom: 26px; display: flex; gap: 6px; z-index: 3; }
+  .hero-dot { width: 7px; height: 7px; border-radius: 999px; background: rgba(255,255,255,0.5); cursor: pointer; transition: width .2s, background .2s; }
+  .hero-dot.on { width: 18px; background: #fff; }
   .hero-badges { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
   .dday-badge {
     display: inline-flex;
@@ -1950,7 +1954,10 @@
         </div>
       </div>
 
-      <div class="hero-carousel" id="homeHeroCarousel"></div>
+      <div class="hero-wrap">
+        <div class="hero-carousel" id="homeHeroCarousel"></div>
+        <div class="hero-dots" id="heroDots"></div>
+      </div>
 
       <div class="section-header" id="secMine" style="display:none;"><h2>내 행사 <span class="count" id="homeMineCount"></span></h2><span class="more" onclick="goMyEvents()">전체 ›</span></div>
       <div id="homeMine"></div>
@@ -5526,8 +5533,22 @@
     const picks = buildHeroPicks();
     HOME_HERO_ID = picks[0] ? picks[0].ev._id : null;
     box.innerHTML = picks.map(p => heroCardHtml(p.ev, p.tag)).join('')
-      || '<div class="comp-emptybox" style="flex:0 0 92%;">표시할 행사가 없어요</div>';
+      || '<div class="comp-emptybox" style="flex:0 0 100%;">표시할 행사가 없어요</div>';
+    const dots = document.getElementById('heroDots');
+    if (dots) {
+      dots.innerHTML = picks.length > 1 ? picks.map((p, i) => '<span class="hero-dot' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" onclick="heroGoTo(' + i + ')"></span>').join('') : '';
+    }
+    box.scrollLeft = 0;
+    box.onscroll = updateHeroDots;
   }
+  function heroStep() { const box = document.getElementById('homeHeroCarousel'); const c = box && box.querySelector('.hero-card'); return c ? c.getBoundingClientRect().width : 1; }
+  function updateHeroDots() {
+    const box = document.getElementById('homeHeroCarousel'), dots = document.getElementById('heroDots');
+    if (!box || !dots) return;
+    const idx = Math.round(box.scrollLeft / heroStep());
+    dots.querySelectorAll('.hero-dot').forEach((d, i) => d.classList.toggle('on', i === idx));
+  }
+  function heroGoTo(i) { const box = document.getElementById('homeHeroCarousel'); if (box) box.scrollTo({ left: i * heroStep(), behavior: 'smooth' }); }
 
   // 내 행사: 내가 참전 표시한 (예정) 행사
   function renderMyEvents() {
