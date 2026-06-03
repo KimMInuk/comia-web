@@ -131,13 +131,14 @@
   .screen {
     display: none;
     padding-bottom: 88px;
-    animation: fadeIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  .screen.active { display: block; }
+  /* 화면 전환: 빠릿한 페이드(140ms). 탭 탭마다 0.25s는 답답하게 느껴져 단축. translateZ로 GPU 합성 고정. */
+  .screen.active { display: block; animation: fadeIn 0.14s ease-out; }
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translate3d(0, 3px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
   }
+  @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } }
   /* ---------- 썸네일 (SVG 심볼) ---------- */
   .thumb {
     width: 56px;
@@ -3820,6 +3821,12 @@
 
   /* ---------- 네비게이션 ---------- */
   const history = ['screen-home'];
+  // 탭 재진입 시 매번 재쿼리하던 답답함 해소 — stale-while-revalidate 캐시.
+  // 최근 TTL(ms) 내 로드한 탭은 캐시 DOM 그대로 보여주고 네트워크 생략. 뮤테이션/실시간은 직접 loadX()로 강제 갱신.
+  const _swrTs = {};
+  function swrFresh(key, ttl) { return (Date.now() - (_swrTs[key] || 0)) < (ttl || 30000); }
+  function swrMark(key) { _swrTs[key] = Date.now(); }
+  function swrBust(key) { _swrTs[key] = 0; }
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById(id);
@@ -3836,9 +3843,10 @@
     else { document.getElementById('scrollArea').scrollTop = 0; }
     if (id === 'screen-events') renderEvents();
     if (id === 'screen-home' && LIVE && sb) refreshCompanionBadge();
-    if (id === 'screen-market' && LIVE && sb) loadProducts();
-    if (id === 'screen-companions') loadCompanionFeed();
-    if (id === 'screen-my') { if (LIVE && sb) { loadDuk(); loadMyProfile(); } refreshMarketingToggle(); }
+    // 탭 재진입: 캐시가 신선하면 즉시 캐시 렌더(네트워크 생략), 아니면 로드.
+    if (id === 'screen-market' && LIVE && sb) { if (swrFresh('market') && MARKET.length) renderMarket(); else loadProducts(); }
+    if (id === 'screen-companions') { if (swrFresh('comp') && (COMP.rooms.length || COMP.browse.length || COMP.incoming.length)) renderCompanionHub(); else loadCompanionFeed(); }
+    if (id === 'screen-my') { if (LIVE && sb && !swrFresh('my')) { loadDuk(); loadMyProfile(); } refreshMarketingToggle(); }
     if (id === 'screen-set-account') refreshMarketingToggle();
     if (id === 'screen-set-interests') loadInterestsScreen();
     if (id === 'screen-set-events') loadSetEvents();
@@ -4598,6 +4606,7 @@
       setMc('mcEvents', GOING.size, '건');
       try { const { count } = await sb.from('saved_filters').select('id', { count: 'exact', head: true }).eq('user_id', u.id); setMc('mcFilters', count || 0, '개'); } catch (e) {}
       try { const { count } = await sb.from('companion_posts').select('id', { count: 'exact', head: true }).eq('author_id', u.id); setMc('mcPosts', count || 0, '건'); } catch (e) {}
+      swrMark('my');
     } catch (e) {}
   }
 
@@ -4712,7 +4721,7 @@
       const [rr, ii, oo] = await Promise.all([
         sb.rpc('my_companion_rooms'), sb.rpc('my_incoming_apps'), sb.rpc('my_outgoing_apps')
       ]);
-      COMP.rooms = rr.data || []; COMP.incoming = ii.data || []; COMP.outgoing = oo.data || [];
+      COMP.rooms = rr.data || []; COMP.incoming = ii.data || []; COMP.outgoing = oo.data || []; swrMark('comp');
       MY_ROOMS = COMP.rooms; renderMyCompanions(); refreshCompanionBadge();
       const ids = [];
       COMP.incoming.forEach(a => ids.push(a.applicant_id));
@@ -6314,7 +6323,7 @@
       const { data } = await sb.from('products')
         .select('id,title,price,images,condition,status,seller_id,created_at,profiles(nickname)')
         .neq('status', 'hidden').order('created_at', { ascending: false }).limit(60);
-      MARKET = data || [];
+      MARKET = data || []; swrMark('market');
     } catch (e) { console.warn('[comia] 상품 로드', e); MARKET = []; }
     renderMarket();
   }
