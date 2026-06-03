@@ -525,6 +525,10 @@
   .post-footer { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--text-sub); font-weight: 500; }
   .recruit-status { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 700; }
   .recruit-status.full { color: var(--text-dim); }
+  .rel-tag { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: -0.2px; }
+  .rel-tag.mine { background: rgba(91,140,255,0.16); color: #5B8CFF; }
+  .rel-tag.joined { background: rgba(79,184,154,0.16); color: #4FB89A; }
+  .rel-tag.applied { background: rgba(242,169,59,0.16); color: #F2A93B; }
   .recruit-dots { display: inline-flex; gap: 3px; }
   .recruit-dots .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-dim); }
   .recruit-dots .dot.filled { background: var(--accent); }
@@ -4719,11 +4723,18 @@
     if (COMP_VIEW === 'browse') {
       try {
         const myRoomIds = new Set(COMP.rooms.map(r => r.room_id));
-        const myPostApplied = new Set(COMP.outgoing.map(a => a.room_id));
+        const myPending = new Set(COMP.outgoing.filter(a => a.app_status === 'pending').map(a => a.room_id));
         const { data } = await sb.from('companion_posts')
           .select('id,body,capacity,filled,status,event_id,author_id,room_id,created_at,meet_at')
-          .eq('status', 'open').order('created_at', { ascending: false }).limit(30);
-        COMP.browse = (data || []).filter(p => !myRoomIds.has(p.room_id) && !myPostApplied.has(p.room_id));
+          .eq('status', 'open').order('created_at', { ascending: false }).limit(50);
+        // 내 방·참여 방·신청한 방도 숨기지 않고 관계 배지로 구분해 모두 노출
+        COMP.browse = (data || []).map(p => {
+          let rel = 'open';
+          if (p.author_id === u.id) rel = 'mine';
+          else if (myRoomIds.has(p.room_id)) rel = 'joined';
+          else if (myPending.has(p.room_id)) rel = 'applied';
+          return Object.assign({}, p, { _rel: rel });
+        });
         await ensureDukTiers(COMP.browse.map(p => p.author_id));
       } catch (e) { console.warn('[comia] 모집 피드', e); }
     }
@@ -4845,13 +4856,19 @@
     const full = (cap && filled >= cap);
     const status = full ? '<span class="recruit-status full">마감</span>'
       : '<span class="recruit-status">' + (cap ? (filled + '/' + cap + '명') : '모집중') + '</span>';
-    const tap = p.event_id ? ("openEv('db" + p.event_id + "')") : '';
     const nm = funName(p.room_id, p.author_id);
     const meet = p.meet_at ? (' · 🕒 ' + fmtMeet(p.meet_at) + ' 집합') : '';
+    // 관계 배지 — 내 방·참여 중·신청함 구분. 내 방/참여 방은 탭 시 채팅으로, 그 외엔 행사 상세로.
+    const rel = p._rel || 'open', inRoom = (rel === 'mine' || rel === 'joined');
+    const relTag = rel === 'mine' ? '<span class="rel-tag mine">내 방</span>'
+      : rel === 'joined' ? '<span class="rel-tag joined">참여 중</span>'
+      : rel === 'applied' ? '<span class="rel-tag applied">신청함</span>' : '<span></span>';
+    const tap = inRoom ? ("openRoomChat('" + p.room_id + "','" + jsq(evt) + "')")
+      : (p.event_id ? ("openEv('db" + p.event_id + "')") : '');
     return '<div class="post-card" onclick="' + tap + '"><div class="post-head"><div class="author">'
       + funAvatar(nm) + '<div><div class="author-name">' + htmlesc(nm) + ownerTag(true) + ' ' + dukBadge(p.author_id)
       + '</div><div class="author-meta">' + htmlesc(evt) + meet + '</div></div></div></div><div class="post-body">'
-      + htmlesc((p.body || '').slice(0, 140)) + '</div><div class="post-footer"><span></span>' + status + '</div></div>';
+      + htmlesc((p.body || '').slice(0, 140)) + '</div><div class="post-footer">' + relTag + status + '</div></div>';
   }
   function dukItemHtml(d) {
     const L = Math.max(1, Math.floor(Math.sqrt(Math.max(d.xp, 0) / 10)));
