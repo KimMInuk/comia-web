@@ -6745,6 +6745,31 @@
       else await loadEvents();
     } catch (e) { toast('새로고침 실패 — 잠시 후 다시'); }
   }
+  // 히어로 캐러셀: 마우스 드래그로 슬라이드(데스크톱/웹 테스트용). 모바일은 터치 스크롤로 동작.
+  (function initHeroDrag() {
+    const box = document.getElementById('homeHeroCarousel'); if (!box) return;
+    let down = false, startX = 0, startScroll = 0, moved = false;
+    box.addEventListener('pointerdown', e => {
+      if (e.pointerType && e.pointerType !== 'mouse') return;   // 터치/펜은 네이티브 스크롤
+      down = true; moved = false; startX = e.clientX; startScroll = box.scrollLeft;
+      box.style.scrollSnapType = 'none'; box.style.cursor = 'grabbing';
+    });
+    box.addEventListener('pointermove', e => {
+      if (!down) return;
+      const dx = e.clientX - startX; if (Math.abs(dx) > 4) moved = true;
+      box.scrollLeft = startScroll - dx;
+    });
+    const end = () => {
+      if (!down) return; down = false; box.style.cursor = ''; box.style.scrollSnapType = 'x mandatory';
+      const i = Math.max(0, Math.round(box.scrollLeft / heroStep()));
+      box.scrollTo({ left: i * heroStep(), behavior: 'smooth' });
+      setTimeout(updateHeroDots, 60);
+    };
+    box.addEventListener('pointerup', end);
+    box.addEventListener('pointerleave', end);
+    // 드래그 후 카드 클릭(상세 열림) 방지
+    box.addEventListener('click', e => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
+  })();
   (function initPullToRefresh() {
     const sa = document.getElementById('scrollArea'), ptr = document.getElementById('ptr');
     if (!sa || !ptr) return;
