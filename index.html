@@ -4278,6 +4278,15 @@
     const my = document.getElementById('myAvatar');
     if (my) { my.style.backgroundImage = ''; my.textContent = emoji; my.style.fontSize = '40px'; }
   }
+  // 계정 전환/로그아웃 시 이전 계정의 프사·닉 잔상 제거 (프로필은 계정에 바인딩)
+  function resetProfileUI() {
+    ['obPhoto', 'myAvatar', 'epPhoto'].forEach(id => {
+      const el = document.getElementById(id); if (!el) return;
+      el.style.backgroundImage = ''; el.textContent = ''; el.style.fontSize = '';
+    });
+    document.querySelectorAll('.profile-name').forEach(el => { el.textContent = '@나'; });
+    swrBust('my'); swrBust('comp'); swrBust('market');   // 탭 캐시도 무효화 → 새 계정 데이터 재로드
+  }
   function obSetPhoto(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -4622,10 +4631,15 @@
       if (sv[1]) sv[1].textContent = xp >= 200 ? '고인물' : xp >= 50 ? '중수' : '입문';
       if (sv[2]) sv[2].innerHTML = xp + '<span class="unit">XP</span>';
       // 프로필 닉네임·아바타·인증뱃지 실데이터
-      const { data: prof } = await sb.from('profiles').select('nickname, verified').eq('id', u.id).maybeSingle();
+      const { data: prof } = await sb.from('profiles').select('nickname, verified, avatar_url').eq('id', u.id).maybeSingle();
       const nm = (prof && prof.nickname) || (u.email ? u.email.split('@')[0] : '나');
       const nameEl = document.querySelector('#screen-my .profile-name'); if (nameEl) nameEl.textContent = '@' + nm;
-      const avEl = document.getElementById('myAvatar'); if (avEl && !avEl.style.backgroundImage) avEl.textContent = nm.slice(0, 2).toUpperCase();
+      // 아바타는 계정 바인딩 — DB avatar_url 있으면 그 이미지로, 없으면 닉 이니셜로 (이전 계정 잔상 제거)
+      const avEl = document.getElementById('myAvatar');
+      if (avEl) {
+        if (prof && prof.avatar_url) { avEl.style.backgroundImage = 'url(' + prof.avatar_url + ')'; avEl.style.backgroundSize = 'cover'; avEl.style.backgroundPosition = 'center'; avEl.textContent = ''; }
+        else { avEl.style.backgroundImage = ''; avEl.textContent = nm.slice(0, 2).toUpperCase(); avEl.style.fontSize = ''; }
+      }
       const subEl = document.querySelector('#screen-my .profile-sub');
       const badgeEl = document.querySelector('#screen-my .profile-badge');
       if (prof && prof.verified) { if (subEl) subEl.textContent = '본인인증 완료 · 실명·연락처 비공개'; if (badgeEl) badgeEl.style.display = ''; }
@@ -5467,9 +5481,11 @@
   function guestEnter() { try { localStorage.setItem('comia_seen', '1'); } catch (e) {} obGoStep(0); showScreen('screen-onboarding'); }
   async function afterLogin(user, forceHome) {
     try {
-      const { data: prof } = await sb.from('profiles').select('nickname,avatar_url').eq('id', user.id).single();
-      if (prof && prof.nickname) applyNickname(prof.nickname);
-      if (prof && prof.avatar_url) setProfilePhoto(prof.avatar_url);
+      resetProfileUI();   // 이전 계정 프사·닉 잔상 제거 후 이 계정 값으로만 채움
+      const { data: prof } = await sb.from('profiles').select('nickname,avatar_url').eq('id', user.id).maybeSingle();
+      const nm = (prof && prof.nickname) || (user.email ? user.email.split('@')[0] : '나');
+      applyNickname(nm);
+      if (prof && prof.avatar_url) setProfilePhoto(prof.avatar_url);   // 없으면 닉 이니셜(applyNickname) 유지
       refreshNotifBadge();
       subscribeNotifications();
       try { localStorage.setItem('comia_seen', '1'); } catch (e) {}
@@ -5483,6 +5499,8 @@
   async function doSignOut() {
     if (NOTIF_CHANNEL) { try { sb.removeChannel(NOTIF_CHANNEL); } catch (e) {} NOTIF_CHANNEL = null; }
     const nb = document.getElementById('notifBadge'); if (nb) nb.style.display = 'none';
+    resetProfileUI();   // 프사·닉 잔상 제거
+    GOING = new Set(); GO_DATES = {}; MY_ROOMS = []; MY_CATS = []; MY_ITEMS = [];   // 개인 데이터 비우기
     if (LIVE && sb) { try { await sb.auth.signOut(); } catch (e) {} }
     try { localStorage.removeItem('comia_seen'); } catch (e) {}
     toast('로그아웃되었어요');
@@ -5684,10 +5702,10 @@
     const grad = ev.gradStr || IP_GRAD[ev.ip] || '#6FB1F0,#4385D4';
     const bg = (ev.img && !ev.img.startsWith('data:'))
       ? "linear-gradient(rgba(26,20,56,0.55),rgba(26,20,56,0.84)), url('" + ev.img + "')"
-      : "radial-gradient(circle at 82% 0%, rgba(255,255,255,0.28), transparent 55%), linear-gradient(135deg," + grad + ")";
+      : "linear-gradient(rgba(12,18,34,0.10),rgba(12,18,34,0.48)), radial-gradient(circle at 82% 0%, rgba(255,255,255,0.22), transparent 55%), linear-gradient(135deg," + grad + ")";
     let badges = '<span class="hero-tag">' + tag + '</span>';
     if (ev.dday != null && ev.dday >= 0) badges += '<span class="dday-badge' + (ev.dday <= 14 ? ' urgent' : '') + '">D-' + ev.dday + '</span>';
-    badges += '<span class="dday-badge" style="background:rgba(255,255,255,0.16);color:#fff;">' + (ev.type || '행사') + '</span>';
+    badges += '<span class="dday-badge" style="background:rgba(0,0,0,0.32);color:#fff;">' + (ev.type || '행사') + '</span>';
     const going = GOING.has(ev._id);
     return '<div class="hero-card" style="background-image:' + bg + ';" onclick="openEv(\'' + ev._id + '\')">'
       + '<div class="hero-badges">' + badges + '</div>'
@@ -5849,15 +5867,16 @@
     let b = '';
     if (ev.dday !== undefined && ev.dday !== null && ev.dday >= 0)
       b += '<span class="dday-badge' + (ev.dday <= 14 ? ' urgent' : '') + '">D-' + ev.dday + '</span>';
-    if (ev.official) b += '<span class="dday-badge" style="background:rgba(255,255,255,0.18);color:#fff;">공식</span>';
-    b += '<span class="dday-badge" style="background:rgba(255,255,255,0.12);color:#C4BCE8;">' + (ev.type || '행사') + '</span>';
+    if (ev.official) b += '<span class="dday-badge" style="background:rgba(0,0,0,0.30);color:#fff;">공식</span>';
+    b += '<span class="dday-badge" style="background:rgba(0,0,0,0.30);color:#fff;">' + (ev.type || '행사') + '</span>';
     document.getElementById('edBadges').innerHTML = b;
     const hero = document.querySelector('#screen-event-detail .detail-hero');
     if (ev.img && !ev.img.startsWith('data:')) {
       hero.style.background = 'linear-gradient(rgba(28,38,58,0.55),rgba(28,38,58,0.78)), url(' + ev.img + ')';
       hero.style.backgroundSize = 'cover'; hero.style.backgroundPosition = 'center';
     } else {
-      hero.style.background = 'linear-gradient(135deg,' + (ev.gradStr || IP_GRAD[ev.ip] || '#5B9BE8,#3A6FB5') + ')';
+      // 밝은 그라데이션에서도 흰 글자·배지가 보이게 어두운 스크림(하단 가중) 추가
+      hero.style.background = 'linear-gradient(rgba(12,18,34,0.12),rgba(12,18,34,0.42)), linear-gradient(135deg,' + (ev.gradStr || IP_GRAD[ev.ip] || '#5B9BE8,#3A6FB5') + ')';
       hero.style.backgroundSize = ''; hero.style.backgroundPosition = '';
     }
     const at = document.getElementById('edAttrib');
