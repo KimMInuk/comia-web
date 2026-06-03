@@ -976,6 +976,16 @@
     word-break: break-word;
   }
   .msg-row.me .bubble { background: var(--accent); color: #fff; border-radius: 15px 4px 15px 15px; }
+  /* 사진 메시지 말풍선 */
+  .bubble.img { padding: 3px; background: transparent !important; }
+  .bubble.img img { display: block; max-width: 200px; max-height: 240px; width: auto; height: auto; border-radius: 13px; object-fit: cover; cursor: pointer; }
+  /* 풀스크린 이미지 뷰어 */
+  .img-viewer { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; padding: 24px; }
+  .img-viewer.on { display: flex; }
+  .img-viewer img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+  /* 참여 멤버 시트 행 */
+  .member-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; text-align: left; }
+  .member-name { font-size: 13.5px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
   .msg-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; margin-bottom: 1px; }
   .msg-row.me .msg-meta { align-items: flex-start; }
   .msg-unread { font-size: 11px; font-weight: 800; color: #F2A93B; line-height: 1; }
@@ -3735,14 +3745,18 @@
 
   <!-- ========= 그룹챗 입력바 ========= -->
   <div class="chat-input-bar" id="chatInputBar">
-    <div class="plus" onclick="toast('사진·위치·약속 공유')">
+    <div class="plus" onclick="chatPlusMenu()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="16"/><line x1="8" x2="16" y1="12" y2="12"/></svg>
     </div>
+    <input type="file" id="chatPhotoInput" accept="image/*" style="display:none" onchange="onChatPhoto(event)" />
     <input class="chat-input" id="chatInput" type="text" placeholder="메시지 입력" onkeydown="if(event.key==='Enter')sendMsg()" />
     <button class="chat-send" onclick="sendMsg()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
   </div>
+
+  <!-- ========= 풀스크린 이미지 뷰어 ========= -->
+  <div class="img-viewer" id="imgViewer" onclick="closeImg()"><img id="imgViewerImg" src="" alt="사진" /></div>
 
   <!-- ========= 바텀 탭바 ========= -->
   <div class="action-sheet-bg" id="actionSheetBg" onclick="closeActions()"></div>
@@ -5974,8 +5988,24 @@
   let CUR_ROOM = null, CUR_CHANNEL = null, CUR_ROOM_OWNER = false;
   function groupRoomMenu() {
     if (!CUR_ROOM) return;
-    if (CUR_ROOM_OWNER) { showActions('동행 방 (방장)', [{ label: '동행 방 설정 · 일정/정원/폭파', fn: () => openRoomSettings(CUR_ROOM) }]); return; }
-    showActions('동행 방', [{ label: '방 나가기', danger: true, fn: leaveRoom }]);
+    const items = [{ label: '👥 참여 멤버 보기', fn: showRoomMembers }];
+    if (CUR_ROOM_OWNER) items.push({ label: '동행 방 설정 · 일정/정원/폭파', fn: () => openRoomSettings(CUR_ROOM) });
+    else items.push({ label: '방 나가기', danger: true, fn: leaveRoom });
+    showActions(CUR_ROOM_OWNER ? '동행 방 (방장)' : '동행 방', items);
+  }
+  // 참여 멤버 보기 — 익명 핸들 + 덕력뱃지 (실명 비공개). 데이터는 입장 시 buildAnonMap 으로 이미 로드됨.
+  async function showRoomMembers() {
+    if (!CUR_ROOM) return;
+    try { await buildAnonMap(CUR_ROOM); } catch (e) {}   // 최신 멤버 반영
+    const mems = ROOM_READ || [];
+    const rows = mems.map(m => {
+      const nm = ANON_MAP[m.user_id] || funName(CUR_ROOM, m.user_id);
+      return '<div class="member-row">' + funAvatar(nm) + '<span class="member-name">' + htmlesc(nm) + ' ' + dukBadge(m.user_id) + '</span></div>';
+    }).join('');
+    document.getElementById('asTitle').textContent = '참여 멤버 ' + mems.length + '명';
+    document.getElementById('asButtons').innerHTML = rows || '<div style="padding:18px;color:var(--text-dim);font-size:13px;text-align:center;">멤버 정보를 불러올 수 없어요</div>';
+    document.getElementById('actionSheetBg').classList.add('on');
+    document.getElementById('actionSheet').classList.add('on');
   }
   /* ---------- 동행 방 설정 (방장: 일정·정원 변경 / 폭파) ---------- */
   let RS = { room: null, postId: null, filled: 1, eventId: null, meetKey: null, cap: 2 };
@@ -6080,20 +6110,23 @@
   async function loadMessages(roomId, uid) {
     ROOM_VIEWER = uid; CHAT_BOX = 'chatMsgs'; CHAT_ROOM = roomId;
     const box = document.getElementById('chatMsgs');
-    const { data } = await sb.from('messages').select('id, body, sender_id, created_at, profiles(nickname)').eq('room_id', roomId).order('created_at').limit(200);
+    const { data } = await sb.from('messages').select('id, body, kind, sender_id, created_at, profiles(nickname)').eq('room_id', roomId).order('created_at').limit(200);
     box.innerHTML = '<div class="chat-system">실시간 동행 채팅방이에요 👋</div>' + (data || []).map(m => msgRowHtml(m, m.sender_id === uid)).join('');
     scrollChatBottom();
   }
   function msgRowHtml(m, mine) {
     const t = new Date(m.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
-    const body = (m.body || '').replace(/</g, '&lt;');
+    const isImg = m.kind === 'image' && m.body;
+    const bubble = isImg
+      ? '<div class="bubble img" onclick="openImg(\'' + jsq(m.body) + '\')"><img src="' + htmlesc(m.body) + '" loading="lazy" alt="사진" /></div>'
+      : '<div class="bubble">' + (m.body || '').replace(/</g, '&lt;') + '</div>';
     const n = unreadCount(m);
     const meta = '<span class="msg-meta"><span class="msg-unread"' + (n > 0 ? '' : ' style="display:none"') + '>' + (n || '') + '</span><span class="msg-time">' + t + '</span></span>';
     const attrs = ' data-created="' + (m.created_at || '') + '" data-sender="' + (m.sender_id || '') + '"';
-    if (mine) return '<div class="msg-row me"' + attrs + '><div class="msg-content"><div class="msg-line"><div class="bubble">' + body + '</div>' + meta + '</div></div></div>';
+    if (mine) return '<div class="msg-row me"' + attrs + '><div class="msg-content"><div class="msg-line">' + bubble + meta + '</div></div></div>';
     const name = ANON_MAP[m.sender_id] || '익명';   // 익명 모토: 닉네임 대신 방별 익명 핸들
     const av = name === '방장' ? '방' : '익';
-    return '<div class="msg-row"' + attrs + '><div class="msg-avatar anon">' + av + '</div><div class="msg-content"><div class="msg-name">' + htmlesc(name) + '</div><div class="msg-line"><div class="bubble">' + body + '</div>' + meta + '</div></div></div>';
+    return '<div class="msg-row"' + attrs + '><div class="msg-avatar anon">' + av + '</div><div class="msg-content"><div class="msg-name">' + htmlesc(name) + '</div><div class="msg-line">' + bubble + meta + '</div></div></div>';
   }
   // 방별 익명 핸들 맵(방장 / 익명N, 가입순)
   let ANON_MAP = {};
@@ -6257,7 +6290,7 @@
     ROOM_VIEWER = uid; CHAT_BOX = 'dmMsgs'; CHAT_ROOM = roomId;
     try { const { data: mem } = await sb.from('chat_members').select('user_id, last_read_at').eq('room_id', roomId); ROOM_READ = mem || []; } catch (e) { ROOM_READ = []; }
     const box = document.getElementById('dmMsgs');
-    const { data } = await sb.from('messages').select('id, body, sender_id, created_at, profiles(nickname)').eq('room_id', roomId).order('created_at').limit(200);
+    const { data } = await sb.from('messages').select('id, body, kind, sender_id, created_at, profiles(nickname)').eq('room_id', roomId).order('created_at').limit(200);
     box.innerHTML = '<div class="chat-system">1:1 대화를 시작해요 👋</div>' + (data || []).map(m => msgRowHtml(m, m.sender_id === uid)).join('');
     scrollChatBottom();
   }
@@ -6294,6 +6327,36 @@
     const box = document.getElementById('sellPhotoBox');
     if (box) { box.style.background = 'center/cover no-repeat url(' + URL.createObjectURL(f) + ')'; box.classList.add('has'); box.textContent = ''; }
   }
+  /* ---------- 채팅 사진 공유 (그룹챗 + DM 공용) ---------- */
+  function chatPlusMenu() {
+    showActions('공유', [{ label: '📷 사진 보내기', fn: () => { const i = document.getElementById('chatPhotoInput'); if (i) i.click(); } }]);
+  }
+  async function onChatPhoto(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';   // 같은 파일 재선택 가능하게 초기화
+    if (!f) return;
+    if (!/^image\//.test(f.type)) { toast('이미지 파일만 보낼 수 있어요'); return; }
+    if (f.size > 8 * 1024 * 1024) { toast('8MB 이하 이미지만 보낼 수 있어요'); return; }
+    if (!LIVE || !sb) { toast('로그인 후 사진을 보낼 수 있어요'); return; }
+    const u = await currentUser(); if (!u) { toast('로그인이 필요해요'); return; }
+    const dm = document.getElementById('screen-dm').classList.contains('active');
+    const room = dm ? CUR_DM_ROOM : CUR_ROOM;
+    if (!room) { toast('채팅방을 찾을 수 없어요'); return; }
+    toast('사진 업로드 중…');
+    try {
+      const url = await uploadImage('chat', f);
+      const { error } = await sb.from('messages').insert({ room_id: room, sender_id: u.id, body: url, kind: 'image' });
+      if (error) throw error;
+      const box = document.getElementById(dm ? 'dmMsgs' : 'chatMsgs');
+      if (box) { box.insertAdjacentHTML('beforeend', msgRowHtml({ body: url, kind: 'image', created_at: new Date().toISOString(), sender_id: u.id }, true)); scrollChatBottom(); }
+    } catch (err) { toast('사진 전송 실패: ' + (err.message || err)); }
+  }
+  function openImg(url) {
+    const v = document.getElementById('imgViewer'), i = document.getElementById('imgViewerImg');
+    if (!v || !i || !url) return;
+    i.src = url; v.classList.add('on');
+  }
+  function closeImg() { const v = document.getElementById('imgViewer'); if (v) v.classList.remove('on'); }
   function won(n) { return (Number(n) || 0).toLocaleString('ko-KR') + '원'; }
   function setText(id, t) { const el = document.getElementById(id); if (el) el.textContent = t; }
   function gradFromStr(s) {
