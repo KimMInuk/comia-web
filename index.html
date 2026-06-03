@@ -3988,24 +3988,23 @@
       list = data || [];
     } catch (e) { console.warn('[comia] 알림 로드', e); }
     const evIds = [...new Set(list.map(n => n.payload && n.payload.event_id).filter(Boolean))];
-    const apIds = [...new Set(list.filter(n => n.type === 'companion_apply').map(n => n.payload && n.payload.applicant_id).filter(Boolean))];
-    const evT = {}, nk = {};
+    const evT = {};   // 실명 닉네임은 받지 않음(익명 모토) → 펀네임으로 표시
     try { if (evIds.length) { const { data } = await sb.from('events').select('id,title').in('id', evIds); (data || []).forEach(e => evT[e.id] = e.title); } } catch (e) {}
-    try { if (apIds.length) { const { data } = await sb.from('profiles').select('id,nickname').in('id', apIds); (data || []).forEach(p => nk[p.id] = p.nickname); } } catch (e) {}
-    box.innerHTML = list.length ? list.map(n => notifRowHtml(n, evT, nk)).join('')
+    box.innerHTML = list.length ? list.map(n => notifRowHtml(n, evT)).join('')
       : '<div style="padding:34px 16px;color:var(--text-dim);font-size:13px;text-align:center;">아직 알림이 없어요</div>';
   }
-  function notifRowHtml(n, evT, nk) {
+  function notifRowHtml(n, evT) {
     const p = n.payload || {}, ev = (p.event_id && evT[p.event_id]) || '행사', t = relTime(n.created_at), unread = n.read ? '' : ' unread';
     const tap = p.event_id ? (";openEv('db" + p.event_id + "')") : '';
     let ico, text, actions = '';
     if (n.type === 'companion_apply') {
-      const nm = (p.applicant_id && nk[p.applicant_id]) || '누군가';
-      ico = '<div class="notif-ico avatar-ico" style="background:linear-gradient(135deg,#4FB89A,#1F5A4A);">' + htmlesc(nm.slice(0, 2).toUpperCase()) + '</div>';
+      const nm = p.applicant_id ? funName(p.room_id || p.post_id || '', p.applicant_id) : '익명';   // 익명 펀네임(실명 X)
+      const avi = (nm.split(' ')[1] || nm).slice(0, 1);
+      ico = '<div class="notif-ico avatar-ico" style="background:linear-gradient(135deg,#4FB89A,#1F5A4A);">' + htmlesc(avi) + '</div>';
       text = '<b>' + htmlesc(nm) + '</b>님이 <b>' + htmlesc(ev) + '</b> 동행에 신청했어요';
       if (p.application_id) actions = '<div class="notif-actions">'
         + '<button class="notif-btn accept" onclick="event.stopPropagation();notifRespond(\'' + p.application_id + '\',true,this)">수락</button>'
-        + '<button class="notif-btn view" onclick="event.stopPropagation();openDM(\'' + p.applicant_id + '\',\'' + jsq(nm) + '\')">1:1 대화</button>'
+        + '<button class="notif-btn view" onclick="event.stopPropagation();openDM(\'' + p.applicant_id + '\',\'' + jsq(nm) + '\',\'동행 신청\',\'\',\'' + p.application_id + '\')">1:1 대화</button>'
         + '<button class="notif-btn decline" onclick="event.stopPropagation();notifRespond(\'' + p.application_id + '\',false,this)">거절</button></div>';
     } else if (n.type === 'companion_accepted') {
       ico = '<div class="notif-ico green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
