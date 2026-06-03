@@ -276,6 +276,17 @@
   .comp-thumb.owner::after { content: '👑'; position: absolute; bottom: -4px; right: -4px; font-size: 12px; }
   /* 동행 허브: 신청 행 리스트 */
   .comp-applist { padding: 0 20px 6px; display: flex; flex-direction: column; gap: 8px; }
+  /* 내가 신청한 동행 카드 */
+  .out-app { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 13px 14px; }
+  .out-app-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .out-app-title { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-pill { flex-shrink: 0; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; letter-spacing: -0.2px; white-space: nowrap; }
+  .status-pill.pending { color: var(--accent-dim); background: var(--accent-bg-strong); }
+  .status-pill.rejected { color: var(--text-sub); background: var(--chip-bg); }
+  .out-app-sub { font-size: 12px; color: var(--text-sub); margin-top: 6px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-weight: 500; }
+  .out-app-actions { display: flex; gap: 7px; margin-top: 11px; }
+  .out-app-actions .cp-btn { flex: 1; text-align: center; }
+  .cp-btn.danger { background: rgba(235,87,87,0.07); color: #EB5757; border: 1px solid rgba(235,87,87,0.28); }
   .cp-app-ev { color: var(--text-sub); font-size: 11.5px; margin-top: 2px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .section-header h2 .count.urgent { color: #EB5757; }
   .comp-emptybox { margin: 0 20px 10px; padding: 22px 16px; text-align: center; color: var(--text-dim); font-size: 13px; background: var(--card); border: 1px dashed var(--border); border-radius: 14px; }
@@ -4662,11 +4673,14 @@
   function outgoingAppRowHtml(a) {
     const nm = funName(a.room_id, a.author_id);
     const pending = a.app_status === 'pending';
-    const lbl = pending ? '<span class="cp-state" style="color:var(--accent);">수락 대기중</span>' : '<span class="cp-state">거절됨</span>';
-    const cancelBtn = '<button class="cp-btn ghost sm" onclick="cancelMyApp(\'' + a.app_id + '\')">' + (pending ? '신청 취소' : '삭제') + '</button>';
-    return '<div class="cp-app-row"><div class="cp-app-info"><b>' + htmlesc(a.event_title || '동행') + '</b>'
-      + '<div class="cp-app-ev">방장 ' + htmlesc(nm) + ' ' + dukBadge(a.author_id) + '</div></div>'
-      + '<div class="cp-app-ctl"><button class="cp-btn ghost sm" onclick="openDM(\'' + a.author_id + '\',\'' + jsq(nm) + '\',\'동행 문의\')">방장과 대화</button>' + cancelBtn + lbl + '</div></div>';
+    const pill = pending ? '<span class="status-pill pending">수락 대기중</span>' : '<span class="status-pill rejected">거절됨</span>';
+    return '<div class="out-app">'
+      + '<div class="out-app-top"><div class="out-app-title">' + htmlesc(a.event_title || '동행') + '</div>' + pill + '</div>'
+      + '<div class="out-app-sub">👑 방장 <b style="color:var(--text);font-weight:700;">' + htmlesc(nm) + '</b> ' + dukBadge(a.author_id) + '</div>'
+      + '<div class="out-app-actions">'
+      + '<button class="cp-btn ghost sm" onclick="openDM(\'' + a.author_id + '\',\'' + jsq(nm) + '\',\'동행 문의\')">방장과 대화</button>'
+      + '<button class="cp-btn danger sm" onclick="cancelMyApp(\'' + a.app_id + '\')">' + (pending ? '신청 취소' : '삭제') + '</button>'
+      + '</div></div>';
   }
   async function cancelMyApp(appId) {
     const u = await requireLogin(); if (!u) return;
