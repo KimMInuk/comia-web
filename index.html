@@ -279,6 +279,8 @@
     font-size: 11px; font-weight: 800; display: flex; align-items: center;
     justify-content: center; border: 2px solid var(--card); box-sizing: border-box;
   }
+  .comp-thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 13px; z-index: 2; }
+  .comp-thumb .unread { z-index: 3; }
   .comp-body { flex: 1; min-width: 0; }
   .comp-title { font-size: 14.5px; font-weight: 700; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .comp-meta { font-size: 12px; color: var(--text-sub); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -5740,7 +5742,10 @@
     } else { box.innerHTML = ''; if (sec) sec.style.display = 'none'; }
   }
   function companionRoomCardHtml(r) {
-    const grad = (r.gradient && r.gradient.length >= 2) ? r.gradient.join(',') : '#5B9BE8,#3A6FB5';
+    const ev = EV_BY_ID['db' + r.event_id];   // 행사 썸네일(포스터/그라데이션 타일)을 행사 카드와 동일하게 사용
+    const grad = (ev && ev.gradStr) ? ev.gradStr : ((r.gradient && r.gradient.length >= 2) ? r.gradient.join(',') : '#5B9BE8,#3A6FB5');
+    const imgSrc = (ev && ev.img) ? ev.img : (r.poster_url || '');
+    const thumbImg = imgSrc ? '<img class="comp-thumb-img" src="' + imgSrc + '" alt="" loading="lazy" onerror="this.remove()">' : '';
     const d = r.starts_at ? new Date(r.starts_at) : null;
     const dstr = d ? (d.getMonth() + 1) + '/' + d.getDate() : '';
     const dday = d ? Math.ceil((d - new Date()) / 86400000) : null;
@@ -5758,7 +5763,7 @@
     else if (dstr) metaParts.push(dstr);
     const title = htmlesc(r.event_title || '동행 방') + (r.is_owner ? ' <span style="font-size:11px;">👑</span>' : '');
     return '<div class="comp-card" onclick="openRoomChat(\'' + r.room_id + '\',\'' + jsq(htmlesc(r.event_title || '동행 방')) + '\')">'
-      + '<div class="comp-thumb' + (r.is_owner ? ' owner' : '') + '" style="background:linear-gradient(135deg,' + grad + ')">' + ini + badge + '</div>'
+      + '<div class="comp-thumb' + (r.is_owner ? ' owner' : '') + '" style="background:linear-gradient(135deg,' + grad + ')">' + thumbImg + '<span class="thumb-ini">' + ini + '</span>' + badge + '</div>'
       + '<div class="comp-body"><div class="comp-title">' + title + '</div>'
       + '<div class="comp-meta">' + metaParts.join(' · ') + '</div></div>'
       + '<svg class="comp-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
