@@ -2703,7 +2703,7 @@
           <div class="title" id="gcTitle">코믹월드 동행</div>
           <div style="font-size:11px;color:var(--text-sub);font-weight:500;margin-top:1px;" id="gcSub">참여 4명 · cherry_aka 외 3명</div>
         </div>
-        <div class="back" onclick="toast('그룹 설정')">
+        <div class="back" onclick="groupRoomMenu()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
         </div>
       </div>
@@ -4002,6 +4002,9 @@
     } else if (n.type === 'companion_rejected') {
       ico = '<div class="notif-ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>';
       text = '<b>' + htmlesc(ev) + '</b> 동행 신청이 아쉽게 거절됐어요';
+    } else if (n.type === 'companion_left') {
+      ico = '<div class="notif-ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg></div>';
+      text = '<b>' + htmlesc(ev) + '</b> 동행에서 한 명이 나갔어요 · 자리 1개가 다시 열렸어요';
     } else {
       ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>';
       text = '새 알림이 도착했어요';
@@ -4658,10 +4661,21 @@
   }
   function outgoingAppRowHtml(a) {
     const nm = funName(a.room_id, a.author_id);
-    const lbl = a.app_status === 'pending' ? '<span class="cp-state" style="color:var(--accent);">수락 대기중</span>' : '<span class="cp-state">거절됨</span>';
+    const pending = a.app_status === 'pending';
+    const lbl = pending ? '<span class="cp-state" style="color:var(--accent);">수락 대기중</span>' : '<span class="cp-state">거절됨</span>';
+    const cancelBtn = '<button class="cp-btn ghost sm" onclick="cancelMyApp(\'' + a.app_id + '\')">' + (pending ? '신청 취소' : '삭제') + '</button>';
     return '<div class="cp-app-row"><div class="cp-app-info"><b>' + htmlesc(a.event_title || '동행') + '</b>'
       + '<div class="cp-app-ev">방장 ' + htmlesc(nm) + ' ' + dukBadge(a.author_id) + '</div></div>'
-      + '<div class="cp-app-ctl"><button class="cp-btn ghost sm" onclick="openDM(\'' + a.author_id + '\',\'' + jsq(nm) + '\',\'동행 문의\')">방장과 대화</button>' + lbl + '</div></div>';
+      + '<div class="cp-app-ctl"><button class="cp-btn ghost sm" onclick="openDM(\'' + a.author_id + '\',\'' + jsq(nm) + '\',\'동행 문의\')">방장과 대화</button>' + cancelBtn + lbl + '</div></div>';
+  }
+  async function cancelMyApp(appId) {
+    const u = await requireLogin(); if (!u) return;
+    try {
+      const { error } = await sb.rpc('cancel_application', { p_app: appId });
+      if (error) throw error;
+      toast('신청을 취소했어요');
+      loadCompanionFeed();
+    } catch (e) { toast('취소 실패: ' + (e.message || e)); }
   }
   async function respondAppHub(appId, accept) {
     const u = await requireLogin(); if (!u) return;
@@ -5786,7 +5800,27 @@
     } catch (e) { toast('처리 실패: ' + (e.message || e)); }
   }
   // --- 실시간 그룹챗 ---
-  let CUR_ROOM = null, CUR_CHANNEL = null;
+  let CUR_ROOM = null, CUR_CHANNEL = null, CUR_ROOM_OWNER = false;
+  function groupRoomMenu() {
+    if (!CUR_ROOM) return;
+    if (CUR_ROOM_OWNER) { toast('방장은 나갈 수 없어요 (행사 종료 후 자동 폭파)'); return; }
+    showActions('동행 방', [{ label: '방 나가기', danger: true, fn: leaveRoom }]);
+  }
+  async function leaveRoom() {
+    if (!CUR_ROOM) return;
+    const u = await requireLogin(); if (!u) return;
+    try {
+      const { error } = await sb.rpc('leave_companion_room', { p_room: CUR_ROOM });
+      if (error) throw error;
+      if (CUR_CHANNEL) { try { sb.removeChannel(CUR_CHANNEL); } catch (e) {} CUR_CHANNEL = null; }
+      MY_ROOMS = MY_ROOMS.filter(r => r.room_id !== CUR_ROOM);
+      CUR_ROOM = null;
+      renderMyCompanions(); refreshCompanionBadge();
+      toast('방에서 나왔어요');
+      back();
+      if ((document.querySelector('.screen.active') || {}).id === 'screen-companions') loadCompanionFeed();
+    } catch (e) { toast('나가기 실패: ' + (e.message || e)); }
+  }
   async function openEventChat() {
     const ev = CUR_EVENT;
     const u = await requireLogin(); if (!u || !ev) return;
@@ -5844,6 +5878,7 @@
       if (!rm || rm.archived_at) { toast('이 동행 방은 행사 종료로 폭파됐어요 🔥'); return; }
     } catch (e) { toast('입장할 수 없는 방이에요'); return; }
     CUR_ROOM = roomId;
+    CUR_ROOM_OWNER = !!(MY_ROOMS.find(r => r.room_id === roomId) || {}).is_owner;
     await buildAnonMap(roomId);
     document.getElementById('gcTitle').textContent = title || '동행 방';
     document.getElementById('gcSub').textContent = '익명 그룹 채팅 · 행사 종료 후 폭파';
