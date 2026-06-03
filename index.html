@@ -4851,7 +4851,7 @@
       + '<div class="out-app-top"><div class="out-app-title">' + htmlesc(a.event_title || '동행') + '</div>' + pill + '</div>'
       + '<div class="out-app-sub">👑 방장 <b style="color:var(--text);font-weight:700;">' + htmlesc(nm) + '</b> ' + dukBadge(a.author_id) + '</div>'
       + '<div class="out-app-actions">'
-      + '<button class="cp-btn ghost sm" onclick="openDM(\'' + a.author_id + '\',\'' + jsq(nm) + '\',\'동행 문의\')">방장과 대화</button>'
+      + (pending ? '<button class="cp-btn ghost sm" onclick="openDM(\'' + a.author_id + '\',\'' + jsq(nm) + '\',\'동행 문의\')">방장과 대화</button>' : '')
       + '<button class="cp-btn danger sm" onclick="cancelMyApp(\'' + a.app_id + '\')">' + (pending ? '신청 취소' : '삭제') + '</button>'
       + '</div></div>';
   }
@@ -5948,9 +5948,11 @@
           + (list.length ? list.map(a => appRowHtml(a, p.room_id)).join('') : '<div class="cp-empty">아직 신청자가 없어요</div>')
           + '</div>';
       } else if (myApp) {
-        const lbl = myApp.status === 'accepted' ? '수락됨 ✓' : (myApp.status === 'rejected' ? '거절됨' : '신청함 · 대기중');
+        const lbl = myApp.status === 'accepted' ? '수락됨 ✓' : (myApp.status === 'rejected' ? '거절됨 · 대화 종료' : '신청함 · 대기중');
         const join = (myApp.status === 'accepted' && p.room_id) ? '<button class="cp-btn" onclick="openRoomChat(\'' + p.room_id + '\',\'동행 방\')">그룹챗 입장</button>' : '';
-        actions = join + '<button class="cp-btn" onclick="openDM(\'' + p.author_id + '\',\'' + jsq(onm) + '\')">1:1 대화</button><span class="cp-state">' + lbl + '</span>';
+        // 1:1 문의는 '대기중'일 때만 — 수락(→그룹챗)/거절(→종료) 후엔 노출 안 함
+        const dm = (myApp.status === 'pending') ? '<button class="cp-btn" onclick="openDM(\'' + p.author_id + '\',\'' + jsq(onm) + '\',\'동행 문의\')">1:1 대화</button>' : '';
+        actions = join + dm + '<span class="cp-state">' + lbl + '</span>';
       } else if (!closed) {
         actions = '<button class="cp-btn" onclick="inquireCompanion(\'' + p.id + '\',\'' + p.author_id + '\',\'' + (p.room_id || '') + '\')">방장에게 1:1 문의</button>';
       }
@@ -5964,8 +5966,10 @@
     let ctl;
     if (a.status === 'pending') ctl = '<button class="dm-accept" onclick="respondApp(\'' + a.id + '\',true)">수락</button><button class="dm-reject" onclick="respondApp(\'' + a.id + '\',false)">거절</button>';
     else ctl = '<span class="cp-state">' + (a.status === 'accepted' ? '수락됨 ✓' : '거절됨') + '</span>';
+    // 1:1 대화는 검토(대기중)일 때만 — 수락/거절 후엔 종료
+    const dm = (a.status === 'pending') ? '<button class="cp-btn ghost sm" onclick="openDM(\'' + a.applicant_id + '\',\'' + jsq(nm) + '\',\'동행 신청\',\'\',\'' + a.id + '\')">대화</button>' : '';
     return '<div class="cp-app-row"><div class="cp-app-info"><b>' + htmlesc(nm) + '</b> ' + dukBadge(a.applicant_id) + msg + '</div>'
-      + '<div class="cp-app-ctl"><button class="cp-btn ghost sm" onclick="openDM(\'' + a.applicant_id + '\',\'' + jsq(nm) + '\')">대화</button>' + ctl + '</div></div>';
+      + '<div class="cp-app-ctl">' + dm + ctl + '</div></div>';
   }
   function toggleApps(pid) { const el = document.getElementById('apps-' + pid); if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none'; }
   async function loadCompanionPosts(ev) {
