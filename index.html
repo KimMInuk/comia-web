@@ -2935,12 +2935,11 @@
       <div class="form-field">
         <div class="form-label">어떤 행사의 동행인가요? <span class="req">*</span></div>
         <div class="selected-event">
-          <div class="thumb" data-ip="cw"></div>
+          <div class="thumb" id="pcEvThumb"></div>
           <div class="se-info">
-            <div class="se-title" id="selEventTitle">서울 코믹월드 2026 여름</div>
-            <div class="se-meta">7/19(토)~7/20(일) · SETEC</div>
+            <div class="se-title" id="selEventTitle">—</div>
+            <div class="se-meta" id="pcEvMeta"></div>
           </div>
-          <span class="se-change" onclick="toast('행사 검색·선택')">변경</span>
         </div>
       </div>
 
@@ -2987,17 +2986,6 @@
         </div>
       </div>
 
-      <!-- 관심 작품 -->
-      <div class="form-field">
-        <div class="form-label">관심 작품 <span class="hint">내 취향에서 선택</span></div>
-        <div class="opt-grid" data-multi>
-          <div class="opt on"><span class="ico-dot" style="background:#3088E0"></span>블루아카이브</div>
-          <div class="opt"><span class="ico-dot" style="background:#F0C45C"></span>원신</div>
-          <div class="opt"><span class="ico-dot" style="background:#EC6196"></span>니케</div>
-          <div class="opt" onclick="toast('작품 추가')">+ 추가</div>
-        </div>
-      </div>
-
       <!-- 동행 유형 -->
       <div class="form-field">
         <div class="form-label">동행 유형 <span class="hint">복수 선택</span></div>
@@ -3011,18 +2999,9 @@
         </div>
       </div>
 
-      <!-- 공개 범위 -->
-      <div class="form-field">
-        <div class="form-label">공개 범위</div>
-        <div class="form-select-btn" onclick="toast('공개 범위 선택')">
-          <span class="val">같은 행사 참여자 + 내 취향</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-      </div>
-
       <div class="info-banner" style="margin: 4px 16px 8px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <div>본인인증된 계정만 모집글을 올릴 수 있어요. 실명·연락처는 공개되지 않습니다.</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <div>이 행사를 보는 누구나 동행을 신청할 수 있어요. 닉네임은 익명, 실명·연락처는 공개되지 않습니다.</div>
       </div>
 
       <div class="form-cta">
@@ -3788,6 +3767,14 @@
   function openCreate(eventName) {
     const name = eventName || (CUR_EVENT && CUR_EVENT.t) || '';
     if (name) document.getElementById('selEventTitle').textContent = name;
+    // 상단 행사 카드: 실제 행사 썸네일·날짜/장소 반영(고정값 제거)
+    const meta = document.getElementById('pcEvMeta'); if (meta) meta.textContent = (CUR_EVENT && (CUR_EVENT.meta || CUR_EVENT.dateStr)) || '';
+    const thumb = document.getElementById('pcEvThumb');
+    if (thumb && CUR_EVENT) {
+      thumb.removeAttribute('data-ip');
+      if (CUR_EVENT.img && !CUR_EVENT.img.startsWith('data:')) { thumb.style.background = "center/cover no-repeat url('" + CUR_EVENT.img + "')"; thumb.textContent = ''; }
+      else { thumb.style.background = 'linear-gradient(135deg,' + (CUR_EVENT.gradStr || IP_GRAD[CUR_EVENT.ip] || '#5B9BE8,#3A6FB5') + ')'; thumb.style.display = 'grid'; thumb.style.placeItems = 'center'; thumb.style.color = '#fff'; thumb.style.fontWeight = '800'; thumb.style.fontSize = '15px'; thumb.textContent = CUR_EVENT.ini || (CUR_EVENT.t || '').slice(0, 2); }
+    }
     // 집합 시간 기본값(행사 시작 시각 있으면 그 시각, 없으면 10:00)
     const tEl = document.getElementById('pcMeetTime');
     if (tEl) {
