@@ -182,7 +182,13 @@
   }
   .hero-title { color: #fff; }
   .hero-card:active { transform: scale(0.985); }
-  .hero-badges { display: flex; gap: 6px; margin-bottom: 14px; }
+  /* 히어로 캐러셀 (태그별 추천 7~8개 가로 스와이프) */
+  .hero-carousel { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .hero-carousel::-webkit-scrollbar { display: none; }
+  .hero-carousel .hero-card { flex: 0 0 87%; scroll-snap-align: center; margin: 0; min-height: 156px; display: flex; flex-direction: column; background-size: cover; background-position: center; }
+  .hero-carousel .hero-card .hero-cta { margin-top: auto; }
+  .hero-tag { background: rgba(255,255,255,0.96); color: #1A1438; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 999px; letter-spacing: -0.2px; }
+  .hero-badges { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
   .dday-badge {
     display: inline-flex;
     align-items: center;
@@ -1944,18 +1950,7 @@
         </div>
       </div>
 
-      <div class="hero-card" id="homeHero">
-        <div class="hero-badges" id="homeHeroBadges"></div>
-        <div class="hero-title" id="homeHeroTitle">—</div>
-        <div class="hero-meta" id="homeHeroMeta"></div>
-        <div class="hero-cta">
-          <button class="btn-going" id="heroGoBtn" onclick="toggleGoing(event, this)">+ 참전</button>
-          <span class="going-count">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            1,243명 참전
-          </span>
-        </div>
-      </div>
+      <div class="hero-carousel" id="homeHeroCarousel"></div>
 
       <div class="section-header" id="secMine" style="display:none;"><h2>내 행사 <span class="count" id="homeMineCount"></span></h2><span class="more" onclick="goMyEvents()">전체 ›</span></div>
       <div id="homeMine"></div>
@@ -4895,10 +4890,7 @@
   }
   function syncGoingButtons(id) {
     const on = GOING.has(id);
-    ['heroGoBtn', 'edGoBtn'].forEach(bid => {
-      const b = document.getElementById(bid);
-      if (b && b.dataset.eid === id) goBtnState(b, on);
-    });
+    document.querySelectorAll('.btn-going[data-eid]').forEach(b => { if (b.dataset.eid === id) goBtnState(b, on); });
   }
   async function toggleGoing(e, btn) {
     e.stopPropagation();
@@ -5164,6 +5156,10 @@
         if (error) throw error;
         if (data && data.length) EVENTS = data.map(mapDbEvent);
       } catch (err) { console.warn('[comia] events 로드 실패 → 더미 유지', err); }
+      try {   // 인기 점수(히어로 '인기 많은' 태그용; anon도 조회 가능)
+        const { data: pop } = await sb.rpc('event_popularity');
+        EV_POP = {}; (pop || []).forEach(r => { EV_POP['db' + r.event_id] = r.score; });
+      } catch (e) {}
     }
     indexEvents();
     renderEvents();
@@ -5492,17 +5488,58 @@
 
   // 홈: 히어로(임박) + 내 동행 + 내 행사(참전) + 추천(관심사 알고리즘)
   function renderHome() {
-    const up = EVENTS.slice().sort((a, b) => a.sort - b.sort);
-    const upcoming = up.filter(e => e.dday === undefined || e.dday === null || e.dday >= 0);
-    const pool = upcoming.length ? upcoming : up;
-    const hero = pool[0];
-    HOME_HERO_ID = hero ? hero._id : null;
-    if (hero) fillHero(hero);
+    renderHeroCarousel();
     renderMyCompanions();
     renderMyEvents();
     renderReco();
   }
   function upcomingOnly(e) { return e.dday === undefined || e.dday === null || e.dday >= 0; }
+
+  // 홈 히어로 캐러셀: 태그별 추천 7~8개 (곧 시작·인기·종료 임박·내 취향 등)
+  let EV_POP = {};   // _id -> 인기 점수(참전+동행방)
+  function buildHeroPicks() {
+    const now = Date.now(), today = new Date();
+    const up = EVENTS.filter(upcomingOnly);
+    const picks = [], seen = new Set();
+    const add = (ev, tag) => { if (ev && !seen.has(ev._id)) { seen.add(ev._id); picks.push({ ev, tag }); } };
+    // 종료 임박: 진행 중 + 7일 내 종료
+    EVENTS.filter(e => e._start && e._end && dayStart(e._start) <= today && e._end >= today && (e._end - now) <= 7 * 86400000)
+      .sort((a, b) => a._end - b._end).slice(0, 2).forEach(e => add(e, '🔥 종료 임박'));
+    // 곧 시작: D-0~10 가까운 순
+    up.filter(e => e.dday != null && e.dday >= 0 && e.dday <= 10).sort((a, b) => a.dday - b.dday).slice(0, 3).forEach(e => add(e, '⏰ 곧 시작'));
+    // 인기 많은: 참전+동행방 점수 상위
+    up.slice().sort((a, b) => (EV_POP[b._id] || 0) - (EV_POP[a._id] || 0)).filter(e => (EV_POP[e._id] || 0) > 0).slice(0, 2).forEach(e => add(e, '🔥 인기 많은'));
+    // 내 취향: 관심사 점수 상위
+    up.map(e => ({ e, s: recoScore(e) })).filter(o => o.s >= 5).sort((a, b) => b.s - a.s).slice(0, 2).forEach(o => add(o.e, '💜 내 취향'));
+    // 이번 주말
+    up.filter(e => e.weekend).slice(0, 1).forEach(e => add(e, '📅 이번 주말'));
+    // 채우기: 임박 순
+    up.slice().sort((a, b) => a.sort - b.sort).forEach(e => { if (picks.length < 8) add(e, '📌 추천'); });
+    return picks.slice(0, 8);
+  }
+  function heroCardHtml(ev, tag) {
+    const grad = ev.gradStr || IP_GRAD[ev.ip] || '#6FB1F0,#4385D4';
+    const bg = (ev.img && !ev.img.startsWith('data:'))
+      ? "linear-gradient(rgba(26,20,56,0.55),rgba(26,20,56,0.84)), url('" + ev.img + "')"
+      : "radial-gradient(circle at 82% 0%, rgba(255,255,255,0.28), transparent 55%), linear-gradient(135deg," + grad + ")";
+    let badges = '<span class="hero-tag">' + tag + '</span>';
+    if (ev.dday != null && ev.dday >= 0) badges += '<span class="dday-badge' + (ev.dday <= 14 ? ' urgent' : '') + '">D-' + ev.dday + '</span>';
+    badges += '<span class="dday-badge" style="background:rgba(255,255,255,0.16);color:#fff;">' + (ev.type || '행사') + '</span>';
+    const going = GOING.has(ev._id);
+    return '<div class="hero-card" style="background-image:' + bg + ';" onclick="openEv(\'' + ev._id + '\')">'
+      + '<div class="hero-badges">' + badges + '</div>'
+      + '<div class="hero-title">' + htmlesc(ev.t) + '</div>'
+      + '<div class="hero-meta">' + htmlesc(ev.meta || '') + '</div>'
+      + '<div class="hero-cta"><button class="btn-going' + (going ? ' on' : '') + '" data-eid="' + ev._id + '" data-dbid="' + (ev.dbid || '') + '" onclick="event.stopPropagation();toggleGoing(event,this)">' + (going ? '✓ 참전 중' : '+ 참전') + '</button></div>'
+      + '</div>';
+  }
+  function renderHeroCarousel() {
+    const box = document.getElementById('homeHeroCarousel'); if (!box) return;
+    const picks = buildHeroPicks();
+    HOME_HERO_ID = picks[0] ? picks[0].ev._id : null;
+    box.innerHTML = picks.map(p => heroCardHtml(p.ev, p.tag)).join('')
+      || '<div class="comp-emptybox" style="flex:0 0 92%;">표시할 행사가 없어요</div>';
+  }
 
   // 내 행사: 내가 참전 표시한 (예정) 행사
   function renderMyEvents() {
@@ -5593,39 +5630,13 @@
       MY_ROOMS = rooms || [];
     } catch (e) { MY_ROOMS = []; }
     renderMyCompanions(); renderMyEvents(); renderReco();
+    renderHeroCarousel();   // 참전·내취향 반영해 히어로 캐러셀 재구성
     loadSavedFilters();   // 저장한 필터 칩 주입
     refreshCompanionBadge();   // 동행 탭 안읽음 레드닷
     renderEvents();   // 참전 정보 로드됨 → 리스트(내 행사 기본/참여중 배지) 반영
     buildCalMap();   // GO_DATES + 범위 반영 → 캘린더 보이면 다시 그림
     if (document.getElementById('eventsCalView') && document.getElementById('eventsCalView').style.display !== 'none') renderCalendar();
-    // 히어로/상세 참전 버튼 상태 동기화
-    const hb = document.getElementById('heroGoBtn'); if (hb && hb.dataset.eid) goBtnState(hb, GOING.has(hb.dataset.eid));
   }
-  function fillHero(ev) {
-    const t = document.getElementById('homeHeroTitle'); if (t) t.textContent = ev.t;
-    const m = document.getElementById('homeHeroMeta'); if (m) m.textContent = ev.meta || '';
-    const hgc = document.querySelector('#screen-home .going-count'); if (hgc) hgc.style.display = 'none';  // 더미 참전수 숨김(실데이터 없음)
-    const hb = document.getElementById('heroGoBtn');
-    if (hb) { hb.dataset.eid = ev._id; hb.dataset.dbid = ev.dbid || ''; goBtnState(hb, GOING.has(ev._id)); }
-    const bd = document.getElementById('homeHeroBadges');
-    if (bd) {
-      let b = '';
-      if (ev.dday !== undefined && ev.dday !== null && ev.dday >= 0) b += '<span class="dday-badge' + (ev.dday <= 14 ? ' urgent' : '') + '">D-' + ev.dday + '</span>';
-      b += '<span class="dday-badge" style="background:rgba(255,255,255,0.14);color:#fff;">' + (ev.type || '행사') + '</span>';
-      bd.innerHTML = b;
-    }
-    const card = document.getElementById('homeHero');
-    if (card) {
-      card.onclick = function () { openEv(ev._id); };
-      if (ev.img && !ev.img.startsWith('data:')) {
-        card.style.backgroundImage = 'linear-gradient(rgba(26,20,56,0.6),rgba(26,20,56,0.82)), url(' + ev.img + ')';
-        card.style.backgroundSize = 'cover'; card.style.backgroundPosition = 'center';
-      } else {
-        card.style.backgroundImage = ''; card.style.backgroundSize = ''; card.style.backgroundPosition = '';
-      }
-    }
-  }
-
   // id로 행사 상세 열기 (리스트·홈 공용)
   function openEv(id) {
     const ev = EV_BY_ID[id];
