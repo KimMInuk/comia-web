@@ -4084,21 +4084,26 @@
     const sa = document.getElementById('scrollArea');
     sa.scrollTop = sa.scrollHeight;
   }
-  function acceptDm() {
-    if (LIVE && sb && CUR_DM_APP) {
-      respondApp(CUR_DM_APP, true); CUR_DM_APP = null;
+  async function acceptDm() {
+    if (!(LIVE && sb && CUR_DM_APP)) { toast('수락 권한이 없어요 (방장만 가능)'); return; }
+    try {
+      const { error } = await sb.rpc('respond_application', { p_app: CUR_DM_APP, p_accept: true });
+      if (error) throw error;
+      CUR_DM_APP = null;
       const c = document.getElementById('dmContext'); if (c) c.style.display = 'none';
-      return;
-    }
-    toast('동행을 수락했어요 — 그룹챗으로 이동'); setTimeout(() => goto('screen-groupchat'), 500);
+      refreshCompanionBadge();
+      toast('동행을 수락했어요 🎉 상대가 그룹챗에 합류해요');
+    } catch (e) { toast('처리 실패: ' + (e.message || e)); }
   }
-  function rejectDm() {
-    if (LIVE && sb && CUR_DM_APP) {
-      respondApp(CUR_DM_APP, false); CUR_DM_APP = null;
+  async function rejectDm() {
+    if (!(LIVE && sb && CUR_DM_APP)) { toast('거절 권한이 없어요 (방장만 가능)'); return; }
+    try {
+      const { error } = await sb.rpc('respond_application', { p_app: CUR_DM_APP, p_accept: false });
+      if (error) throw error;
+      CUR_DM_APP = null;
       const c = document.getElementById('dmContext'); if (c) c.style.display = 'none';
-      setTimeout(back, 400); return;
-    }
-    toast('동행 신청을 거절했어요'); setTimeout(back, 500);
+      toast('동행 신청을 거절했어요'); setTimeout(back, 400);
+    } catch (e) { toast('처리 실패: ' + (e.message || e)); }
   }
 
   /* ---------- 온보딩 ---------- */
@@ -5904,8 +5909,14 @@
       const sub = document.getElementById('dmTitleSub'); if (sub) sub.textContent = '1:1 대화';
       const ctx = document.getElementById('dmContext');
       if (ctx) {
+        const isOwnerReview = !!appId;   // 수락/거절은 신청을 '받은' 방장만(appId 있을 때)
         ctx.style.display = ctxTitle ? 'flex' : 'none';
-        if (ctxTitle) { document.getElementById('dmCtxTitle').textContent = ctxTitle; document.getElementById('dmCtxSub').textContent = ctxSub || ''; }
+        if (ctxTitle) {
+          document.getElementById('dmCtxTitle').textContent = ctxTitle;
+          document.getElementById('dmCtxSub').textContent = ctxSub || (isOwnerReview ? '수락하면 그룹챗에 합류해요' : '방장에게 자기소개를 보내면 수락 여부를 알려줘요');
+        }
+        const acts = ctx.querySelector('.ctx-actions');
+        if (acts) acts.style.display = isOwnerReview ? 'flex' : 'none';
       }
       goto('screen-dm');
       await loadDmMessages(roomId, u.id);
