@@ -6545,7 +6545,9 @@
   function renderQuickChips() {
     const row = document.getElementById('quickRow'); if (!row) return;
     let h = '';
-    QUICK_CATS.forEach(c => {
+    // 관심 대분류(MY_CATS)를 앞으로 정렬
+    const orderedCats = QUICK_CATS.slice().sort((a, b) => (MY_CATS.indexOf(b) >= 0 ? 1 : 0) - (MY_CATS.indexOf(a) >= 0 ? 1 : 0));
+    orderedCats.forEach(c => {
       const m = CAT_META[c] || {};
       h += '<div class="quick-chip' + (curFilter.cats.includes(c) ? ' on' : '') + '" data-qk="cats" data-qv="' + attresc(c) + '"><span class="ico-dot" style="background:' + (m.c || '#888') + '"></span>' + htmlesc(c) + '</div>';
     });
@@ -6630,11 +6632,16 @@
   function buildIpFilter(){
     const grid = document.getElementById('ipGrid'); if (!grid) return;
     const on = new Set([...grid.querySelectorAll('.opt.on')].map(o => o.textContent.trim()));
+    const colorOf = (n) => { const f = IP_BASE.find(x => x[0] === n); return f ? f[1] : ipColor(n); };
     const seen = new Set(), items = [];
-    IP_BASE.forEach(([n,c]) => { if (!seen.has(n)) { seen.add(n); items.push([n,c]); } });
-    (EVENTS || []).forEach(ev => (ev.ips || []).forEach(ip => { ip = (ip||'').trim(); if (ip && ip !== '기타 / 오리지널' && !seen.has(ip)) { seen.add(ip); items.push([ip, ipColor(ip)]); } }));
-    items.push(['기타 / 오리지널','#888']);
-    grid.innerHTML = items.map(([n,c]) => '<div class="opt' + (on.has(n) ? ' on' : '') + '"><span class="ico-dot" style="background:' + c + '"></span>' + htmlesc(n) + '</div>').join('');
+    // 1) 내 관심 작품 먼저 (관심사 우선 정렬)
+    (MY_ITEMS || []).forEach(ip => { ip = (ip || '').trim(); if (ip && ip !== '기타 / 오리지널' && !seen.has(ip)) { seen.add(ip); items.push([ip, colorOf(ip), true]); } });
+    // 2) 큐레이션 기본
+    IP_BASE.forEach(([n,c]) => { if (!seen.has(n)) { seen.add(n); items.push([n,c,false]); } });
+    // 3) 행사 데이터에 등장한 IP
+    (EVENTS || []).forEach(ev => (ev.ips || []).forEach(ip => { ip = (ip||'').trim(); if (ip && ip !== '기타 / 오리지널' && !seen.has(ip)) { seen.add(ip); items.push([ip, ipColor(ip), false]); } }));
+    items.push(['기타 / 오리지널','#888',false]);
+    grid.innerHTML = items.map(([n,c,mine]) => '<div class="opt' + (on.has(n) ? ' on' : '') + (mine ? ' mine' : '') + '"><span class="ico-dot" style="background:' + c + '"></span>' + htmlesc(n) + (mine ? ' ★' : '') + '</div>').join('');
   }
   function openFilter() {
     buildIpFilter();
