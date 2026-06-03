@@ -2951,6 +2951,12 @@
         <div class="gd-chips" id="pcMeetChips"></div>
       </div>
 
+      <!-- 집합 시간 -->
+      <div class="form-field">
+        <div class="form-label">집합 시간 <span class="req">*</span> <span class="hint">방 목록에 함께 노출돼요</span></div>
+        <input class="form-input" id="pcMeetTime" type="time" value="10:00" style="max-width:160px;" />
+      </div>
+
       <!-- 집합 장소 -->
       <div class="form-field">
         <div class="form-label">집합 장소</div>
@@ -3771,6 +3777,13 @@
   function openCreate(eventName) {
     const name = eventName || (CUR_EVENT && CUR_EVENT.t) || '';
     if (name) document.getElementById('selEventTitle').textContent = name;
+    // 집합 시간 기본값(행사 시작 시각 있으면 그 시각, 없으면 10:00)
+    const tEl = document.getElementById('pcMeetTime');
+    if (tEl) {
+      let hh = 10, mm = 0;
+      if (CUR_EVENT && CUR_EVENT._start && !isNaN(CUR_EVENT._start) && (CUR_EVENT._start.getHours() || CUR_EVENT._start.getMinutes())) { hh = CUR_EVENT._start.getHours(); mm = CUR_EVENT._start.getMinutes(); }
+      tEl.value = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+    }
     // 만나는 날 칩 구성 (행사 기간의 날짜들; 단일일이면 자동 선택)
     PC_MEET_KEY = null;
     const chips = document.getElementById('pcMeetChips');
@@ -3810,7 +3823,9 @@
       if (!text.trim()) { toast('내용을 입력해주세요'); return; }
       const days = eventDayKeys(CUR_EVENT);
       if (days.length > 1 && !PC_MEET_KEY) { toast('만나는 날을 선택해주세요'); return; }
-      const meetAt = PC_MEET_KEY ? (keyToIso(PC_MEET_KEY) + 'T12:00:00+09:00') : null;
+      const tEl = document.getElementById('pcMeetTime');
+      const timeStr = (tEl && tEl.value) ? tEl.value : '10:00';   // 'HH:MM'
+      const meetAt = PC_MEET_KEY ? (keyToIso(PC_MEET_KEY) + 'T' + timeStr + ':00+09:00') : null;
       const { data, error } = await sb.rpc('create_companion_room', { p_event: CUR_EVENT.dbid, p_body: text, p_capacity: cap, p_meet_at: meetAt });
       if (error) { toast('등록 실패: ' + error.message); return; }
       if (titleEl) titleEl.value = ''; if (bodyEl) bodyEl.value = '';
@@ -4696,7 +4711,7 @@
       : '<span class="recruit-status">' + (cap ? (filled + '/' + cap + '명') : '모집중') + '</span>';
     const tap = p.event_id ? ("openEv('db" + p.event_id + "')") : '';
     const nm = funName(p.room_id, p.author_id);
-    const meet = p.meet_at ? (function () { const m = new Date(p.meet_at); return ' · 📅 ' + (m.getMonth() + 1) + '/' + m.getDate() + ' 만남'; })() : '';
+    const meet = p.meet_at ? (' · 🕒 ' + fmtMeet(p.meet_at) + ' 집합') : '';
     return '<div class="post-card" onclick="' + tap + '"><div class="post-head"><div class="author">'
       + funAvatar(nm) + '<div><div class="author-name">' + htmlesc(nm) + ownerTag(true) + ' ' + dukBadge(p.author_id)
       + '</div><div class="author-meta">' + htmlesc(evt) + meet + '</div></div></div></div><div class="post-body">'
@@ -5486,7 +5501,7 @@
     else if (r.capacity) metaParts.push('모집 ' + (r.filled || 1) + '/' + r.capacity + '명');
     else metaParts.push((r.member_count || 1) + '명 참여');
     if (r.is_owner && r.pending_in > 0) metaParts.push('<span style="color:#EB5757;font-weight:700;">신청 ' + r.pending_in + ' 대기</span>');
-    if (r.meet_at) { const md = new Date(r.meet_at); metaParts.push('📅 ' + (md.getMonth() + 1) + '/' + md.getDate() + ' 만남'); }
+    if (r.meet_at) metaParts.push('🕒 ' + fmtMeet(r.meet_at) + ' 집합');
     else if (ddtxt) metaParts.push(ddtxt);
     else if (dstr) metaParts.push(dstr);
     const title = htmlesc(r.event_title || '동행 방') + (r.is_owner ? ' <span style="font-size:11px;">👑</span>' : '');
@@ -5655,12 +5670,19 @@
   }
   // --- 동행 모집글 ---
   function jsq(s) { return String(s == null ? '' : s).replace(/['"\\<>]/g, ''); }  // onclick 인자 안전화
+  const _WDAY = ['일', '월', '화', '수', '목', '금', '토'];
+  function fmtMeet(ts) {
+    if (!ts) return '집합 시간 미정';
+    const d = new Date(ts);
+    const hh = String(d.getHours()).padStart(2, '0'), mm = String(d.getMinutes()).padStart(2, '0');
+    return (d.getMonth() + 1) + '/' + d.getDate() + '(' + _WDAY[d.getDay()] + ') ' + hh + ':' + mm;
+  }
   function companionCardHtml(p, myId, apps, myApp) {
     const mine = myId && p.author_id === myId;
     const closed = p.status && p.status !== 'open';
     const onm = funName(p.room_id, p.author_id);
     let h = '<div class="post-card"><div class="post-head"><div class="author">' + funAvatar(onm) + '<div>'
-      + '<div class="author-name">' + htmlesc(onm) + ownerTag(true) + (mine ? ' (나)' : '') + ' ' + dukBadge(p.author_id) + '</div><div class="author-meta">' + new Date(p.created_at).toLocaleDateString() + '</div></div></div></div>'
+      + '<div class="author-name">' + htmlesc(onm) + ownerTag(true) + (mine ? ' (나)' : '') + ' ' + dukBadge(p.author_id) + '</div><div class="author-meta">🕒 ' + (p.meet_at ? fmtMeet(p.meet_at) + ' 집합' : '집합 시간 미정') + '</div></div></div></div>'
       + '<div class="post-body">' + (p.body || '').replace(/</g, '&lt;') + '</div>'
       + '<div class="post-footer"><span>모집 ' + (p.filled || 1) + '/' + (p.capacity || 2) + '명' + (closed ? ' · 마감' : '') + '</span></div>';
     let actions = '';
@@ -5706,7 +5728,7 @@
       const u = await currentUser();
       const myId = u && u.id;
       const { data } = await sb.from('companion_posts')
-        .select('id, author_id, body, capacity, filled, status, created_at, room_id, invite_token')
+        .select('id, author_id, body, capacity, filled, status, created_at, room_id, invite_token, meet_at')
         .eq('event_id', ev.dbid).order('created_at', { ascending: false });
       const posts = data || [];
       const segC = document.querySelector('#screen-event-detail .ev-seg [data-evtab="companion"]');
