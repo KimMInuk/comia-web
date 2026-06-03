@@ -583,6 +583,8 @@
   .profile-sub { font-size: 12.5px; color: var(--text-sub); margin-top: 5px; font-weight: 500; }
   .edit-profile-btn { display: block; margin: 14px auto 0; padding: 8px 18px; border-radius: 999px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; background: var(--card); color: var(--text-sub); border: 1px solid var(--border); letter-spacing: -0.2px; transition: background .13s; }
   .edit-profile-btn:active { background: var(--card-active); }
+  .btn-disband { width: 100%; padding: 13px; border-radius: 13px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; background: rgba(235,87,87,0.08); color: #EB5757; border: 1px solid rgba(235,87,87,0.35); letter-spacing: -0.2px; transition: background .13s; }
+  .btn-disband:active { background: rgba(235,87,87,0.16); }
   .fandom-tags { display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
   .fandom-tag {
     font-size: 11.5px;
@@ -1445,6 +1447,7 @@
   .gd-chip { padding: 7px 12px; border-radius: 10px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: var(--bg); border: 1px solid var(--border); color: var(--text-sub); letter-spacing: -0.2px; transition: transform .12s, background .12s; }
   .gd-chip:active { transform: scale(0.95); }
   .gd-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .gd-chip.off { opacity: 0.4; cursor: not-allowed; }
   /* 관심 작품 태그 편집 */
   .int-tags { display: flex; flex-wrap: wrap; gap: 7px; min-height: 4px; }
   .int-tag { display: inline-flex; align-items: center; gap: 5px; padding: 7px 10px 7px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: var(--accent-bg-strong); color: var(--accent-dim); border: 1px solid rgba(91,155,232,0.3); letter-spacing: -0.2px; }
@@ -2537,6 +2540,28 @@
         <div class="menu-item" onclick="confirmDeleteAccount()"><span style="color:var(--danger);">회원 탈퇴</span><span class="right"><span class="chev">›</span></span></div>
       </div>
       <div style="height:24px"></div>
+    </div>
+
+    <!-- ===================== 동행 방 설정 (방장) ===================== -->
+    <div class="screen" id="screen-room-settings">
+      <div class="nav-header"><div class="back" onclick="back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div><div class="title">동행 방 설정</div></div>
+      <div class="set-note"><b id="rsEvent">—</b> · 방장만 변경 가능</div>
+      <div class="form-field" id="rsMeetDayField" style="padding:0 16px;">
+        <div class="form-label">만나는 날</div>
+        <div class="gd-chips" id="rsMeetChips"></div>
+      </div>
+      <div class="form-field" style="padding:0 16px;">
+        <div class="form-label">집합 시간</div>
+        <input class="form-input" id="rsMeetTime" type="time" value="10:00" style="max-width:160px;" />
+      </div>
+      <div class="form-field" style="padding:0 16px;">
+        <div class="form-label">모집 인원 <span class="hint" id="rsCapHint"></span></div>
+        <div class="gd-chips" id="rsCapChips"></div>
+      </div>
+      <div class="bottom-cta" style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-primary" onclick="saveRoomSettings()">변경 저장</button>
+        <button class="btn-disband" onclick="disbandRoom()">🔥 이 동행 방 폭파(삭제)</button>
+      </div>
     </div>
 
     <!-- ===================== 관심 작품 관리 ===================== -->
@@ -3801,7 +3826,7 @@
     if (tabIds.includes(id)) document.querySelector('.tab[data-screen="'+id+'"]').classList.add('active');
     // 풀스크린 화면: 탭바 숨김 (그룹챗은 입력바 표시)
     const isChat = id === 'screen-groupchat' || id === 'screen-dm';
-    const noTab = isChat || id === 'screen-post-create' || id === 'screen-info-write' || id === 'screen-sell' || id === 'screen-myproducts' || id === 'screen-report' || id === 'screen-search' || id === 'screen-notif' || id === 'screen-product' || id === 'screen-checkout' || id === 'screen-checkin' || id === 'screen-onboarding' || id === 'screen-auth' || id === 'screen-duk-detail' || id === 'screen-terms' || id === 'screen-privacy' || id.startsWith('screen-set-');
+    const noTab = isChat || id === 'screen-post-create' || id === 'screen-info-write' || id === 'screen-room-settings' || id === 'screen-sell' || id === 'screen-myproducts' || id === 'screen-report' || id === 'screen-search' || id === 'screen-notif' || id === 'screen-product' || id === 'screen-checkout' || id === 'screen-checkin' || id === 'screen-onboarding' || id === 'screen-auth' || id === 'screen-duk-detail' || id === 'screen-terms' || id === 'screen-privacy' || id.startsWith('screen-set-');
     document.querySelector('.tabbar').style.display = noTab ? 'none' : 'flex';
     document.getElementById('chatInputBar').style.display = isChat ? 'flex' : 'none';
     if (isChat) { setTimeout(scrollChatBottom, 0); }
@@ -4056,6 +4081,9 @@
     } else if (n.type === 'companion_left') {
       ico = '<div class="notif-ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg></div>';
       text = '<b>' + htmlesc(ev) + '</b> 동행에서 한 명이 나갔어요 · 자리 1개가 다시 열렸어요';
+    } else if (n.type === 'companion_disbanded') {
+      ico = '<div class="notif-ico amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg></div>';
+      text = '<b>' + htmlesc(ev) + '</b> 동행 방이 방장에 의해 폭파됐어요 🔥';
     } else {
       ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>';
       text = '새 알림이 도착했어요';
@@ -5923,8 +5951,73 @@
   let CUR_ROOM = null, CUR_CHANNEL = null, CUR_ROOM_OWNER = false;
   function groupRoomMenu() {
     if (!CUR_ROOM) return;
-    if (CUR_ROOM_OWNER) { toast('방장은 나갈 수 없어요 (행사 종료 후 자동 폭파)'); return; }
+    if (CUR_ROOM_OWNER) { showActions('동행 방 (방장)', [{ label: '동행 방 설정 · 일정/정원/폭파', fn: () => openRoomSettings(CUR_ROOM) }]); return; }
     showActions('동행 방', [{ label: '방 나가기', danger: true, fn: leaveRoom }]);
+  }
+  /* ---------- 동행 방 설정 (방장: 일정·정원 변경 / 폭파) ---------- */
+  let RS = { room: null, postId: null, filled: 1, eventId: null, meetKey: null, cap: 2 };
+  async function openRoomSettings(roomId) {
+    const u = await requireLogin(); if (!u || !roomId) return;
+    try {
+      const { data } = await sb.from('companion_posts').select('id, event_id, capacity, filled, meet_at, author_id').eq('room_id', roomId).maybeSingle();
+      if (!data) { toast('방 정보를 찾을 수 없어요'); return; }
+      if (data.author_id !== u.id) { toast('방장만 설정할 수 있어요'); return; }
+      RS = { room: roomId, postId: data.id, filled: data.filled || 1, eventId: data.event_id, cap: data.capacity || 2, meetKey: null };
+      const ev = EV_BY_ID['db' + data.event_id];
+      document.getElementById('rsEvent').textContent = ev ? ev.t : '동행';
+      // 만나는 날
+      const chips = document.getElementById('rsMeetChips'), field = document.getElementById('rsMeetDayField');
+      const days = ev ? eventDayKeys(ev) : [];
+      const curKey = data.meet_at ? calKey(new Date(data.meet_at)) : (days[0] || null);
+      RS.meetKey = curKey;
+      if (days.length <= 1) { field.style.display = 'none'; }
+      else { field.style.display = ''; chips.innerHTML = days.map(k => '<span class="gd-chip' + (k === curKey ? ' on' : '') + '" data-k="' + k + '" onclick="setRsDay(\'' + k + '\')">' + fmtDayKey(k) + '</span>').join(''); }
+      // 집합 시간
+      const t = document.getElementById('rsMeetTime');
+      if (t) { if (data.meet_at) { const m = new Date(data.meet_at); t.value = String(m.getHours()).padStart(2, '0') + ':' + String(m.getMinutes()).padStart(2, '0'); } else t.value = '10:00'; }
+      // 모집 인원 (현재 인원 미만 비활성)
+      document.getElementById('rsCapHint').textContent = '현재 ' + RS.filled + '명 참여 중';
+      const caps = [2, 3, 4, 5, 6, 8]; let cg = '';
+      caps.forEach(n => { const dis = n < RS.filled; cg += '<span class="gd-chip' + (n === RS.cap ? ' on' : '') + (dis ? ' off' : '') + '"' + (dis ? '' : ' onclick="setRsCap(' + n + ')"') + '>' + n + '명</span>'; });
+      cg += '<span class="gd-chip' + (RS.cap >= 50 ? ' on' : '') + '" onclick="setRsCap(99)">제한 없음</span>';
+      document.getElementById('rsCapChips').innerHTML = cg;
+      goto('screen-room-settings');
+    } catch (e) { toast('불러오기 실패: ' + (e.message || e)); }
+  }
+  function setRsDay(k) { RS.meetKey = k; document.querySelectorAll('#rsMeetChips .gd-chip').forEach(c => c.classList.toggle('on', c.dataset.k === k)); }
+  function setRsCap(n) {
+    RS.cap = n;
+    document.querySelectorAll('#rsCapChips .gd-chip').forEach(c => {
+      const unlim = c.textContent.indexOf('제한') >= 0;
+      c.classList.toggle('on', unlim ? n >= 50 : parseInt(c.textContent) === n);
+    });
+  }
+  async function saveRoomSettings() {
+    if (!RS.room) return;
+    const u = await requireLogin(); if (!u) return;
+    const t = document.getElementById('rsMeetTime'); const timeStr = (t && t.value) ? t.value : '10:00';
+    const meetAt = RS.meetKey ? (keyToIso(RS.meetKey) + 'T' + timeStr + ':00+09:00') : null;
+    try {
+      const { error } = await sb.rpc('update_companion_room', { p_room: RS.room, p_capacity: RS.cap, p_meet_at: meetAt });
+      if (error) throw error;
+      toast('동행 방 설정을 저장했어요 ✨');
+      back(); loadCompanionFeed();
+    } catch (e) { toast('저장 실패: ' + (e.message || e)); }
+  }
+  async function disbandRoom() {
+    if (!RS.room) return;
+    if (!confirm('이 동행 방을 폭파(삭제)할까요?\n참여자 전원의 접근이 차단되고 모집이 마감돼요. 되돌릴 수 없어요.')) return;
+    const u = await requireLogin(); if (!u) return;
+    try {
+      const { error } = await sb.rpc('disband_room', { p_room: RS.room });
+      if (error) throw error;
+      if (CUR_CHANNEL) { try { sb.removeChannel(CUR_CHANNEL); } catch (e) {} CUR_CHANNEL = null; }
+      MY_ROOMS = MY_ROOMS.filter(r => r.room_id !== RS.room);
+      CUR_ROOM = null; RS.room = null;
+      renderMyCompanions(); refreshCompanionBadge();
+      toast('동행 방을 폭파했어요 🔥');
+      goTab2('screen-companions'); loadCompanionFeed();
+    } catch (e) { toast('폭파 실패: ' + (e.message || e)); }
   }
   async function leaveRoom() {
     if (!CUR_ROOM) return;
