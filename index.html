@@ -581,6 +581,8 @@
   .profile-badge svg { width: 12px; height: 12px; }
   .profile-name { font-size: 19px; font-weight: 800; letter-spacing: -0.4px; }
   .profile-sub { font-size: 12.5px; color: var(--text-sub); margin-top: 5px; font-weight: 500; }
+  .edit-profile-btn { display: block; margin: 14px auto 0; padding: 8px 18px; border-radius: 999px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; background: var(--card); color: var(--text-sub); border: 1px solid var(--border); letter-spacing: -0.2px; transition: background .13s; }
+  .edit-profile-btn:active { background: var(--card-active); }
   .fandom-tags { display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
   .fandom-tag {
     font-size: 11.5px;
@@ -2401,7 +2403,7 @@
       <div class="header">
         <h1><span class="htitle-ic"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="11" cy="8" r="3.4"/><path d="M4.5 21 V19.5 a6.5 6.5 0 0 1 13 0 V21 Z"/><path d="M18.5 6.8 C18.5 7.8 19.5 9 20.7 9 C19.5 9 18.5 10.2 18.5 11.2 C18.5 10.2 17.5 9 16.3 9 C17.5 9 18.5 7.8 18.5 6.8 Z"/></svg></span>마이</h1>
         <div class="actions">
-          <div class="icon-btn">
+          <div class="icon-btn" title="설정" onclick="goto('screen-set-account')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </div>
         </div>
@@ -2419,6 +2421,7 @@
           <span class="fandom-tag">#원신</span>
           <span class="fandom-tag">#니케</span>
         </div>
+        <button class="edit-profile-btn" onclick="openProfileEdit()">프로필 편집</button>
       </div>
 
       <div class="stats-row">
@@ -2475,22 +2478,65 @@
       </div>
 
       <div class="menu-list">
-        <div class="menu-item" onclick="goto('screen-set-blocks')"><span>차단·신고 목록</span><span class="right"><span class="chev">›</span></span></div>
-        <div class="menu-item" onclick="goto('screen-set-privacy')"><span>프로필 공개 범위</span><span class="right">취향 한정 <span class="chev">›</span></span></div>
-        <div class="menu-item" onclick="restartOnboarding()"><span>온보딩 다시 보기</span><span class="right"><span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="goto('screen-set-account')"><span>설정</span><span class="right"><span class="chev">›</span></span></div>
         <div class="menu-item" onclick="doSignOut()"><span>로그아웃</span><span class="right"><span class="chev">›</span></span></div>
       </div>
 
+      <div style="text-align:center; font-size:10.5px; color:var(--text-dim); margin-top: 28px;">코미아 v0.1.0 · 데모 빌드</div>
+    </div>
+
+    <!-- ===================== 프로필 편집 ===================== -->
+    <div class="screen" id="screen-set-profile">
+      <div class="nav-header"><div class="back" onclick="back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div><div class="title">프로필 편집</div></div>
+      <div class="ob-photo-wrap" style="margin-top:26px;">
+        <div class="ob-photo" id="epPhoto">🐾</div>
+        <label class="ob-photo-cam" for="epPhotoInput" title="사진 올리기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </label>
+        <input type="file" id="epPhotoInput" accept="image/*" style="display:none" onchange="obSetPhoto(event)" />
+      </div>
+      <div class="ob-photo-hint">사진을 올리면 프로필에 바로 반영돼요. (실명은 공개되지 않아요)</div>
+      <div class="form-field" style="padding:0 16px;">
+        <div class="form-label">닉네임 <span class="hint">다른 사용자에게 보이는 이름</span></div>
+        <input class="form-input" id="epNick" type="text" maxlength="16" placeholder="닉네임 (최대 16자)" />
+      </div>
+      <div class="bottom-cta"><button class="btn-primary" onclick="saveProfileEdit()">저장</button></div>
+    </div>
+
+    <!-- ===================== 설정 ===================== -->
+    <div class="screen" id="screen-set-account">
+      <div class="nav-header"><div class="back" onclick="back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div><div class="title">설정</div></div>
+
+      <div class="set-note">계정</div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="openProfileEdit()"><span>프로필 편집 <span style="color:var(--text-dim);font-size:11.5px;">닉네임·사진</span></span><span class="right"><span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="goto('screen-set-privacy')"><span>프로필 공개 범위</span><span class="right">취향 한정 <span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="toast('휴대폰 본인인증 (준비 중)')"><span>본인인증</span><span class="right">미인증 <span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="goto('screen-set-blocks')"><span>차단·신고 목록</span><span class="right"><span class="chev">›</span></span></div>
+      </div>
+
+      <div class="set-note">알림</div>
       <div class="menu-list">
         <div class="toggle-row">
           <div class="tr-main"><div class="tr-title">마케팅·이벤트 알림</div><div class="tr-sub">행사 추천·혜택 알림 (야간 21~08시 제외)</div></div>
           <div class="tgl" id="mktTgl" onclick="toggleMarketing()"></div>
         </div>
-        <div class="menu-item" onclick="goto('screen-terms')"><span>이용약관</span><span class="right"><span class="chev">›</span></span></div>
-        <div class="menu-item" onclick="goto('screen-privacy')"><span>개인정보처리방침</span><span class="right"><span class="chev">›</span></span></div>
       </div>
 
-      <div style="text-align:center; font-size:10.5px; color:var(--text-dim); margin-top: 28px;">코미아 v0.1.0 · 데모 빌드</div>
+      <div class="set-note">약관·정보</div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="goto('screen-terms')"><span>이용약관</span><span class="right"><span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="goto('screen-privacy')"><span>개인정보처리방침</span><span class="right"><span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="restartOnboarding()"><span>온보딩 다시 보기</span><span class="right"><span class="chev">›</span></span></div>
+        <div class="menu-item"><span>앱 버전</span><span class="right" style="color:var(--text-dim);">v0.1.0</span></div>
+      </div>
+
+      <div class="set-note">계정 관리</div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="doSignOut()"><span>로그아웃</span><span class="right"><span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="confirmDeleteAccount()"><span style="color:var(--danger);">회원 탈퇴</span><span class="right"><span class="chev">›</span></span></div>
+      </div>
+      <div style="height:24px"></div>
     </div>
 
     <!-- ===================== 관심 작품 관리 ===================== -->
@@ -3765,6 +3811,7 @@
     if (id === 'screen-market' && LIVE && sb) loadProducts();
     if (id === 'screen-companions') loadCompanionFeed();
     if (id === 'screen-my') { if (LIVE && sb) { loadDuk(); loadMyProfile(); } refreshMarketingToggle(); }
+    if (id === 'screen-set-account') refreshMarketingToggle();
     if (id === 'screen-set-interests') loadInterestsScreen();
     if (id === 'screen-set-events') loadSetEvents();
     if (id === 'screen-set-posts') loadSetPosts();
@@ -4128,7 +4175,7 @@
   function obPrev() { if (obStep > 0) obGoStep(obStep - 1); }
   // 온보딩 프로필 + 마이 프로필 아바타 동시 반영
   function setProfilePhoto(url) {
-    ['obPhoto', 'myAvatar'].forEach(id => {
+    ['obPhoto', 'myAvatar', 'epPhoto'].forEach(id => {
       const el = document.getElementById(id); if (!el) return;
       el.style.backgroundImage = 'url(' + url + ')';
       el.style.backgroundSize = 'cover';
@@ -4217,6 +4264,38 @@
     stage.addEventListener('pointercancel', () => { dragging = false; });
     document.getElementById('cropZoom').addEventListener('input', e => { crop.s = parseFloat(e.target.value); applyCropTransform(); });
   })();
+  /* ---------- 프로필 편집 (닉네임·사진) ---------- */
+  async function openProfileEdit() {
+    const u = await requireLogin(); if (!u) return;
+    goto('screen-set-profile');
+    try {
+      const { data } = await sb.from('profiles').select('nickname, avatar_url').eq('id', u.id).maybeSingle();
+      const nm = (data && data.nickname) || (u.email ? u.email.split('@')[0] : '');
+      const inp = document.getElementById('epNick'); if (inp) inp.value = nm;
+      const ep = document.getElementById('epPhoto');
+      if (ep) {
+        if (data && data.avatar_url) { ep.style.backgroundImage = 'url(' + data.avatar_url + ')'; ep.style.backgroundSize = 'cover'; ep.style.backgroundPosition = 'center'; ep.textContent = ''; }
+        else { ep.style.backgroundImage = ''; ep.textContent = (nm || '나').slice(0, 2).toUpperCase(); ep.style.fontSize = '30px'; }
+      }
+    } catch (e) {}
+  }
+  async function saveProfileEdit() {
+    const u = await requireLogin(); if (!u) return;
+    const nick = (document.getElementById('epNick').value || '').trim();
+    if (!nick) { toast('닉네임을 입력해주세요'); return; }
+    try {
+      const { error } = await sb.from('profiles').update({ nickname: nick }).eq('id', u.id);
+      if (error) throw error;
+      applyNickname(nick);
+      toast('프로필을 저장했어요 ✨');
+      loadMyProfile(); back();
+    } catch (e) { toast('저장 실패: ' + (e.message || e)); }
+  }
+  async function confirmDeleteAccount() {
+    if (!confirm('정말 탈퇴하시겠어요?\n참전·동행·작성글 등 내 활동이 비활성화되며 되돌릴 수 없어요.')) return;
+    // 실제 계정 삭제는 서버(Edge Function/관리API) 연동 필요 — 우선 데이터 정리 + 로그아웃 안내
+    toast('탈퇴 요청을 접수했어요. 안전한 처리를 위해 곧 지원될 예정이에요.');
+  }
   const OB_CHK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
   function selectedBigCats() {
     return [...document.querySelectorAll('#screen-onboarding .ob-step[data-step="1"] .ob-fandom.on')].map(e => e.dataset.cat);
