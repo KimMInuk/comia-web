@@ -955,7 +955,10 @@
     word-break: break-word;
   }
   .msg-row.me .bubble { background: var(--accent); color: #fff; border-radius: 15px 4px 15px 15px; }
-  .msg-time { font-size: 10px; color: var(--text-dim); flex-shrink: 0; margin-bottom: 1px; }
+  .msg-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; margin-bottom: 1px; }
+  .msg-row.me .msg-meta { align-items: flex-start; }
+  .msg-unread { font-size: 11px; font-weight: 800; color: #F2A93B; line-height: 1; }
+  .msg-time { font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
   /* 약속 장소 카드 */
   .meet-card {
     margin: 4px 16px 14px 54px;
@@ -5856,6 +5859,7 @@
     } catch (e) { toast('채팅방 입장 실패: ' + (e.message || e)); }
   }
   async function loadMessages(roomId, uid) {
+    ROOM_VIEWER = uid; CHAT_BOX = 'chatMsgs'; CHAT_ROOM = roomId;
     const box = document.getElementById('chatMsgs');
     const { data } = await sb.from('messages').select('id, body, sender_id, created_at, profiles(nickname)').eq('room_id', roomId).order('created_at').limit(200);
     box.innerHTML = '<div class="chat-system">실시간 동행 채팅방이에요 👋</div>' + (data || []).map(m => msgRowHtml(m, m.sender_id === uid)).join('');
@@ -5864,17 +5868,23 @@
   function msgRowHtml(m, mine) {
     const t = new Date(m.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
     const body = (m.body || '').replace(/</g, '&lt;');
-    if (mine) return '<div class="msg-row me"><div class="msg-content"><div class="msg-line"><div class="bubble">' + body + '</div><span class="msg-time">' + t + '</span></div></div></div>';
+    const n = unreadCount(m);
+    const meta = '<span class="msg-meta"><span class="msg-unread"' + (n > 0 ? '' : ' style="display:none"') + '>' + (n || '') + '</span><span class="msg-time">' + t + '</span></span>';
+    const attrs = ' data-created="' + (m.created_at || '') + '" data-sender="' + (m.sender_id || '') + '"';
+    if (mine) return '<div class="msg-row me"' + attrs + '><div class="msg-content"><div class="msg-line"><div class="bubble">' + body + '</div>' + meta + '</div></div></div>';
     const name = ANON_MAP[m.sender_id] || '익명';   // 익명 모토: 닉네임 대신 방별 익명 핸들
     const av = name === '방장' ? '방' : '익';
-    return '<div class="msg-row"><div class="msg-avatar anon">' + av + '</div><div class="msg-content"><div class="msg-name">' + htmlesc(name) + '</div><div class="msg-line"><div class="bubble">' + body + '</div><span class="msg-time">' + t + '</span></div></div></div>';
+    return '<div class="msg-row"' + attrs + '><div class="msg-avatar anon">' + av + '</div><div class="msg-content"><div class="msg-name">' + htmlesc(name) + '</div><div class="msg-line"><div class="bubble">' + body + '</div>' + meta + '</div></div></div>';
   }
   // 방별 익명 핸들 맵(방장 / 익명N, 가입순)
   let ANON_MAP = {};
+  // 카톡식 안읽음: 현재 열린 방의 멤버별 마지막 읽은 시각 + 렌더 컨텍스트
+  let ROOM_READ = [], ROOM_VIEWER = null, CHAT_BOX = 'chatMsgs', CHAT_ROOM = null;
   async function buildAnonMap(roomId) {
-    ANON_MAP = {};
+    ANON_MAP = {}; ROOM_READ = [];
     try {
-      const { data } = await sb.from('chat_members').select('user_id, role, joined_at').eq('room_id', roomId).order('joined_at');
+      const { data } = await sb.from('chat_members').select('user_id, role, joined_at, last_read_at').eq('room_id', roomId).order('joined_at');
+      ROOM_READ = data || [];
       const used = {};
       (data || []).forEach(m => {
         let nm = funName(roomId, m.user_id);
@@ -5883,6 +5893,29 @@
         ANON_MAP[m.user_id] = nm + (m.role === 'owner' ? ' 👑' : '');
       });
     } catch (e) {}
+  }
+  // 이 메시지를 아직 안 읽은 인원수 (보낸이·나 제외, 카톡식)
+  function unreadCount(m) {
+    if (!ROOM_READ.length) return 0;
+    const ts = new Date(m.created_at).getTime();
+    let n = 0;
+    ROOM_READ.forEach(mem => {
+      if (mem.user_id === m.sender_id || mem.user_id === ROOM_VIEWER) return;
+      const lr = mem.last_read_at ? new Date(mem.last_read_at).getTime() : 0;
+      if (lr < ts) n++;
+    });
+    return n;
+  }
+  // 현재 방 멤버 읽음상태 다시 받아 모든 메시지 안읽음 배지 갱신(읽음 실시간 반영)
+  async function refreshReadCounts() {
+    if (!CHAT_ROOM || !LIVE || !sb) return;
+    try { const { data } = await sb.from('chat_members').select('user_id, last_read_at').eq('room_id', CHAT_ROOM); ROOM_READ = data || ROOM_READ; } catch (e) { return; }
+    const box = document.getElementById(CHAT_BOX); if (!box) return;
+    box.querySelectorAll('.msg-row[data-created]').forEach(row => {
+      const n = unreadCount({ created_at: row.dataset.created, sender_id: row.dataset.sender });
+      const u = row.querySelector('.msg-unread');
+      if (u) { if (n > 0) { u.textContent = n; u.style.display = ''; } else { u.style.display = 'none'; } }
+    });
   }
   // 동행 방(모집글) 그룹챗 열기 — 멤버만(RLS). 채팅은 익명 핸들.
   async function openRoomChat(roomId, title) {
@@ -5940,8 +5973,10 @@
         if (!box || CUR_ROOM !== roomId) return;
         box.insertAdjacentHTML('beforeend', msgRowHtml(payload.new, false));
         scrollChatBottom();
-        sb.rpc('mark_room_read', { p_room: roomId }).then(() => refreshCompanionBadge()).catch(() => {});  // 보고 있는 방은 읽음 유지
-      }).subscribe();
+        sb.rpc('mark_room_read', { p_room: roomId }).then(() => { refreshCompanionBadge(); refreshReadCounts(); }).catch(() => {});  // 보고 있는 방은 읽음 유지
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_members', filter: 'room_id=eq.' + roomId }, () => refreshReadCounts())  // 다른 멤버 읽음 → 안읽음수 갱신
+      .subscribe();
   }
 
   // --- 1:1 DM (실연결) ---
@@ -5975,6 +6010,8 @@
     } catch (e) { toast('대화 열기 실패: ' + (e.message || e)); }
   }
   async function loadDmMessages(roomId, uid) {
+    ROOM_VIEWER = uid; CHAT_BOX = 'dmMsgs'; CHAT_ROOM = roomId;
+    try { const { data: mem } = await sb.from('chat_members').select('user_id, last_read_at').eq('room_id', roomId); ROOM_READ = mem || []; } catch (e) { ROOM_READ = []; }
     const box = document.getElementById('dmMsgs');
     const { data } = await sb.from('messages').select('id, body, sender_id, created_at, profiles(nickname)').eq('room_id', roomId).order('created_at').limit(200);
     box.innerHTML = '<div class="chat-system">1:1 대화를 시작해요 👋</div>' + (data || []).map(m => msgRowHtml(m, m.sender_id === uid)).join('');
@@ -5990,8 +6027,10 @@
         if (!box || CUR_DM_ROOM !== roomId) return;
         box.insertAdjacentHTML('beforeend', msgRowHtml(payload.new, false));
         scrollChatBottom();
-        sb.rpc('mark_room_read', { p_room: roomId }).then(() => refreshCompanionBadge()).catch(() => {});  // 보고 있는 방은 읽음 유지
-      }).subscribe();
+        sb.rpc('mark_room_read', { p_room: roomId }).then(() => { refreshCompanionBadge(); refreshReadCounts(); }).catch(() => {});  // 보고 있는 방은 읽음 유지
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_members', filter: 'room_id=eq.' + roomId }, () => refreshReadCounts())
+      .subscribe();
   }
 
   /* ===================== 굿즈마켓 (실연결, 결제 제외) ===================== */
