@@ -4721,6 +4721,8 @@
     '선인장', '다육이', '도토리', '솔방울', '단풍잎', '조약돌', '구름', '무지개', '눈사람', '별똥별'];
   function fnHash(s) { let h = 2166136261; for (let i = 0; i < (s || '').length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
   function funName(roomId, uid) { const h = fnHash((roomId || '') + ':' + (uid || '')); return FUN_ADJ[h % FUN_ADJ.length] + ' ' + FUN_ANI[Math.floor(h / FUN_ADJ.length) % FUN_ANI.length]; }
+  // '로/으로' 조사 자동(받침 없음 또는 ㄹ받침 → 로, 그 외 → 으로)
+  function withRo(name) { const c = (name || '').charCodeAt((name || '').length - 1); if (c >= 0xAC00 && c <= 0xD7A3) { const j = (c - 0xAC00) % 28; return name + ((j === 0 || j === 8) ? '로' : '으로'); } return name + '로'; }
   function funAvatar(name) { return '<div class="avatar anon">' + ((name.split(' ')[1] || name).slice(0, 1)) + '</div>'; }
   function ownerTag(isOwner) { return isOwner ? ' <span class="ownerflag">👑방장</span>' : ''; }
 
@@ -5929,7 +5931,8 @@
     CUR_ROOM_OWNER = !!(MY_ROOMS.find(r => r.room_id === roomId) || {}).is_owner;
     await buildAnonMap(roomId);
     document.getElementById('gcTitle').textContent = title || '동행 방';
-    document.getElementById('gcSub').textContent = '익명 그룹 채팅 · 행사 종료 후 폭파';
+    const myNick = funName(roomId, u.id);
+    document.getElementById('gcSub').textContent = '🐾 ' + withRo(myNick) + (CUR_ROOM_OWNER ? ' 👑' : '') + ' 대화 중 · 종료 후 폭파';
     goto('screen-groupchat');
     await loadMessages(roomId, u.id);
     subscribeRoom(roomId, u.id);
