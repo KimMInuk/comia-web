@@ -1967,11 +1967,11 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
           </div>
           <div class="ob-head" style="padding-top:0;">
-            <div class="t">본인인증 <span style="color:var(--text-sub);font-weight:600;font-size:15px;">(선택)</span></div>
-            <div class="s">사기 없는 거래·동행을 위해 권장해요.<br><b style="color:var(--text);">실명은 공개되지 않고 ✓ 뱃지만 표시</b>됩니다.</div>
+            <div class="t">신뢰와 안전</div>
+            <div class="s">코미아는 <b style="color:var(--text);">GPS 현장 체크인·덕력</b>으로 신뢰를 쌓아요.<br>휴대폰 본인인증은 <b style="color:var(--text);">출시 후 제공</b>될 예정이에요.</div>
           </div>
           <div style="height:20px"></div>
-          <button class="btn-primary" onclick="toast('휴대폰 본인인증')" style="width:100%;">휴대폰으로 본인인증</button>
+          <div style="text-align:center;font-size:13px;color:var(--text-dim);font-weight:600;padding:13px;border:1px dashed var(--border);border-radius:12px;">🔒 본인인증 · 출시 후 제공 예정</div>
         </div>
       </div>
 
@@ -2451,10 +2451,10 @@
       <div class="profile-hero">
         <div class="profile-avatar-wrap">
           <div class="profile-avatar" id="myAvatar">NY</div>
-          <div class="profile-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="profile-badge" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
         </div>
-        <div class="profile-name">@nyaru0</div>
-        <div class="profile-sub">본인인증 완료 · 실명·연락처 비공개</div>
+        <div class="profile-name">@나</div>
+        <div class="profile-sub">실명·연락처 비공개</div>
         <div class="fandom-tags">
           <span class="fandom-tag">#블루아카이브</span>
           <span class="fandom-tag">#원신</span>
@@ -2550,7 +2550,7 @@
       <div class="menu-list">
         <div class="menu-item" onclick="openProfileEdit()"><span>프로필 편집 <span style="color:var(--text-dim);font-size:11.5px;">닉네임·사진</span></span><span class="right"><span class="chev">›</span></span></div>
         <div class="menu-item" onclick="goto('screen-set-privacy')"><span>프로필 공개 범위</span><span class="right">취향 한정 <span class="chev">›</span></span></div>
-        <div class="menu-item" onclick="toast('휴대폰 본인인증 (준비 중)')"><span>본인인증</span><span class="right">미인증 <span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="toast('본인인증은 출시 후 제공될 예정이에요')"><span>본인인증</span><span class="right">출시 후 제공 <span class="chev">›</span></span></div>
         <div class="menu-item" onclick="goto('screen-set-blocks')"><span>차단·신고 목록</span><span class="right"><span class="chev">›</span></span></div>
       </div>
 
@@ -2709,11 +2709,13 @@
         <h3>1. 수집하는 개인정보</h3>
         <table>
           <tr><th>구분</th><th>항목</th><th>목적</th></tr>
-          <tr><td>필수</td><td>이메일, 비밀번호(또는 소셜 로그인 식별자), 닉네임</td><td>회원 식별·인증</td></tr>
-          <tr><td>선택</td><td>관심 작품·분야, 프로필 이미지</td><td>맞춤 행사 추천</td></tr>
+          <tr><td>필수</td><td>이메일·비밀번호 또는 소셜 로그인 식별자(Google·Kakao), 닉네임</td><td>회원 식별·인증</td></tr>
+          <tr><td>선택</td><td>관심 작품·분야, 프로필 이미지, 성별(자가신고)</td><td>맞춤 행사 추천·동행 매칭 참고</td></tr>
+          <tr><td>선택</td><td>업로드 이미지(굿즈 사진·채팅 첨부)</td><td>거래·동행 소통</td></tr>
           <tr><td>선택</td><td>위치정보(현장 체크인 시)</td><td>현장 참여 인증(덕력)</td></tr>
           <tr><td>자동</td><td>기기·접속 로그, 서비스 이용기록</td><td>보안·부정이용 방지</td></tr>
         </table>
+        <p style="color:var(--text-dim);font-size:12px;">※ 성별은 <b>이용자 자가신고</b>이며 본인확인(검증)된 정보가 아닙니다. 본인인증 기능은 추후 제공 예정입니다.</p>
         <h3>2. 위치정보</h3>
         <p>현장 체크인 시 <b>그 시점의 위치정보</b>를 행사장 반경 확인 목적으로만 이용하며, 인증 결과(참여 여부)만 저장하고 <b>원 좌표는 별도 보관하지 않습니다.</b> 위치정보는 동의한 경우에만 수집되며, 거부해도 체크인 외 기능은 정상 이용할 수 있습니다.</p>
         <h3>3. 보유·이용 기간</h3>
@@ -2723,7 +2725,8 @@
         <h3>4. 제3자 제공 · 처리위탁</h3>
         <ul>
           <li>이용자 동의 없이 제3자에게 제공하지 않습니다(법령에 따른 경우 제외).</li>
-          <li>소셜 로그인: Google 등 — 로그인 인증 목적의 식별정보 처리.</li>
+          <li>소셜 로그인: Google·Kakao — 로그인 인증 목적의 식별정보 처리. (카카오는 닉네임·프로필 이미지만 받으며 이메일은 수집하지 않습니다.)</li>
+          <li>푸시 알림(도입 시): 기기 토큰을 알림 발송 목적에 한해 처리.</li>
         </ul>
         <h3>5. 개인정보의 국외 이전 (중요)</h3>
         <p>서비스는 클라우드 인프라(Supabase)를 이용하며, 회원 정보가 <b>국외(호주, AWS ap-southeast-2 리전)</b>에 저장·처리됩니다.</p>
@@ -4689,7 +4692,7 @@
       const subEl = document.querySelector('#screen-my .profile-sub');
       const badgeEl = document.querySelector('#screen-my .profile-badge');
       if (prof && prof.verified) { if (subEl) subEl.textContent = '본인인증 완료 · 실명·연락처 비공개'; if (badgeEl) badgeEl.style.display = ''; }
-      else { if (subEl) subEl.textContent = '본인인증 전 · 마이에서 인증할 수 있어요'; if (badgeEl) badgeEl.style.display = 'none'; }
+      else { if (subEl) subEl.textContent = '실명·연락처 비공개'; if (badgeEl) badgeEl.style.display = 'none'; }
       // 관심 작품 태그
       const { data } = await sb.from('profile_interests').select('big_cat, sub_item').eq('user_id', u.id);
       const cats = new Set(), tagSet = new Set();
