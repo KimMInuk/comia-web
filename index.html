@@ -5478,7 +5478,6 @@
   async function authOAuth(provider) {
     if (!LIVE || !sb) { toast('데모 모드 — 키 연결 후 사용 가능해요'); return; }
     if (provider === 'naver') { toast('네이버 로그인은 준비중이에요'); return; }
-    if (provider === 'kakao') { toast('카카오 로그인은 준비중이에요 (구글 먼저 지원)'); return; }
     if (authMode === 'signup' && !requiredConsentMet()) { toast('필수 약관에 동의해주세요'); return; }
     if (authMode === 'signup') setMarketingPref(marketingConsented());
     const cap = window.Capacitor;
