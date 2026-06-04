@@ -5416,7 +5416,7 @@
       t: row.title, type: row.type, official: !!row.official, region: row.region,
       genres: row.genres || [], ips: row.ip_tags || [], cats: row.cats || [], weekend,
       month, sort, meta, badges, dateStr, venue: row.venue || '', source: row.source_name || '주최',
-      sourceUrl: row.source_url || '', dday, _start: d, _end: e || d,
+      sourceUrl: row.source_url || '', ticketUrl: row.ticket_url || '', dday, _start: d, _end: e || d,
       price: row.price || '', description: row.description || '',
       ini: (((row.ip_tags && row.ip_tags[0]) || row.title || '')).slice(0, 2),
       gradStr: (row.gradient && row.gradient.length >= 2) ? row.gradient.join(',') : null,
@@ -6014,7 +6014,7 @@
     const at = document.getElementById('edAttrib');
     if (at) at.innerHTML = '포스터·이미지 © ' + (ev.source || '주최') + ' — <span class="lnk" onclick="openSource()">출처 보기</span>';
     const tk = document.getElementById('edTicket');
-    if (tk) tk.style.display = ev.sourceUrl ? 'inline-flex' : 'none';  // 링크 있을 때만
+    if (tk) tk.style.display = (ev.ticketUrl || ev.sourceUrl) ? 'inline-flex' : 'none';  // 예매·출처 링크 있을 때만
     // 행사 정보 카드 채우기
     const info = document.getElementById('edInfo');
     if (info) {
@@ -6037,7 +6037,7 @@
   function eir(k, v) { return '<div class="eir"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
   function openSource() { openTicket(); }
   function openTicket() {
-    const u = CUR_EVENT && CUR_EVENT.sourceUrl;
+    const u = CUR_EVENT && (CUR_EVENT.ticketUrl || CUR_EVENT.sourceUrl);   // 예매처 우선, 없으면 출처
     if (!u) { toast('연결할 링크가 없어요'); return; }
     try { window.open(u, '_blank'); } catch (e) { location.href = u; }
   }
