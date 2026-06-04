@@ -4199,6 +4199,33 @@
         toast('🔔 새 알림이 도착했어요');
       }).subscribe();
   }
+  // FCM 푸시 토큰 등록(네이티브만) — 앱 꺼져 있어도 알림 받기. 토큰을 devices 테이블에 저장.
+  let PUSH_LISTENERS = false;
+  async function registerPush() {
+    const cap = window.Capacitor;
+    if (!(cap && cap.isNativePlatform && cap.isNativePlatform())) return;   // 웹은 스킵
+    const PN = cap.Plugins && cap.Plugins.PushNotifications;
+    if (!PN) return;
+    try {
+      if (!PUSH_LISTENERS) {
+        PUSH_LISTENERS = true;
+        PN.addListener('registration', async (token) => {
+          try {
+            const u = await currentUser(); if (!u || !token || !token.value) return;
+            await sb.from('devices').upsert({ user_id: u.id, fcm_token: token.value, platform: 'android', updated_at: new Date().toISOString() }, { onConflict: 'user_id,fcm_token' });
+          } catch (e) { console.warn('[comia] device token 저장 실패', e); }
+        });
+        PN.addListener('registrationError', (e) => console.warn('[comia] push 등록 오류', e));
+        // 앱이 열려 있을 때 푸시 수신 → 알림 배지 갱신
+        PN.addListener('pushNotificationReceived', () => { const b = document.getElementById('notifBadge'); if (b) b.style.display = 'block'; });
+        // 알림 탭 → 알림함으로
+        PN.addListener('pushNotificationActionPerformed', () => { try { goto('screen-notif'); } catch (e) {} });
+      }
+      let perm = await PN.checkPermissions();
+      if (perm.receive !== 'granted') perm = await PN.requestPermissions();
+      if (perm.receive === 'granted') await PN.register();
+    } catch (e) { console.warn('[comia] registerPush', e); }
+  }
   /* ---------- 알림 (데모 폴백) ---------- */
   function readNotif(el) { el.classList.remove('unread'); syncNotifBadge(); }
   async function readAllNotif() {
@@ -5561,6 +5588,7 @@
       if (prof && prof.avatar_url) setProfilePhoto(prof.avatar_url);   // 없으면 닉 이니셜(applyNickname) 유지
       refreshNotifBadge();
       subscribeNotifications();
+      registerPush();   // 네이티브: FCM 토큰 등록(앱 밖 푸시용)
       try { localStorage.setItem('comia_seen', '1'); } catch (e) {}
       loadEvents();   // 계정 전환 시 개인화 데이터(참전·동행·관심사) 다시 로드
       if (forceHome) { goTab2('screen-home'); return; }
