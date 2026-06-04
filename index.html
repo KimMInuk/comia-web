@@ -4378,9 +4378,19 @@
     } catch (e) { toast('저장 실패: ' + (e.message || e)); }
   }
   async function confirmDeleteAccount() {
-    if (!confirm('정말 탈퇴하시겠어요?\n참전·동행·작성글 등 내 활동이 비활성화되며 되돌릴 수 없어요.')) return;
-    // 실제 계정 삭제는 서버(Edge Function/관리API) 연동 필요 — 우선 데이터 정리 + 로그아웃 안내
-    toast('탈퇴 요청을 접수했어요. 안전한 처리를 위해 곧 지원될 예정이에요.');
+    if (!confirm('정말 탈퇴하시겠어요?\n계정과 모든 활동(참전·동행·작성글·채팅·덕력·굿즈)이 영구 삭제되며 되돌릴 수 없어요.')) return;
+    if (!(LIVE && sb)) { toast('데모 모드에서는 탈퇴를 지원하지 않아요'); return; }
+    try {
+      const { error } = await sb.rpc('delete_my_account');   // 본인 데이터 정리 + auth 계정 삭제(SECURITY DEFINER)
+      if (error) throw error;
+      try { await sb.auth.signOut(); } catch (e) {}
+      if (NOTIF_CHANNEL) { try { sb.removeChannel(NOTIF_CHANNEL); } catch (e) {} NOTIF_CHANNEL = null; }
+      resetProfileUI();
+      GOING = new Set(); GO_DATES = {}; MY_ROOMS = []; MY_CATS = []; MY_ITEMS = [];
+      try { localStorage.removeItem('comia_seen'); } catch (e) {}
+      toast('탈퇴가 완료됐어요. 그동안 이용해주셔서 감사합니다.');
+      showScreen('screen-auth');
+    } catch (e) { toast('탈퇴 처리 실패: ' + (e.message || e)); }
   }
   const OB_CHK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
   function selectedBigCats() {
@@ -4560,41 +4570,58 @@
       document.getElementById('scrollArea').scrollTop = 0;
     }, 700 * (steps.length + 1));
   }
+  // 위치 획득: 네이티브(Capacitor Geolocation, 런타임 권한) 우선 → 웹은 navigator.geolocation 폴백
+  function getPosition() {
+    const cap = window.Capacitor;
+    const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+    const Geo = cap && cap.Plugins && cap.Plugins.Geolocation;
+    if (native && Geo) {
+      return (async () => {
+        try { await Geo.requestPermissions(); } catch (e) {}
+        const p = await Geo.getCurrentPosition({ enableHighAccuracy: true, timeout: 15000 });
+        return { coords: { latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy } };
+      })();
+    }
+    return new Promise((res, rej) => {
+      if (!navigator.geolocation) { rej(new Error('no geolocation')); return; }
+      navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+    });
+  }
   async function liveCheckin() {
     const u = await requireLogin(); if (!u) return;
     const ev = CUR_EVENT;
     if (!ev || !ev.dbid) { toast('행사 정보가 없어요'); return; }
-    if (!navigator.geolocation) { toast('이 기기는 위치를 지원하지 않아요'); return; }
     document.getElementById('ckIntro').style.display = 'none';
     const prog = document.getElementById('ckProgress'); prog.style.display = 'block';
     const steps = prog.querySelectorAll('.gps-step');
     steps.forEach(s => s.classList.remove('done'));
     if (steps[0]) steps[0].classList.add('done');
     const fail = (msg) => { prog.style.display = 'none'; toast(msg); resetCheckin(); };
-    navigator.geolocation.getCurrentPosition(async pos => {
-      if (steps[1]) steps[1].classList.add('done');
-      try {
-        const { data, error } = await sb.rpc('verify_checkin', {
-          p_event: ev.dbid, p_lat: pos.coords.latitude, p_lng: pos.coords.longitude, p_accuracy: pos.coords.accuracy || 50
-        });
-        if (error) throw error;
-        if (steps[2]) steps[2].classList.add('done');
-        setTimeout(() => {
-          prog.style.display = 'none';
-          if (data && data.ok) showCheckinResult(data, ev);
-          else if (data && data.reason === 'already_checked_in') { toast('이미 체크인한 행사예요'); resetCheckin(); }
-          else { toast('체크인 결과를 확인할 수 없어요'); resetCheckin(); }
-        }, 450);
-      } catch (e) {
-        const m = ((e && e.message) || '') + '';
-        let f = '체크인 실패';
-        if (/too far/.test(m)) f = '행사장에서 너무 멀어요 (반경 150m 이내에서 체크인)';
-        else if (/no location/.test(m)) f = '이 행사는 좌표 정보가 없어 체크인할 수 없어요';
-        else if (/event window/.test(m)) f = '행사 기간(±1일)에만 체크인할 수 있어요';
-        else if (/auth/.test(m)) f = '로그인이 필요해요';
-        fail(f);
-      }
-    }, () => fail('위치 권한이 필요해요'), { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+    let pos;
+    try { pos = await getPosition(); }
+    catch (e) { fail('위치 권한이 필요해요. 기기 설정에서 위치 접근을 허용해주세요'); return; }
+    if (steps[1]) steps[1].classList.add('done');
+    try {
+      const { data, error } = await sb.rpc('verify_checkin', {
+        p_event: ev.dbid, p_lat: pos.coords.latitude, p_lng: pos.coords.longitude, p_accuracy: pos.coords.accuracy || 50
+      });
+      if (error) throw error;
+      if (steps[2]) steps[2].classList.add('done');
+      setTimeout(() => {
+        prog.style.display = 'none';
+        if (data && data.ok) showCheckinResult(data, ev);
+        else if (data && data.reason === 'already_checked_in') { toast('이미 체크인한 행사예요'); resetCheckin(); }
+        else { toast('체크인 결과를 확인할 수 없어요'); resetCheckin(); }
+      }, 450);
+    } catch (e) {
+      const m = ((e && e.message) || '') + '';
+      let f = '체크인 실패';
+      if (/too far/.test(m)) f = '행사장에서 너무 멀어요 (반경 150m 이내에서 체크인)';
+      else if (/no location/.test(m)) f = '이 행사는 좌표 정보가 없어 체크인할 수 없어요';
+      else if (/event window/.test(m)) f = '행사 기간(±1일)에만 체크인할 수 있어요';
+      else if (/auth/.test(m)) f = '로그인이 필요해요';
+      fail(f);
+    }
   }
   function showCheckinResult(data, ev) {
     document.getElementById('ckResult').style.display = 'block';
@@ -5308,13 +5335,21 @@
     const dateStr = d ? (fmt(d) + (e && e.toDateString() !== d.toDateString() ? '~' + fmt(e) : '')) : '';
     const meta = [dateStr, row.venue].filter(Boolean).join(' · ');
     const dday = d ? Math.ceil((d - new Date()) / 86400000) : null;
+    // '이번 주말' 필터용: 행사 기간이 다가오는 주말(토~일)과 겹치는지 계산
+    let weekend = false;
+    if (d) {
+      const now = new Date(), wd = now.getDay();
+      const sat = new Date(now); sat.setDate(now.getDate() + ((6 - wd + 7) % 7)); sat.setHours(0, 0, 0, 0);
+      const sun = new Date(sat); sun.setDate(sat.getDate() + 1); sun.setHours(23, 59, 59, 999);
+      weekend = (d <= sun) && ((e || d) >= sat);
+    }
     const badges = [];
     if (dday !== null && dday >= 0) badges.push({ t: 'D-' + dday, c: dday <= 14 ? 'accent' : '' });
     if (row.type) badges.push({ t: row.type });
     const ev = {
       _id: 'db' + row.id, dbid: row.id,
       t: row.title, type: row.type, official: !!row.official, region: row.region,
-      genres: row.genres || [], ips: row.ip_tags || [], cats: row.cats || [],
+      genres: row.genres || [], ips: row.ip_tags || [], cats: row.cats || [], weekend,
       month, sort, meta, badges, dateStr, venue: row.venue || '', source: row.source_name || '주최',
       sourceUrl: row.source_url || '', dday, _start: d, _end: e || d,
       price: row.price || '', description: row.description || '',
@@ -5404,6 +5439,14 @@
     const c = document.getElementById('signupConsent');
     if (c) c.style.display = m === 'signup' ? 'block' : 'none';
   }
+  // 테스트 계정 빠른 로그인 블록 노출 여부 — 출시(스토어 제출) 전 false 로 변경하면 DOM에서 제거됨
+  const SHOW_TEST_ACCOUNTS = true;
+  function applyTestAccountVisibility() {
+    if (SHOW_TEST_ACCOUNTS) return;
+    const ta = document.getElementById('testAccounts'); if (ta) ta.remove();
+  }
+  document.addEventListener('DOMContentLoaded', applyTestAccountVisibility);
+  applyTestAccountVisibility();
   // 테스트 계정 빠른 로그인 (개발용; 비번 고정 test1234)
   async function loginTest(email) {
     if (!LIVE || !sb) { toast('데모 모드 — 키 연결 후 사용 가능해요'); return; }
