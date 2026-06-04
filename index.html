@@ -5503,15 +5503,17 @@
     if (authMode === 'signup') setMarketingPref(marketingConsented());
     const cap = window.Capacitor;
     const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+    // 카카오는 이메일 미요청(비즈앱 검수 불필요) — 닉네임·프로필사진만. 익명 펀네임 앱이라 이메일 불필요.
+    const scopes = provider === 'kakao' ? 'profile_nickname profile_image' : undefined;
     try {
       if (native) {
         // 모바일: 시스템 브라우저로 OAuth → 딥링크(com.comia.app://login-callback)로 복귀
-        const { data, error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: 'com.comia.app://login-callback', skipBrowserRedirect: true } });
+        const { data, error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: 'com.comia.app://login-callback', skipBrowserRedirect: true, scopes } });
         if (error) throw error;
         const Browser = cap.Plugins && cap.Plugins.Browser;
         if (Browser) await Browser.open({ url: data.url }); else window.open(data.url, '_blank');
       } else {
-        const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin } });
+        const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin, scopes } });
         if (error) throw error;
       }
     } catch (e) { toast('로그인 오류: ' + (e.message || e)); }
