@@ -1745,6 +1745,12 @@
   .ob-av { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; background: var(--card); border: 2px solid var(--border); cursor: pointer; transition: all 0.15s; }
   .ob-av.on { border-color: var(--accent); background: var(--accent-bg); transform: scale(1.08); }
   .ob-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; color: var(--text); font-size: 15px; font-family: inherit; outline: none; text-align: center; letter-spacing: -0.2px; }
+  .ob-gender { margin-top: 18px; }
+  .og-label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .og-note { font-weight: 500; font-size: 11.5px; color: var(--text-dim); margin-left: 4px; }
+  .og-opts { display: flex; gap: 8px; }
+  .og-opt { flex: 1; text-align: center; padding: 11px 0; border: 1px solid var(--border); border-radius: 11px; font-size: 14px; font-weight: 700; color: var(--text-sub); cursor: pointer; transition: all 0.15s; }
+  .og-opt.on { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
   .ob-input:focus { border-color: var(--accent); }
   .ob-verify { text-align: center; padding-top: 26px; }
   .ob-shield { width: 80px; height: 80px; border-radius: 24px; background: var(--accent-bg); display: grid; place-items: center; margin: 0 auto 20px; color: var(--accent); }
@@ -1944,6 +1950,14 @@
           <div class="ob-av">🟦</div>
         </div>
         <input class="ob-input" id="obNick" type="text" placeholder="닉네임 입력" value="nyaru0" maxlength="16" />
+        <div class="ob-gender" id="obGender">
+          <div class="og-label">성별 <span class="og-note">동행 매칭 참고용 · 비공개 가능</span></div>
+          <div class="og-opts">
+            <div class="og-opt" data-g="female" onclick="setObGender('female')">여성</div>
+            <div class="og-opt" data-g="male" onclick="setObGender('male')">남성</div>
+            <div class="og-opt on" data-g="none" onclick="setObGender('none')">비공개</div>
+          </div>
+        </div>
       </div>
 
       <!-- 4. 본인인증 -->
@@ -4240,6 +4254,11 @@
   /* ---------- 온보딩 ---------- */
   let obStep = 0;
   const OB_LAST = 4;
+  let OB_GENDER = 'none';   // 온보딩 성별(자가신고). none=비공개
+  function setObGender(g) {
+    OB_GENDER = g;
+    document.querySelectorAll('#obGender .og-opt').forEach(o => o.classList.toggle('on', o.dataset.g === g));
+  }
   function obGoStep(n) {
     obStep = n;
     document.querySelectorAll('#screen-onboarding .ob-step').forEach(s => s.classList.toggle('active', +s.dataset.step === n));
@@ -5386,7 +5405,9 @@
       if (!user) return;
       const nickEl = document.getElementById('obNick');
       const nick = nickEl ? nickEl.value.trim() : '';
-      if (nick) await sb.from('profiles').update({ nickname: nick }).eq('id', user.id);
+      const upd = { gender: (OB_GENDER && OB_GENDER !== 'none') ? OB_GENDER : null };   // 자가신고 성별(없으면 비공개)
+      if (nick) upd.nickname = nick;
+      await sb.from('profiles').update(upd).eq('id', user.id);
       const rows = [];
       document.querySelectorAll('#screen-onboarding .ob-step[data-step="1"] .ob-fandom.on')
         .forEach(c => rows.push({ user_id: user.id, big_cat: c.dataset.cat, sub_item: '' }));
