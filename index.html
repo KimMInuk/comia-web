@@ -466,7 +466,7 @@
   .info-line svg { width: 14px; height: 14px; opacity: 0.8; flex-shrink: 0; }
   .hero-attrib { margin-top: 13px; font-size: 10.5px; color: rgba(255,255,255,0.62); font-weight: 500; letter-spacing: -0.2px; }
   .hero-attrib .lnk { text-decoration: underline; cursor: pointer; }
-  .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 0 16px 18px; }
+  .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 0 16px 18px; }
   .quick-action {
     background: var(--card);
     padding: 14px 8px;
@@ -2172,10 +2172,6 @@
         <div class="quick-action" onclick="openMap()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <span class="label">지도·길찾기</span>
-        </div>
-        <div class="quick-action" onclick="goEventGoods()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          <span class="label">굿즈</span>
         </div>
       </div>
 
@@ -6087,23 +6083,6 @@
       { label: '카카오맵', fn: () => openExternal(kakao) },
       { label: '네이버 지도', fn: () => openExternal(naver) },
     ]);
-  }
-  // 굿즈 버튼: 현장 판매 굿즈 정보가 있으면 그 섹션으로, 없으면 중고 거래 마켓(대표 IP 필터)
-  function goEventGoods() {
-    const ev = CUR_EVENT;
-    if (ev && Array.isArray(ev.goods) && ev.goods.filter(g => g && g.name).length) {
-      const box = document.getElementById('edGoods');
-      if (box) {
-        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash');
-        return;
-      }
-    }
-    const ip = (ev && ((ev.ips && ev.ips[0]) || (ev.cats && ev.cats[0]))) || '';
-    MARKET_CAT = ip || '전체';
-    goTab2('screen-market');
-    document.querySelectorAll('#screen-market .chips-row .chip').forEach(c => c.classList.remove('active'));
-    toast(ip ? ("'" + ip + "' 중고 거래") : '굿즈 마켓');
   }
 
   /* ===================== 동행 + 실시간 채팅 (실연결) ===================== */
