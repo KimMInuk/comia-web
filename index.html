@@ -318,8 +318,10 @@
   .event-card:hover { background: var(--card-hover); }
   .event-card:active { background: var(--card-active); transform: scale(0.995); }
   /* 참전 중인 행사: 초록 테두리 + 좌측 액센트 */
-  .event-card.going { border-color: var(--success); box-shadow: inset 4px 0 0 var(--success); }
-  .tag.going-tag { color: #fff; background: var(--success); display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; flex-shrink: 0; }
+  .event-card.going { position: relative; border-color: rgba(52,176,124,0.30); background: rgba(52,176,124,0.055); }
+  .event-card.going::before { content: ''; position: absolute; left: -1px; top: 12px; bottom: 12px; width: 4px; border-radius: 0 4px 4px 0; background: var(--success); }
+  .event-card.going:active { background: rgba(52,176,124,0.10); }
+  .tag.going-tag { color: var(--success); background: rgba(52,176,124,0.14); display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; flex-shrink: 0; }
   .tag.going-tag svg { width: 9px; height: 9px; flex-shrink: 0; }
   /* 행사 탭 범위 토글 (내 행사 / 전체 탐색) */
   .scope-toggle { display: flex; gap: 8px; margin: 0 16px 12px; }
@@ -2052,11 +2054,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </span>
         </div>
-      </div>
-
-      <div class="scope-toggle" id="scopeToggle">
-        <div class="scope-btn active" data-scope="going" onclick="setEventScope('going')">🎌 내 행사</div>
-        <div class="scope-btn" data-scope="all" onclick="setEventScope('all')">전체 탐색</div>
       </div>
 
       <div class="segment" id="eventsViewSeg">
@@ -5123,7 +5120,7 @@
     catch (e) { toast('삭제 실패'); }
   }
   function back() { if (history.length > 1) { history.pop(); showScreen(history[history.length - 1]); } }
-  function goTab(el) { const id = el.dataset.screen; history.length = 0; history.push(id); showScreen(id); }
+  function goTab(el) { const id = el.dataset.screen; if (id === 'screen-events') ONLY_GOING = false; history.length = 0; history.push(id); showScreen(id); }
   function goTab2(id) { history.length = 0; history.push(id); showScreen(id); }
 
   /* ---------- 안드로이드 하드웨어 뒤로가기 (앱 종료 방지) ---------- */
@@ -5707,7 +5704,7 @@
       + '</div></div>';
   }
 
-  let ONLY_GOING = true;    // 행사 탭 기본 = '내 행사'(참전)만. 전체 탐색 토글로 해제
+  let ONLY_GOING = false;   // 행사 탭 기본 = 전체 행사. (내 행사는 홈 '내 행사' 섹션에서)
   let EV_QUERY = '';        // 행사 탭 검색어 (필터와 AND 결합)
   function goMyEvents() {
     setEventScope('going');
@@ -5756,7 +5753,7 @@
     if (ONLY_GOING) {
       const list = EVENTS.filter(ev => GOING.has(ev._id) && eventMatchesQuery(ev, q)).sort((a, b) => a.sort - b.sort);
       cnt.innerHTML = '<span>내 행사 <b>' + list.length + '</b>개' + (q ? ' · “' + htmlesc(q) + '”' : '') + '</span>'
-        + (q ? '<span class="ev-clear" onclick="clearEventSearch()">검색 지우기</span>' : '');
+        + '<span class="ev-clear" onclick="setEventScope(\'all\')">전체 행사 ›</span>';
       box.innerHTML = list.length ? renderEventGroups(list)
         : '<div class="ev-empty"><div class="ee-t">' + (q ? '검색 결과가 없어요' : '아직 참전한 행사가 없어요') + '</div><div class="ee-s">행사에 「+ 참전」하면 여기에 모여요</div><div style="margin-top:14px;"><button class="btn-primary" style="padding:10px 18px;font-size:13px;" onclick="setEventScope(\'all\')">전체 행사 탐색하기</button></div></div>';
       RENDERED = list;
