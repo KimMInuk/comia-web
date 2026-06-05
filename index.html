@@ -1447,15 +1447,17 @@
   .cal-weekday.sat { color: #5AA6EC; }
   .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
   .cal-cell {
-    aspect-ratio: 1 / 1.15;
+    aspect-ratio: 1 / 1.32;
     border-radius: 10px;
-    padding: 7px 0 0;
+    padding: 7px 2px 3px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     cursor: pointer;
     transition: background 0.15s;
+    min-width: 0;
+    overflow: hidden;
   }
   .cal-cell:hover { background: var(--card); }
   .cal-cell.empty { cursor: default; }
@@ -1480,6 +1482,25 @@
   .cal-bar.pt { margin: 0 auto; width: 7px; height: 6px; border-radius: 999px; opacity: 0.55; }
   .cal-bar.pt.mine { opacity: 1; width: 9px; height: 9px; box-shadow: 0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px currentColor; }
   .cal-more { font-size: 9px; font-weight: 700; color: var(--text-dim); line-height: 1; margin-top: 1px; }
+  .cal-evt { width: 100%; font-size: 8.5px; line-height: 1.15; font-weight: 600; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; padding: 0 1px; text-align: left; }
+  .cal-cap { text-align: center; font-size: 11.5px; color: var(--text-dim); font-weight: 500; padding: 16px 16px 4px; }
+  /* 캘린더 날짜별 행사 바텀시트 */
+  .caldsheet-bg { position: absolute; inset: 0; background: rgba(10,16,30,0.42); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 60; }
+  .caldsheet-bg.on { opacity: 1; pointer-events: auto; }
+  .caldsheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; background: var(--bg); border-radius: 20px 20px 0 0; transform: translateY(110%); transition: transform 0.26s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -8px 30px rgba(10,16,30,0.18); max-height: 64%; display: flex; flex-direction: column; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .caldsheet.on { transform: translateY(0); }
+  .caldsheet .cds-grip { width: 40px; height: 4px; background: var(--border); border-radius: 999px; margin: 10px auto 6px; flex-shrink: 0; }
+  .caldsheet .cds-head { font-size: 14px; font-weight: 800; padding: 2px 18px 10px; letter-spacing: -0.2px; flex-shrink: 0; }
+  .caldsheet .cds-head .c { color: var(--accent); margin-left: 5px; font-size: 12.5px; }
+  .caldsheet .cds-body { overflow-y: auto; padding: 0 10px 8px; -webkit-overflow-scrolling: touch; }
+  .cal-row { display: flex; align-items: center; gap: 9px; padding: 10px 8px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
+  .cal-row:active { background: var(--card); }
+  .cr-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+  .cr-time { font-size: 12px; font-weight: 700; color: var(--text-sub); width: 40px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .cr-main { flex: 1; min-width: 0; }
+  .cr-title { font-size: 13px; font-weight: 600; letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cr-venue { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .cr-type { font-size: 10px; font-weight: 700; color: var(--accent); background: var(--accent-bg); padding: 3px 7px; border-radius: 7px; flex-shrink: 0; }
   /* 가는 날 선택(긴 행사) */
   .godates-card { margin: 14px 16px 0; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 15px; }
   .godates-card .gd-t { font-size: 13.5px; font-weight: 800; letter-spacing: -0.3px; display: flex; align-items: center; gap: 6px; }
@@ -2095,7 +2116,7 @@
           </div>
           <div class="cal-days" id="calDays"></div>
         </div>
-        <div class="cal-day-events" id="calDayEvents"></div>
+        <div class="cal-cap">날짜를 탭하면 그 날 행사 목록이 떠요</div>
       </div>
     </div>
 
@@ -3805,6 +3826,14 @@
     <button class="as-btn cancel" onclick="closeActions()">취소</button>
   </div>
 
+  <!-- ===== 캘린더: 날짜별 행사 바텀시트 ===== -->
+  <div class="caldsheet-bg" id="calDayBg" onclick="closeCalDay()"></div>
+  <div class="caldsheet" id="calDaySheet">
+    <div class="cds-grip"></div>
+    <div class="cds-head" id="calDayHead"></div>
+    <div class="cds-body" id="calDayEvents"></div>
+  </div>
+
   <div class="tabbar">
     <div class="tab active" data-screen="screen-home" onclick="goTab(this)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 3 L20.4 10.1 Q21 10.6 21 11.4 V19.5 Q21 21 19.5 21 H4.5 Q3 21 3 19.5 V11.4 Q3 10.6 3.6 10.1 Z M12 10.5 C12 11.95 13.25 13.2 14.7 13.2 C13.25 13.2 12 14.45 12 15.9 C12 14.45 10.75 13.2 9.3 13.2 C10.75 13.2 12 11.95 12 10.5 Z"/></svg>
@@ -3881,6 +3910,7 @@
   function swrMark(key) { _swrTs[key] = Date.now(); }
   function swrBust(key) { _swrTs[key] = 0; }
   function showScreen(id) {
+    if (typeof closeCalDay === 'function') closeCalDay();   // 화면 이동 시 캘린더 시트 닫기
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById(id);
     if (el) el.classList.add('active');
@@ -5131,6 +5161,8 @@
   });
   function hardwareBack() {
     // 1) 열린 오버레이/시트부터 닫기
+    const calBg = document.getElementById('calDayBg');
+    if (calBg && calBg.classList.contains('on')) { closeCalDay(); return; }
     const sheet = document.getElementById('sheetOverlay');
     if (sheet && sheet.classList.contains('show')) { closeFilter(); return; }
     const crop = document.getElementById('cropOverlay');
@@ -7201,6 +7233,9 @@
       let cur = new Date(o.s), n = 0;
       while (cur <= o.e && n < 200) { (CAL_MAP[calKey(cur)] = CAL_MAP[calKey(cur)] || []).push(o.ev); cur.setDate(cur.getDate() + 1); n++; }
     });
+    // 날짜별 목록을 시작시각순 정렬(셀 헤드라인·바텀시트 공용)
+    const _t = ev => (ev._start && !isNaN(ev._start)) ? ev._start.getTime() : 0;
+    Object.keys(CAL_MAP).forEach(k => CAL_MAP[k].sort((a, b) => (_t(a) - _t(b)) || (a.t || '').localeCompare(b.t || '', 'ko')));
     // ② 막대용 세그먼트: 짧은 행사=연속 구간 / 긴 행사=오픈일+내가 가는 날만 점으로
     const segs = [];
     items.forEach(o => {
@@ -7229,6 +7264,7 @@
   let calYear = _todayDt.getFullYear(), calMonth = _todayDt.getMonth() + 1, calSelected = CAL_TODAY;
 
   function setEventView(view) {
+    closeCalDay();
     document.querySelectorAll('#eventsViewSeg .segment-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
     document.getElementById('eventsListView').style.display = view === 'list' ? 'block' : 'none';
     document.getElementById('eventsCalView').style.display = view === 'cal' ? 'block' : 'none';
@@ -7263,25 +7299,53 @@
         } else barHtml += '<div class="cal-bar empty"></div>';
       }
       barHtml += '</div>';
-      const more = bars.filter((b, i) => i >= CAL_MAXLANE && b).length;
-      const moreHtml = more ? '<span class="cal-more">+' + more + '</span>' : '';
-      html += '<div class="' + cls.join(' ') + '" onclick="selectCalDay(\'' + key + '\')"><span class="cal-num">' + d + '</span>' + barHtml + moreHtml + '</div>';
+      const dayEvs = CAL_MAP[key] || [];
+      let hint = '';
+      if (dayEvs.length) {
+        hint = '<div class="cal-evt">' + htmlesc(dayEvs[0].t || '') + '</div>';
+        if (dayEvs.length > 1) hint += '<span class="cal-more">+' + (dayEvs.length - 1) + '</span>';
+      }
+      html += '<div class="' + cls.join(' ') + '" onclick="selectCalDay(\'' + key + '\')"><span class="cal-num">' + d + '</span>' + barHtml + hint + '</div>';
     }
     document.getElementById('calDays').innerHTML = html;
     renderCalDayEvents();
   }
+  function calTime(ev) {
+    const d = ev._start;
+    if (d && !isNaN(d) && (d.getHours() || d.getMinutes()))
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    return '';
+  }
+  function calRowHtml(ev) {
+    const c = ev.gradStr ? ev.gradStr.split(',')[0] : (IP_DOT[ev.ip] || '#5B9BE8');
+    const t = calTime(ev);
+    const venue = ev.venue || ev.region || '';
+    return '<div class="cal-row" onclick="openEv(\'' + ev._id + '\')">'
+      + '<span class="cr-dot" style="background:' + c + '"></span>'
+      + '<span class="cr-time">' + (t || '·') + '</span>'
+      + '<div class="cr-main"><div class="cr-title">' + htmlesc(ev.t) + '</div>'
+      + (venue ? '<div class="cr-venue">' + htmlesc(venue) + '</div>' : '') + '</div>'
+      + (ev.type ? '<span class="cr-type">' + htmlesc(ev.type) + '</span>' : '')
+      + '</div>';
+  }
   function renderCalDayEvents() {
     const evs = CAL_MAP[calSelected] || [];
     const parts = calSelected.split('-');
-    let html = '<div class="cal-day-title">' + parts[1] + '월 ' + parts[2] + '일' + (evs.length ? ' <span class="c">' + evs.length + '건</span>' : '') + '</div>';
-    if (!evs.length) {
-      html += '<div class="cal-empty-day">이 날은 등록된 행사가 없어요</div>';
-    } else {
-      html += evs.map(eventCardHtml).join('');  // 클릭 시 openEv로 상세 매칭
-    }
-    document.getElementById('calDayEvents').innerHTML = html;
+    const head = document.getElementById('calDayHead');
+    if (head) head.innerHTML = parts[1] + '월 ' + parts[2] + '일' + (evs.length ? ' <span class="c">' + evs.length + '건</span>' : '');
+    const body = document.getElementById('calDayEvents'); if (!body) return;
+    body.innerHTML = evs.length ? evs.map(calRowHtml).join('')
+      : '<div class="cal-empty-day">이 날은 등록된 행사가 없어요</div>';
   }
-  function selectCalDay(key) { calSelected = key; renderCalendar(); }
+  function openCalDay() {
+    document.getElementById('calDayBg').classList.add('on');
+    document.getElementById('calDaySheet').classList.add('on');
+  }
+  function closeCalDay() {
+    const bg = document.getElementById('calDayBg'); if (bg) bg.classList.remove('on');
+    const sh = document.getElementById('calDaySheet'); if (sh) sh.classList.remove('on');
+  }
+  function selectCalDay(key) { calSelected = key; renderCalendar(); openCalDay(); }
   function calPrev() { calMonth--; if (calMonth < 1) { calMonth = 12; calYear--; } renderCalendar(); }
   function calNext() { calMonth++; if (calMonth > 12) { calMonth = 1; calYear++; } renderCalendar(); }
 
