@@ -6960,28 +6960,48 @@
   // IP_BASE: 색상 팔레트(큐레이션 컬러)용. 필터 항목 자체는 실제 행사 데이터에서 동적 생성.
   const IP_BASE = [['블루아카이브','#3088E0'],['원신','#F0C45C'],['붕괴: 스타레일','#7A5CE0'],['젠레스 존 제로','#222'],['니케','#EC6196'],['명조','#4FC2A4'],['우마무스메','#7EC04F'],['페그오','#E0884F'],['러브라이브','#E04F8A'],['아이마스','#4F9FE0'],['프로세카','#4FE0C2'],['프리코네','#C04FE0'],['학원아이돌','#E0C04F'],['주술회전','#9B5BC4'],['귀멸의 칼날','#3FA66B'],['체인소맨','#E0603A'],['스파이 패밀리','#C28A3A'],['최애의 아이','#E04F8A'],['YOASOBI','#4F6FC8'],['즛토마요','#5E4FB0'],['Vaundy','#C86E3F'],['Ado','#3A3A3A'],['Eve','#4F86B0'],['요네즈 켄시','#4F8A6E'],['Aimer','#6E5FA0'],['LiSA','#C85E80'],['미세스 그린애플','#5EB05E'],['리그 오브 레전드','#1FA7C9'],['발로란트','#E0413F'],['오버워치','#E08A2C'],['배틀그라운드','#E0B23A'],['메이플스토리','#E0732C']];
   function ipColor(n){ let h=0; for(let i=0;i<n.length;i++) h=(h*31+n.charCodeAt(i))>>>0; return 'hsl(' + (h%360) + ',52%,55%)'; }
-  // 작품(IP) 필터: 실제 행사 데이터에 등장한 IP만 동적 생성(유령 필터 방지). 관심작품 우선 → 행사 많은 순.
+  // 작품(IP) 필터: 실제 행사 데이터의 IP만 동적 생성(유령 방지) + 대분류(분야)별 그룹핑.
+  // 각 IP의 대표 분야 = 그 IP가 등장한 행사들의 cats 최빈값. 그룹 내: 관심작품 ★ 우선 → 행사 많은 순.
   function buildIpFilter(){
     const grid = document.getElementById('ipGrid'); if (!grid) return;
     const on = new Set([...grid.querySelectorAll('.opt.on')].map(o => o.textContent.replace('★','').trim()));
     const colorOf = (n) => { const f = IP_BASE.find(x => x[0] === n); return f ? f[1] : ipColor(n); };
     const mine = new Set((MY_ITEMS || []).map(s => (s || '').trim()).filter(Boolean));
-    // 실제 행사에 등장한 IP 빈도 집계
-    const freq = new Map();
-    (EVENTS || []).forEach(ev => (ev.ips || []).forEach(ip => {
-      ip = (ip || '').trim(); if (!ip || ip === '기타 / 오리지널') return;
-      freq.set(ip, (freq.get(ip) || 0) + 1);
-    }));
-    const names = [...freq.keys()].sort((a, b) => {
-      const ma = mine.has(a), mb = mine.has(b);
-      if (ma !== mb) return ma ? -1 : 1;                 // 관심작품 먼저
-      if (freq.get(b) !== freq.get(a)) return freq.get(b) - freq.get(a);  // 행사 많은 순
-      return a.localeCompare(b, 'ko');
+    const freq = new Map(), catCount = new Map();
+    (EVENTS || []).forEach(ev => {
+      const cats = (ev.cats || []).filter(Boolean);
+      (ev.ips || []).forEach(ip => {
+        ip = (ip || '').trim(); if (!ip || ip === '기타 / 오리지널') return;
+        freq.set(ip, (freq.get(ip) || 0) + 1);
+        let m = catCount.get(ip); if (!m) { m = {}; catCount.set(ip, m); }
+        cats.forEach(c => { m[c] = (m[c] || 0) + 1; });
+      });
     });
-    const items = names.map(n => [n, colorOf(n), mine.has(n)]);
-    items.push(['기타 / 오리지널', '#888', false]);
-    grid.innerHTML = items.map(([n,c,m]) => '<div class="opt' + (on.has(n) ? ' on' : '') + (m ? ' mine' : '') + '"><span class="ico-dot" style="background:' + c + '"></span>' + htmlesc(n) + (m ? ' ★' : '') + '</div>').join('')
-      || '<div class="fsub-empty">표시할 작품이 없어요</div>';
+    const repCat = (ip) => {   // 대표 분야(최빈 cat)
+      const m = catCount.get(ip); if (!m) return '기타';
+      let best = '기타', bn = 0;
+      QUICK_CATS.forEach(c => { if ((m[c] || 0) > bn) { bn = m[c]; best = c; } });
+      return bn > 0 ? best : '기타';
+    };
+    const groups = {};
+    [...freq.keys()].forEach(ip => { const c = repCat(ip); (groups[c] = groups[c] || []).push(ip); });
+    const sortFn = (a, b) => {
+      const ma = mine.has(a), mb = mine.has(b); if (ma !== mb) return ma ? -1 : 1;
+      if (freq.get(b) !== freq.get(a)) return freq.get(b) - freq.get(a);
+      return a.localeCompare(b, 'ko');
+    };
+    let h = '';
+    QUICK_CATS.concat(['기타']).forEach(cat => {
+      const list = (groups[cat] || []).sort(sortFn);
+      if (cat === '기타') list.push('기타 / 오리지널');   // 오리지널은 기타 맨 끝
+      if (!list.length) return;
+      h += '<div class="fsub-head">' + ((CAT_META[cat] || {}).e || '') + ' ' + cat + '</div>';
+      list.forEach(ip => {
+        const m = mine.has(ip);
+        h += '<div class="opt' + (on.has(ip) ? ' on' : '') + (m ? ' mine' : '') + '"><span class="ico-dot" style="background:' + colorOf(ip) + '"></span>' + htmlesc(ip) + (m ? ' ★' : '') + '</div>';
+      });
+    });
+    grid.innerHTML = h || '<div class="fsub-empty">표시할 작품이 없어요</div>';
   }
   function openFilter() {
     buildIpFilter();
