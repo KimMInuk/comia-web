@@ -1447,13 +1447,13 @@
   .cal-weekday.sat { color: #5AA6EC; }
   .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
   .cal-cell {
-    aspect-ratio: 1 / 1.06;
+    aspect-ratio: 1 / 1.42;
     border-radius: 12px;
-    padding: 7px 0 0;
+    padding: 6px 2px 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 3px;
     cursor: pointer;
     transition: background 0.15s;
     min-width: 0;
@@ -1472,10 +1472,12 @@
   .cal-cell.selected .cal-num { color: var(--accent); font-weight: 800; }
   .cal-cell.today.selected .cal-num { background: var(--accent); color: #fff; }
   .cal-cell.iam.selected .cal-num { background: var(--accent); color: #fff; }
-  .cal-dots { display: flex; gap: 4px; min-height: 7px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 0 3px; }
-  .cal-dot { width: 6px; height: 6px; border-radius: 50%; opacity: 0.85; }
-  .cal-dot.my { width: 7px; height: 7px; opacity: 1; box-shadow: 0 0 0 1.5px var(--bg), 0 0 0 3px currentColor; }
-  .cal-dot-more { font-size: 8.5px; font-weight: 800; color: var(--text-dim); line-height: 1; }
+  .cal-mthumb { width: 26px; height: 26px; border-radius: 7px; overflow: hidden; position: relative; display: grid; place-items: center; flex-shrink: 0; }
+  .cal-mthumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cal-mthumb span { font-size: 8.5px; font-weight: 800; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,0.3); letter-spacing: -0.3px; }
+  .cal-mthumb.my { box-shadow: 0 0 0 2px var(--accent); }
+  .cal-evt { width: 100%; font-size: 8.5px; line-height: 1.12; font-weight: 600; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .cal-cell.iam .cal-evt { color: var(--accent-dim); font-weight: 700; }
   /* 연속 막대(다중일 행사) */
   .cal-bars { width: 100%; display: flex; flex-direction: column; gap: 2px; margin-top: 2px; padding: 0; }
   .cal-bar { height: 5px; margin: 0 -1.5px; }      /* 음수 마진으로 셀 간 2px 갭을 메워 연속 */
@@ -7273,6 +7275,12 @@
     const img = (ev.img && !String(ev.img).startsWith('data:')) ? '<img src="' + ev.img + '" loading="lazy" onerror="this.remove()">' : '';
     return '<div class="' + cls + '" style="background:linear-gradient(135deg,' + grad + ')">' + img + '<span>' + htmlesc(ev.ini || (ev.t || '').slice(0, 2)) + '</span></div>';
   }
+  // 달력 셀용 미니 썸네일(가는 행사면 링)
+  function calMiniThumb(ev, mine) {
+    const grad = ev.gradStr || IP_GRAD[ev.ip] || '#A9B0C0,#7C8498';
+    const img = (ev.img && !String(ev.img).startsWith('data:')) ? '<img src="' + ev.img + '" loading="lazy" onerror="this.remove()">' : '';
+    return '<div class="cal-mthumb' + (mine ? ' my' : '') + '" style="background:linear-gradient(135deg,' + grad + ')">' + img + '<span>' + htmlesc(ev.ini || (ev.t || '').slice(0, 2)) + '</span></div>';
+  }
   // 구글 캘린더 추가용 날짜 문자열(시간 있으면 UTC, 없으면 종일 YYYYMMDD)
   function gcalDates(ev) {
     const pad = n => String(n).padStart(2, '0');
@@ -7353,14 +7361,16 @@
       if (key === CAL_TODAY) cls.push('today');
       if (key === calSelected) cls.push('selected');
       const dayEvs = CAL_MAP[key] || [];
-      if (dayEvs.some(ev => isMyDay(ev, key))) cls.push('iam');   // 내가 가는 날 강조
-      let dots = '';
-      dayEvs.slice(0, 3).forEach(ev => {
-        const c = ev.gradStr ? ev.gradStr.split(',')[0] : (IP_DOT[ev.ip] || '#5B9BE8');
-        dots += '<span class="cal-dot' + (isMyDay(ev, key) ? ' my' : '') + '" style="background:' + c + ';color:' + c + '"></span>';
-      });
-      if (dayEvs.length > 3) dots += '<span class="cal-dot-more">+' + (dayEvs.length - 3) + '</span>';
-      html += '<div class="' + cls.join(' ') + '" onclick="selectCalDay(\'' + key + '\')"><span class="cal-num">' + d + '</span><div class="cal-dots">' + dots + '</div></div>';
+      const goIdx = dayEvs.findIndex(ev => isMyDay(ev, key));
+      if (goIdx >= 0) cls.push('iam');   // 내가 가는 날 강조
+      let inner = '';
+      if (dayEvs.length) {
+        const head = goIdx >= 0 ? dayEvs[goIdx] : dayEvs[0];   // 헤드라인: 내 일정 우선, 없으면 첫 행사
+        inner += calMiniThumb(head, goIdx >= 0)
+          + '<div class="cal-evt">' + htmlesc(head.t || '') + '</div>'
+          + (dayEvs.length > 1 ? '<span class="cal-more">+' + (dayEvs.length - 1) + '</span>' : '');
+      }
+      html += '<div class="' + cls.join(' ') + '" onclick="selectCalDay(\'' + key + '\')"><span class="cal-num">' + d + '</span>' + inner + '</div>';
     }
     document.getElementById('calDays').innerHTML = html;
     renderCalDayEvents();
