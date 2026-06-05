@@ -6931,37 +6931,57 @@
     const on = selected || new Set([...grid.querySelectorAll('.opt.on')].map(o => o.textContent.trim()));
     const catsGroup = sheetGroups()[0];
     const selCats = catsGroup ? [...catsGroup.querySelectorAll('.opt.on')].map(o => o.textContent.trim()) : [];
-    const chosen = selCats.length ? selCats : Object.keys(SUBGENRES);
-    let h = '';
-    chosen.forEach(cat => {
-      const list = SUBGENRES[cat] || []; if (!list.length) return;
-      h += '<div class="fsub-head">' + ((CAT_META[cat] || {}).e || '') + ' ' + cat + '</div>';
-      list.forEach(g => { h += '<div class="opt' + (on.has(g) ? ' on' : '') + '">' + g + '</div>'; });
+    // 실제 행사에 존재하는 장르만 집계(유령 필터 방지). 대분류 선택 시 해당 분야 행사로 제한.
+    const present = new Set();
+    (EVENTS || []).forEach(ev => {
+      if (selCats.length && !(ev.cats || []).some(c => selCats.includes(c))) return;
+      (ev.genres || []).forEach(g => { g = (g || '').trim(); if (g) present.add(g); });
     });
-    // 행사 데이터엔 있는데 SUBGENRES에 없는 장르 → '기타(행사에서)'로 자동 노출
-    const known = new Set(); Object.values(SUBGENRES).forEach(l => l.forEach(g => known.add(g)));
-    const extra = new Set();
-    (EVENTS || []).forEach(ev => (ev.genres || []).forEach(g => { g = (g || '').trim(); if (g && !known.has(g)) extra.add(g); }));
-    if (extra.size) { h += '<div class="fsub-head">✨ 기타(행사에서)</div>'; [...extra].forEach(g => { h += '<div class="opt' + (on.has(g) ? ' on' : '') + '">' + htmlesc(g) + '</div>'; }); }
-    grid.innerHTML = h || '<div class="fsub-empty">관심 분야를 먼저 골라보세요</div>';
+    if (!present.size) {
+      grid.innerHTML = '<div class="fsub-empty">' + (selCats.length ? '이 분야 행사에 표시할 세부 장르가 없어요' : '표시할 세부 장르가 없어요') + '</div>';
+      const he = document.getElementById('genreHint'); if (he) he.textContent = selCats.length ? selCats.length + '개 분야' : '전체';
+      return;
+    }
+    // SUBGENRES 순서로 그룹핑하되, 실제 존재하는 장르만 노출
+    const chosen = selCats.length ? selCats : Object.keys(SUBGENRES);
+    let h = ''; const shown = new Set();
+    chosen.forEach(cat => {
+      const list = (SUBGENRES[cat] || []).filter(g => present.has(g) && !shown.has(g));
+      if (!list.length) return;
+      h += '<div class="fsub-head">' + ((CAT_META[cat] || {}).e || '') + ' ' + cat + '</div>';
+      list.forEach(g => { shown.add(g); h += '<div class="opt' + (on.has(g) ? ' on' : '') + '">' + htmlesc(g) + '</div>'; });
+    });
+    // SUBGENRES에 없지만 행사엔 있는 장르 → 기타
+    const extra = [...present].filter(g => !shown.has(g)).sort((a, b) => a.localeCompare(b, 'ko'));
+    if (extra.length) { h += '<div class="fsub-head">✨ 기타</div>'; extra.forEach(g => { h += '<div class="opt' + (on.has(g) ? ' on' : '') + '">' + htmlesc(g) + '</div>'; }); }
+    grid.innerHTML = h;
     const hint = document.getElementById('genreHint'); if (hint) hint.textContent = selCats.length ? selCats.length + '개 분야' : '전체';
   }
-  // IP(작품) 필터: 기본 큐레이션 + 행사 데이터에 등장한 IP 자동 합집합 ('태깅=등록')
-  const IP_BASE = [['블루아카이브','#3088E0'],['원신','#F0C45C'],['붕괴: 스타레일','#7A5CE0'],['젠레스 존 제로','#222'],['니케','#EC6196'],['명조','#4FC2A4'],['우마무스메','#7EC04F'],['페그오','#E0884F'],['러브라이브','#E04F8A'],['아이마스','#4F9FE0'],['프로세카','#4FE0C2'],['프리코네','#C04FE0'],['학원아이돌','#E0C04F'],['주술회전','#9B5BC4'],['귀멸의 칼날','#3FA66B'],['체인소맨','#E0603A'],['스파이 패밀리','#C28A3A'],['최애의 아이','#E04F8A'],['YOASOBI','#4F6FC8'],['즛토마요','#5E4FB0'],['Vaundy','#C86E3F'],['Ado','#3A3A3A'],['Eve','#4F86B0'],['요네즈 켄시','#4F8A6E'],['Aimer','#6E5FA0'],['LiSA','#C85E80'],['미세스 그린애플','#5EB05E']];
+  // IP_BASE: 색상 팔레트(큐레이션 컬러)용. 필터 항목 자체는 실제 행사 데이터에서 동적 생성.
+  const IP_BASE = [['블루아카이브','#3088E0'],['원신','#F0C45C'],['붕괴: 스타레일','#7A5CE0'],['젠레스 존 제로','#222'],['니케','#EC6196'],['명조','#4FC2A4'],['우마무스메','#7EC04F'],['페그오','#E0884F'],['러브라이브','#E04F8A'],['아이마스','#4F9FE0'],['프로세카','#4FE0C2'],['프리코네','#C04FE0'],['학원아이돌','#E0C04F'],['주술회전','#9B5BC4'],['귀멸의 칼날','#3FA66B'],['체인소맨','#E0603A'],['스파이 패밀리','#C28A3A'],['최애의 아이','#E04F8A'],['YOASOBI','#4F6FC8'],['즛토마요','#5E4FB0'],['Vaundy','#C86E3F'],['Ado','#3A3A3A'],['Eve','#4F86B0'],['요네즈 켄시','#4F8A6E'],['Aimer','#6E5FA0'],['LiSA','#C85E80'],['미세스 그린애플','#5EB05E'],['리그 오브 레전드','#1FA7C9'],['발로란트','#E0413F'],['오버워치','#E08A2C'],['배틀그라운드','#E0B23A'],['메이플스토리','#E0732C']];
   function ipColor(n){ let h=0; for(let i=0;i<n.length;i++) h=(h*31+n.charCodeAt(i))>>>0; return 'hsl(' + (h%360) + ',52%,55%)'; }
+  // 작품(IP) 필터: 실제 행사 데이터에 등장한 IP만 동적 생성(유령 필터 방지). 관심작품 우선 → 행사 많은 순.
   function buildIpFilter(){
     const grid = document.getElementById('ipGrid'); if (!grid) return;
-    const on = new Set([...grid.querySelectorAll('.opt.on')].map(o => o.textContent.trim()));
+    const on = new Set([...grid.querySelectorAll('.opt.on')].map(o => o.textContent.replace('★','').trim()));
     const colorOf = (n) => { const f = IP_BASE.find(x => x[0] === n); return f ? f[1] : ipColor(n); };
-    const seen = new Set(), items = [];
-    // 1) 내 관심 작품 먼저 (관심사 우선 정렬)
-    (MY_ITEMS || []).forEach(ip => { ip = (ip || '').trim(); if (ip && ip !== '기타 / 오리지널' && !seen.has(ip)) { seen.add(ip); items.push([ip, colorOf(ip), true]); } });
-    // 2) 큐레이션 기본
-    IP_BASE.forEach(([n,c]) => { if (!seen.has(n)) { seen.add(n); items.push([n,c,false]); } });
-    // 3) 행사 데이터에 등장한 IP
-    (EVENTS || []).forEach(ev => (ev.ips || []).forEach(ip => { ip = (ip||'').trim(); if (ip && ip !== '기타 / 오리지널' && !seen.has(ip)) { seen.add(ip); items.push([ip, ipColor(ip), false]); } }));
-    items.push(['기타 / 오리지널','#888',false]);
-    grid.innerHTML = items.map(([n,c,mine]) => '<div class="opt' + (on.has(n) ? ' on' : '') + (mine ? ' mine' : '') + '"><span class="ico-dot" style="background:' + c + '"></span>' + htmlesc(n) + (mine ? ' ★' : '') + '</div>').join('');
+    const mine = new Set((MY_ITEMS || []).map(s => (s || '').trim()).filter(Boolean));
+    // 실제 행사에 등장한 IP 빈도 집계
+    const freq = new Map();
+    (EVENTS || []).forEach(ev => (ev.ips || []).forEach(ip => {
+      ip = (ip || '').trim(); if (!ip || ip === '기타 / 오리지널') return;
+      freq.set(ip, (freq.get(ip) || 0) + 1);
+    }));
+    const names = [...freq.keys()].sort((a, b) => {
+      const ma = mine.has(a), mb = mine.has(b);
+      if (ma !== mb) return ma ? -1 : 1;                 // 관심작품 먼저
+      if (freq.get(b) !== freq.get(a)) return freq.get(b) - freq.get(a);  // 행사 많은 순
+      return a.localeCompare(b, 'ko');
+    });
+    const items = names.map(n => [n, colorOf(n), mine.has(n)]);
+    items.push(['기타 / 오리지널', '#888', false]);
+    grid.innerHTML = items.map(([n,c,m]) => '<div class="opt' + (on.has(n) ? ' on' : '') + (m ? ' mine' : '') + '"><span class="ico-dot" style="background:' + c + '"></span>' + htmlesc(n) + (m ? ' ★' : '') + '</div>').join('')
+      || '<div class="fsub-empty">표시할 작품이 없어요</div>';
   }
   function openFilter() {
     buildIpFilter();
