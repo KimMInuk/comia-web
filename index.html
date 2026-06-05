@@ -4198,7 +4198,7 @@
   }
   function notifRowHtml(n, evT) {
     const p = n.payload || {}, ev = (p.event_id && evT[p.event_id]) || '행사', t = relTime(n.created_at), unread = n.read ? '' : ' unread';
-    const tap = p.event_id ? (";openEv('db" + p.event_id + "')") : '';
+    let tap = p.event_id ? (";openEv('db" + p.event_id + "')") : '';
     let ico, text, actions = '';
     if (n.type === 'companion_apply') {
       const nm = p.applicant_id ? funName(p.room_id || p.post_id || '', p.applicant_id) : '익명';   // 익명 펀네임(실명 X)
@@ -4226,6 +4226,10 @@
       const when = dd <= 0 ? '오늘' : (dd === 1 ? '내일' : 'D-' + dd);
       ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div>';
       text = '<b>' + htmlesc(ev) + '</b> ' + when + ' 시작해요! 🎌 준비됐나요?';
+    } else if (n.type === 'notice') {
+      ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l15-5v12L3 13z"/><path d="M11.5 16.5a3 3 0 0 1-5.5-1.6"/></svg></div>';
+      text = (p.title ? '<b>' + htmlesc(p.title) + '</b>' : '코미아 공지') + (p.body ? '<br><span class="muted">' + htmlesc(p.body) + '</span>' : '');
+      if (p.link && /^https?:/i.test(p.link)) tap = ";openExternal('" + p.link + "')";
     } else {
       ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>';
       text = '새 알림이 도착했어요';
