@@ -5667,7 +5667,13 @@
   async function afterLogin(user, forceHome) {
     try {
       resetProfileUI();   // 이전 계정 프사·닉 잔상 제거 후 이 계정 값으로만 채움
-      const { data: prof } = await sb.from('profiles').select('nickname,avatar_url').eq('id', user.id).maybeSingle();
+      const { data: prof } = await sb.from('profiles').select('nickname,avatar_url,banned,ban_reason').eq('id', user.id).maybeSingle();
+      if (prof && prof.banned) {   // 제재(정지)된 계정 차단
+        try { await sb.auth.signOut(); } catch (e) {}
+        resetProfileUI();
+        toast('이용이 제한된 계정이에요' + (prof.ban_reason ? ' · ' + prof.ban_reason : ''));
+        showScreen('screen-auth'); return;
+      }
       const nm = (prof && prof.nickname) || (user.email ? user.email.split('@')[0] : '나');
       applyNickname(nm);
       if (prof && prof.avatar_url) setProfilePhoto(prof.avatar_url);   // 없으면 닉 이니셜(applyNickname) 유지
