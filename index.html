@@ -5422,6 +5422,7 @@
       sourceUrl: row.source_url || '', ticketUrl: row.ticket_url || '', dday, _start: d, _end: e || d,
       price: row.price || '', description: row.description || '',
       lat: (row.lat != null ? Number(row.lat) : null), lng: (row.lng != null ? Number(row.lng) : null),
+      address: row.address || '',
       goods: Array.isArray(row.official_goods) ? row.official_goods : [],
       ini: (((row.ip_tags && row.ip_tags[0]) || row.title || '')).slice(0, 2),
       gradStr: (row.gradient && row.gradient.length >= 2) ? row.gradient.join(',') : null,
@@ -6037,8 +6038,7 @@
     const info = document.getElementById('edInfo');
     if (info) {
       const tags = [].concat(ev.ips || [], ev.genres || []).filter(x => x && x !== '기타 / 오리지널');
-      const _vv = (ev.venue || ev.region || '').trim();
-      const hasPlace = (ev.lat && ev.lng) || (_vv && _vv !== '미정' && _vv !== '서울');
+      const hasPlace = (ev.lat && ev.lng) || (ev.address && ev.address.trim()) || !isVagueVenue(ev.venue || ev.region || '');
       const intro = ev.description ? htmlesc(ev.description)
         : (ev.t + '은(는) ' + (ev.region ? ev.region + ' ' : '') + (ev.venue || '') +
           (ev.dateStr ? ' · ' + ev.dateStr : '') + ' 에 열리는 ' + (ev.type || '행사') + '예요.' +
@@ -6063,20 +6063,31 @@
     if (!u) { toast('연결할 공식·예매 링크가 없어요'); return; }
     openExternal(u);
   }
+  // 장소가 행정구역(서울/마포구 등)뿐이라 지도에서 특정 못 하는지 판정
+  function isVagueVenue(v) {
+    v = (v || '').trim();
+    if (!v || ['미정', '온라인', '추후공개', '미공개', '한국', '전국', '국내'].includes(v)) return true;
+    const REGION = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '경기·인천', '대전·충청', '광주·전라'];
+    const toks = v.split(/[\s·,]+/).filter(Boolean);
+    const isAdmin = t => REGION.includes(t) || REGION.some(r => t.startsWith(r)) || (/(특별시|광역시|특별자치시|특별자치도|시|도|군|구)$/.test(t) && t.length <= 4);
+    return toks.every(isAdmin);   // 모든 토큰이 행정구역이면 모호
+  }
   // 지도·길찾기: 카카오맵/네이버지도 앱으로 딥링크(공식 link URL, API키 불필요).
-  // 좌표 있으면 카카오는 정확한 핀(link/map), 없으면 장소명 검색. 네이버는 장소명 검색.
+  // 정확도: 좌표(핀) > 도로명주소(검색) > 장소명(검색). 행정구역뿐이면 열지 않음.
   function openMap() {
     const ev = CUR_EVENT;
     if (!ev) { toast('행사 정보가 없어요'); return; }
     const venue = (ev.venue || ev.region || '').trim();
+    const addr = (ev.address || '').trim();
     const hasGeo = ev.lat != null && ev.lng != null && !isNaN(ev.lat) && !isNaN(ev.lng);
-    if (!hasGeo && (!venue || venue === '미정' || venue === '서울')) { toast('아직 장소가 정해지지 않았어요'); return; }
+    if (!hasGeo && !addr && isVagueVenue(venue)) { toast('장소가 정확하지 않아 지도를 열 수 없어요'); return; }
     const label = venue || ev.t || '행사장';
-    const enc = encodeURIComponent(label);
+    const query = addr || venue;                 // 주소가 있으면 주소로 검색(명칭 불일치 방지)
+    const encQ = encodeURIComponent(query);
     const kakao = hasGeo
-      ? 'https://map.kakao.com/link/map/' + enc + ',' + ev.lat + ',' + ev.lng
-      : 'https://map.kakao.com/link/search/' + enc;
-    const naver = 'https://map.naver.com/p/search/' + enc;
+      ? 'https://map.kakao.com/link/map/' + encodeURIComponent(label) + ',' + ev.lat + ',' + ev.lng
+      : 'https://map.kakao.com/link/search/' + encQ;
+    const naver = 'https://map.naver.com/p/search/' + encQ;
     showActions(label + ' 지도에서 보기', [
       { label: '카카오맵', fn: () => openExternal(kakao) },
       { label: '네이버 지도', fn: () => openExternal(naver) },
