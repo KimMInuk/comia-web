@@ -2200,11 +2200,6 @@
         </div>
       </div>
 
-      <div class="segment" id="eventsViewSeg">
-        <div class="segment-btn active" data-view="list" onclick="setEventView('list')">리스트</div>
-        <div class="segment-btn" data-view="cal" onclick="setEventView('cal')">캘린더</div>
-      </div>
-
       <div id="eventsListView">
       <!-- 퀵필터: 1탭 토글 (대분류·지역·기간) -->
       <div class="quick-row" id="quickRow"></div>
@@ -2221,7 +2216,14 @@
       <div class="report-hint">찾는 행사가 없나요? <span class="lnk" onclick="openReport()">빠진 행사 알려주기 ›</span></div>
       </div><!-- /eventsListView -->
 
-      <div id="eventsCalView" style="display:none;">
+    </div>
+
+    <!-- ===================== CALENDAR (행사 탭에서 승격) ===================== -->
+    <div class="screen" id="screen-calendar">
+      <div class="header">
+        <h1><span class="htitle-ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1zM4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9H4z"/></svg></span>캘린더</h1>
+      </div>
+      <div id="eventsCalView">
         <div class="cal-header">
           <div class="cal-title" id="calTitle">2026년 7월</div>
           <div class="cal-nav">
@@ -3987,6 +3989,10 @@
       <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M3.4 7 Q3.4 5.4 5 5.4 H19 Q20.6 5.4 20.6 7 V19 Q20.6 20.6 19 20.6 H5 Q3.4 20.6 3.4 19 Z M7 2.8 Q8 2.8 8 3.8 V5.4 H6 V3.8 Q6 2.8 7 2.8 Z M17 2.8 Q18 2.8 18 3.8 V5.4 H16 V3.8 Q16 2.8 17 2.8 Z M12 11 C12 12.4 13.4 14 15 14 C13.4 14 12 15.6 12 17 C12 15.6 10.6 14 9 14 C10.6 14 12 12.4 12 11 Z"/></svg>
       <span class="label">행사</span>
     </div>
+    <div class="tab" data-screen="screen-calendar" onclick="goTab(this)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1zM4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9H4z"/></svg>
+      <span class="label">캘린더</span>
+    </div>
     <div class="tab market-only" data-screen="screen-market" onclick="goTab(this)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 6 H15 V4 L20 8 L15 12 V10 H4.5 Z"/><path d="M19.5 18 H9 V20 L4 16 L9 12 V14 H19.5 Z"/><path d="M12 10.1 C12 11 12.9 11.9 13.8 11.9 C12.9 11.9 12 12.8 12 13.7 C12 12.8 11.1 11.9 10.2 11.9 C11.1 11.9 12 11 12 10.1 Z"/></svg>
       <span class="label">거래</span>
@@ -4064,7 +4070,7 @@
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById(id);
     if (el) el.classList.add('active');
-    const tabIds = ['screen-home','screen-events','screen-market','screen-companions','screen-my'];
+    const tabIds = ['screen-home','screen-events','screen-calendar','screen-market','screen-companions','screen-my'];
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     if (tabIds.includes(id)) document.querySelector('.tab[data-screen="'+id+'"]').classList.add('active');
     // 풀스크린 화면: 탭바 숨김 (그룹챗은 입력바 표시)
@@ -4075,6 +4081,7 @@
     if (isChat) { setTimeout(scrollChatBottom, 0); }
     else { document.getElementById('scrollArea').scrollTop = 0; }
     if (id === 'screen-events') renderEvents();
+    if (id === 'screen-calendar') { if (LIVE && sb && !(typeof EVENTS !== 'undefined' && EVENTS.length)) loadEvents(); else { buildCalMap(); renderCalendar(); } }
     if (id === 'screen-home' && LIVE && sb) refreshCompanionBadge();
     // 탭 재진입: 캐시가 신선하면 즉시 캐시 렌더(네트워크 생략), 아니면 로드.
     if (id === 'screen-market' && LIVE && sb) { if (swrFresh('market') && MARKET.length) renderMarket(); else loadProducts(); }
@@ -5385,7 +5392,7 @@
     rerenderCalIfVisible();
     toast(was ? '참전을 취소했어요' : '내 행사에 추가했어요 🎌');
   }
-  function calVisible() { const c = document.getElementById('eventsCalView'); return c && c.style.display !== 'none' && document.getElementById('screen-events').classList.contains('active'); }
+  function calVisible() { const s = document.getElementById('screen-calendar'); return !!(s && s.classList.contains('active')); }
   function rerenderCalIfVisible() { buildCalMap(); if (calVisible()) renderCalendar(); }
   // 다중일 행사: '내가 가는 날' 선택 카드 (참전 상태에서만)
   function eventDayKeys(ev) {
@@ -5926,7 +5933,7 @@
     document.querySelectorAll('#scopeToggle .scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === s));
     buildCalMap();
     renderEvents();
-    if (document.getElementById('eventsCalView') && document.getElementById('eventsCalView').style.display !== 'none') renderCalendar();
+    if (calVisible()) renderCalendar();
   }
   function eventMatchesQuery(ev, q) {
     if (!q) return true;
@@ -5938,7 +5945,6 @@
     const inp = document.getElementById('evSearch');
     EV_QUERY = (inp ? inp.value : '').trim();
     const x = document.getElementById('evSearchClear'); if (x) x.style.display = EV_QUERY ? 'grid' : 'none';
-    if (EV_QUERY && document.getElementById('eventsCalView') && document.getElementById('eventsCalView').style.display !== 'none') setEventView('list');
     renderEvents();
   }
   function clearEventSearch() {
@@ -6250,7 +6256,7 @@
     refreshCompanionBadge();   // 동행 탭 안읽음 레드닷
     renderEvents();   // 참전 정보 로드됨 → 리스트(내 행사 기본/참여중 배지) 반영
     buildCalMap();   // GO_DATES + 범위 반영 → 캘린더 보이면 다시 그림
-    if (document.getElementById('eventsCalView') && document.getElementById('eventsCalView').style.display !== 'none') renderCalendar();
+    if (calVisible()) renderCalendar();
   }
   // id로 행사 상세 열기 (리스트·홈 공용)
   function openEv(id) {
@@ -7578,12 +7584,8 @@
   const CAL_TODAY = calKey(_todayDt);
   let calYear = _todayDt.getFullYear(), calMonth = _todayDt.getMonth() + 1, calSelected = CAL_TODAY;
 
-  function setEventView(view) {
-    closeCalDay();
-    document.querySelectorAll('#eventsViewSeg .segment-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
-    document.getElementById('eventsListView').style.display = view === 'list' ? 'block' : 'none';
-    document.getElementById('eventsCalView').style.display = view === 'cal' ? 'block' : 'none';
-    if (view === 'cal') renderCalendar();
+  function setEventView() {   // 캘린더가 독립 탭으로 승격됨 — 행사 화면은 리스트 전용(캘린더 DOM은 screen-calendar 소유)
+    const lv = document.getElementById('eventsListView'); if (lv) lv.style.display = 'block';
   }
   function renderCalendar() {
     document.getElementById('calTitle').textContent = calYear + '년 ' + calMonth + '월';
@@ -7708,7 +7710,7 @@
     const id = (document.querySelector('.screen.active') || {}).id || '';
     if (!LIVE || !sb) return;   // 스피너로 충분 — 토스트 안 띄움
     try {
-      if (id === 'screen-home' || id === 'screen-events' || id === 'screen-companions') await loadEvents();
+      if (id === 'screen-home' || id === 'screen-events' || id === 'screen-calendar' || id === 'screen-companions') await loadEvents();
       else if (id === 'screen-market') await loadProducts();
       else if (id === 'screen-my') { await loadDuk(); }
       else if (id === 'screen-notif') await loadNotifications();
