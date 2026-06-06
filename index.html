@@ -456,6 +456,21 @@
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }
+  .month-divider.now {
+    color: var(--success);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .month-divider.now::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success); box-shadow: 0 0 0 3px rgba(70,200,120,0.18);
+  }
+  .past-entry {
+    display: block; width: calc(100% - 32px); margin: 18px 16px 8px;
+    padding: 13px; border: 1px dashed var(--line); border-radius: 12px;
+    background: transparent; color: var(--text-dim); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background .15s, color .15s;
+  }
+  .past-entry:active { background: var(--card2, rgba(255,255,255,0.04)); color: var(--text); }
   /* ---------- 행사 상세 ---------- */
   .detail-hero {
     margin: 0 16px 14px;
@@ -5847,6 +5862,27 @@
     PAST_EVENTS = out; PAST_LOADING = false;
     return out;
   }
+  // 행사 상태: 0=진행 중, 1=예정(미래), 2=종료
+  function evPhase(ev) {
+    if (ev._past) return 2;
+    const t = dayStart(new Date());
+    const s = ev._start ? dayStart(ev._start) : null;
+    const e = (ev._end && !isNaN(ev._end)) ? dayStart(ev._end) : s;
+    if (!s) return 1;
+    if (e < t) return 2;
+    if (s <= t) return 0;
+    return 1;
+  }
+  function pastEntryHtml() {
+    return '<button class="past-entry" onclick="showPastEvents()">🕓 지난 행사 보기 ›</button>';
+  }
+  function showPastEvents() {
+    ONLY_GOING = false;
+    curFilter.period = ['지난 행사'];
+    syncSheetToFilter(curFilter);
+    renderEvents();
+    const sc = document.getElementById('screen-events'); if (sc) sc.scrollTop = 0;
+  }
   function renderEvents() {
     renderQuickChips();
     updateFilterDot();
@@ -5871,33 +5907,53 @@
         loadPastEvents().then(() => { if (curFilter.period.includes('지난 행사')) renderEvents(); });
         return;
       }
-      const plist = PAST_EVENTS.filter(ev => eventMatches(ev, curFilter) && eventMatchesQuery(ev, q)).sort((a, b) => b.sort - a.sort);
+      // 종료된 행사: 아직 archive 안 된 published(종료일<오늘) + status='past' 합치고 중복 제거
+      const seen = new Set();
+      const ended = EVENTS.filter(ev => evPhase(ev) === 2);
+      const fNoPeriod = Object.assign({}, curFilter, { period: [] });
+      const plist = ended.concat(PAST_EVENTS)
+        .filter(ev => { if (seen.has(ev._id)) return false; seen.add(ev._id); return true; })
+        .filter(ev => eventMatches(ev, fNoPeriod) && eventMatchesQuery(ev, q))
+        .sort((a, b) => b.sort - a.sort);
       cnt.innerHTML = '<span>지난 행사 <b>' + plist.length + '</b>개' + (q ? ' · “' + htmlesc(q) + '”' : '') + '</span><span class="ev-clear" onclick="clearEventFilter()">초기화</span>';
-      box.innerHTML = plist.length ? renderEventGroups(plist)
-        : '<div class="ev-empty"><div class="ee-t">지난 행사가 없어요</div><div class="ee-s">행사가 끝나면 여기에 모여요</div></div>';
+      box.innerHTML = (plist.length ? renderEventGroups(plist)
+        : '<div class="ev-empty"><div class="ee-t">지난 행사가 없어요</div><div class="ee-s">행사가 끝나면 여기에 모여요</div></div>')
+        + '<button class="past-entry" onclick="clearEventFilter()">← 다가오는 행사 보기</button>';
       RENDERED = plist;
       return;
     }
-    const list = EVENTS.filter(ev => eventMatches(ev, curFilter) && eventMatchesQuery(ev, q)).sort((a, b) => a.sort - b.sort);
+    // 기본 목록: 종료된 행사 제외 → 진행 중(종료 임박순) 먼저, 그다음 예정(시작 빠른순)
+    const list = EVENTS.filter(ev => evPhase(ev) !== 2 && eventMatches(ev, curFilter) && eventMatchesQuery(ev, q))
+      .sort((a, b) => {
+        const pa = evPhase(a), pb = evPhase(b);
+        if (pa !== pb) return pa - pb;
+        if (pa === 0) return (a._end - b._end) || (a.sort - b.sort);
+        return a.sort - b.sort;
+      });
     const active = filterActive(curFilter);
     let label;
     if (q && active) label = '“' + htmlesc(q) + '” + 필터 <b>' + list.length + '</b>개';
     else if (q) label = '“' + htmlesc(q) + '” 검색 <b>' + list.length + '</b>개';
     else if (active) label = '필터 결과 <b>' + list.length + '</b>개';
-    else label = '전체 <b>' + list.length + '</b>개 행사';
+    else label = '진행 중·예정 <b>' + list.length + '</b>개 행사';
     cnt.innerHTML = '<span>' + label + '</span>'
       + ((active || q) ? '<span class="ev-clear" onclick="clearEventFilter()">초기화</span>' : '');
     if (!list.length) {
-      box.innerHTML = '<div class="ev-empty"><div class="ee-t">조건에 맞는 행사가 없어요</div><div class="ee-s">검색어·필터를 조정하거나 초기화해 보세요</div></div>';
+      box.innerHTML = '<div class="ev-empty"><div class="ee-t">진행 중·예정 행사가 없어요</div><div class="ee-s">검색어·필터를 조정하거나 초기화해 보세요</div></div>' + pastEntryHtml();
       return;
     }
     RENDERED = list;
-    box.innerHTML = renderEventGroups(list);
+    box.innerHTML = renderEventGroups(list) + pastEntryHtml();
   }
   function renderEventGroups(list) {
-    let html = '', curMonth = '';
+    let html = '', curKey = '';
     list.forEach(ev => {
-      if (ev.month !== curMonth) { curMonth = ev.month; html += '<div class="month-divider">' + curMonth + '</div>'; }
+      const ph = evPhase(ev);
+      const key = ph === 0 ? '__now' : ev.month;
+      if (key !== curKey) {
+        curKey = key;
+        html += '<div class="month-divider' + (ph === 0 ? ' now' : '') + '">' + (ph === 0 ? '진행 중' : ev.month) + '</div>';
+      }
       html += eventCardHtml(ev);
     });
     return html;
