@@ -117,6 +117,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky; top: 0; z-index: 18;            /* 리퀴드 글래스: 스크롤 시 콘텐츠가 뒤로 비침 */
+    background: rgba(255,255,255,0.72);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
+    box-shadow: 0 1px 12px rgba(30,50,90,0.04);
+  }
+  html[data-theme="dark"] .header {
+    background: rgba(14,20,34,0.60);
+    box-shadow: 0 1px 12px rgba(0,0,0,0.28);
   }
   .header h1 {
     font-size: 23px;
@@ -889,9 +898,11 @@
   .filter-sheet {
     position: absolute;
     bottom: 0; left: 0; right: 0;
-    background: var(--bg-elev);
+    background: rgba(255,255,255,0.85);                 /* 리퀴드 글래스 시트 */
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
     border-radius: 24px 24px 0 0;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid rgba(255,255,255,0.6);
     z-index: 50;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -1937,8 +1948,10 @@
   /* 액션 시트(신고·차단 등) */
   .action-sheet-bg { position: absolute; inset: 0; background: rgba(10,16,30,0.42); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 60; }
   .action-sheet-bg.on { opacity: 1; pointer-events: auto; }
-  .action-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; background: var(--bg); border-radius: 20px 20px 0 0; padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); transform: translateY(110%); transition: transform 0.24s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -8px 30px rgba(10,16,30,0.18); }
+  .action-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; background: rgba(255,255,255,0.88); -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%); border-radius: 20px 20px 0 0; padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); transform: translateY(110%); transition: transform 0.24s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -8px 30px rgba(10,16,30,0.18); }
   .action-sheet.on { transform: translateY(0); }
+  html[data-theme="dark"] .filter-sheet { background: rgba(20,27,42,0.85); border-top: 1px solid rgba(255,255,255,0.10); }
+  html[data-theme="dark"] .action-sheet { background: rgba(20,27,42,0.88); }
   .action-sheet .as-title { font-size: 12.5px; font-weight: 600; color: var(--text-sub); text-align: center; padding: 8px 4px 10px; letter-spacing: -0.2px; }
   .as-btn { width: 100%; padding: 15px; border-radius: 13px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; border: none; background: var(--card); color: var(--text); margin-top: 8px; letter-spacing: -0.2px; }
   .as-btn:active { transform: scale(0.985); }
