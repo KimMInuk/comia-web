@@ -5388,8 +5388,8 @@
      SUPABASE_URL / SUPABASE_ANON_KEY 를 채우면 자동으로 '라이브 모드'(실제 DB),
      비우면 '데모 모드'(아래 더미 데이터)로 동작한다.
      anon key 는 클라이언트 공개용(RLS로 보호)이라 앱에 넣어도 안전하다. */
-  const SUPABASE_URL = 'https://oqotrjfsjxbqpuvlnczk.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xb3RyamZzanhicXB1dmxuY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNjUxMTYsImV4cCI6MjA5NTk0MTExNn0.1xywqHu4jxV7z_eAIWy6bOtHYV2XkzG09cZEe2ObHrQ';
+  const SUPABASE_URL = 'https://jjfhreljqpstietjnbju.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZmhyZWxqcXBzdGlldGpuYmp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NDg0NTIsImV4cCI6MjA5NjMyNDQ1Mn0.93Mu-KC2Do9wXXORmgn1VBYb9tztvDTuO4y2E-XG9UA';
   let sb = null, LIVE = false;
   function initSupabase(done) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { console.log('[comia] 데모 모드 (더미 데이터)'); done(); return; }
