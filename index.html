@@ -729,8 +729,11 @@
   /* ---------- 바텀 탭 ---------- */
   .tabbar {
     height: 78px;
-    background: #FFFFFF;            /* 안드로이드 WebView 스크롤 렉 방지: backdrop-filter 제거(불투명) */
-    border-top: 1px solid var(--border);
+    background: rgba(255,255,255,0.70);                  /* 리퀴드 글래스: 반투명 + 블러 */
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
+    border-top: 1px solid rgba(255,255,255,0.55);
+    box-shadow: 0 -8px 24px rgba(30,50,90,0.07);
     display: flex;
     justify-content: space-around;
     align-items: flex-start;
@@ -738,6 +741,18 @@
     bottom: 0; left: 0; right: 0;
     padding: 8px 0 18px;
     z-index: 20;
+  }
+  .tabbar::before {                                       /* 윗면 광택(글래스 엣지) */
+    content: ''; position: absolute; top: 0; left: 14px; right: 14px; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent);
+  }
+  html[data-theme="dark"] .tabbar {
+    background: rgba(18,24,38,0.58);
+    border-top: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.38);
+  }
+  html[data-theme="dark"] .tabbar::before {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
   }
   .tab {
     flex: 1;
