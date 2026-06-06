@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<script>
+  /* 다크모드 조기 적용(FOUC 방지) — CSS 파싱 전에 data-theme 설정 */
+  (function () {
+    try {
+      var p = localStorage.getItem('comia_theme') || 'system';
+      var dark = p === 'dark' || (p === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    } catch (e) {}
+  })();
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>코미아 — 서브컬쳐 행사·동행</title>
@@ -30,6 +40,27 @@
     --danger: #EE6A82;
     --success: #34B07C;
     --chip-bg: #EDF3FA;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0E1422;
+    --bg-elev: #161D2E;
+    --card: #161D2E;
+    --card-hover: #1C2536;
+    --card-active: #232E44;
+    --border: #29334B;
+    --border-soft: #1E2839;
+    --text: #E8ECF5;
+    --text-sub: #9AA6C0;
+    --text-dim: #6B7689;
+    --accent: #6BA6EE;
+    --accent-dim: #5B9BE8;
+    --accent-bg: rgba(91,155,232,0.16);
+    --accent-bg-strong: rgba(91,155,232,0.26);
+    --warn: #EEA84A;
+    --danger: #EE6A82;
+    --success: #3CC089;
+    --chip-bg: #1E2839;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -615,6 +646,9 @@
   .profile-sub { font-size: 12.5px; color: var(--text-sub); margin-top: 5px; font-weight: 500; }
   .edit-profile-btn { display: block; margin: 14px auto 0; padding: 8px 18px; border-radius: 999px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; background: var(--card); color: var(--text-sub); border: 1px solid var(--border); letter-spacing: -0.2px; transition: background .13s; }
   .edit-profile-btn:active { background: var(--card-active); }
+  .theme-seg { display: inline-flex; background: var(--chip-bg); border-radius: 999px; padding: 3px; gap: 2px; }
+  .theme-seg .seg-btn { font-family: inherit; border: none; background: transparent; color: var(--text-sub); font-size: 12px; font-weight: 700; padding: 6px 13px; border-radius: 999px; cursor: pointer; letter-spacing: -0.2px; transition: background .13s, color .13s; }
+  .theme-seg .seg-btn.on { background: var(--accent); color: #fff; }
   .btn-disband { width: 100%; padding: 13px; border-radius: 13px; font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; background: rgba(235,87,87,0.08); color: #EB5757; border: 1px solid rgba(235,87,87,0.35); letter-spacing: -0.2px; transition: background .13s; }
   .btn-disband:active { background: rgba(235,87,87,0.16); }
   .fandom-tags { display: flex; gap: 6px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
@@ -2655,6 +2689,18 @@
         </div>
       </div>
 
+      <div class="set-note">화면</div>
+      <div class="menu-list">
+        <div class="toggle-row" style="align-items:center;">
+          <div class="tr-main"><div class="tr-title">테마</div><div class="tr-sub">시스템 설정을 따르거나 직접 선택해요</div></div>
+          <div class="theme-seg" id="themeSeg">
+            <button class="seg-btn" data-theme="system" onclick="setTheme('system')">시스템</button>
+            <button class="seg-btn" data-theme="light" onclick="setTheme('light')">라이트</button>
+            <button class="seg-btn" data-theme="dark" onclick="setTheme('dark')">다크</button>
+          </div>
+        </div>
+      </div>
+
       <div class="set-note">약관·정보</div>
       <div class="menu-list">
         <div class="menu-item" onclick="goto('screen-terms')"><span>이용약관</span><span class="right"><span class="chev">›</span></span></div>
@@ -3990,7 +4036,7 @@
     if (id === 'screen-market' && LIVE && sb) { if (swrFresh('market') && MARKET.length) renderMarket(); else loadProducts(); }
     if (id === 'screen-companions') { if (swrFresh('comp') && (COMP.rooms.length || COMP.browse.length || COMP.incoming.length)) renderCompanionHub(); else loadCompanionFeed(); }
     if (id === 'screen-my') { if (LIVE && sb && !swrFresh('my')) { loadDuk(); loadMyProfile(); } refreshMarketingToggle(); }
-    if (id === 'screen-set-account') refreshMarketingToggle();
+    if (id === 'screen-set-account') { refreshMarketingToggle(); renderThemeSeg(); }
     if (id === 'screen-set-interests') loadInterestsScreen();
     if (id === 'screen-set-events') loadSetEvents();
     if (id === 'screen-set-posts') loadSetPosts();
@@ -5879,6 +5925,22 @@
   }
   function isEnded(ev) { return evPhase(ev) === 2; }
   function isOngoing(ev) { return evPhase(ev) === 0; }
+  /* ---------- 다크모드(시스템 자동 + 설정 토글) ---------- */
+  function _sysDark() { return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
+  function applyTheme(pref) {
+    const dark = pref === 'dark' || (pref === 'system' && _sysDark());
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }
+  let THEME_PREF = (function () { try { return localStorage.getItem('comia_theme') || 'system'; } catch (e) { return 'system'; } })();
+  function renderThemeSeg() {
+    document.querySelectorAll('#themeSeg .seg-btn').forEach(b => b.classList.toggle('on', b.dataset.theme === THEME_PREF));
+  }
+  function setTheme(pref) {
+    THEME_PREF = pref;
+    try { localStorage.setItem('comia_theme', pref); } catch (e) {}
+    applyTheme(pref); renderThemeSeg();
+  }
+  if (window.matchMedia) { try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (THEME_PREF === 'system') applyTheme('system'); }); } catch (e) {} }
   function pastEntryHtml() {
     return '<button class="past-entry" onclick="showPastEvents()">🕓 지난 행사 보기 ›</button>';
   }
