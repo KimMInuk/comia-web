@@ -1125,6 +1125,8 @@
     background: rgba(24,25,30,0.62);
     box-shadow: 0 -1px 12px rgba(0,0,0,0.32);
   }
+  /* 거래(굿즈마켓) 보관처리: MARKET_ENABLED=false → 진입점 숨김. true로 바꾸면 즉시 복구 */
+  html.no-market .market-only { display: none !important; }
   .chat-input-bar .plus {
     width: 36px; height: 36px;
     border-radius: 50%;
@@ -2675,7 +2677,7 @@
         <div class="menu-item" onclick="goto('screen-set-filters')"><span>저장한 필터</span><span class="right"><span id="mcFilters"></span> <span class="chev">›</span></span></div>
         <div class="menu-item" onclick="goto('screen-set-events')"><span>예정된 행사</span><span class="right"><span id="mcEvents"></span> <span class="chev">›</span></span></div>
         <div class="menu-item" onclick="goto('screen-set-posts')"><span>내 동행 모집글</span><span class="right"><span id="mcPosts"></span> <span class="chev">›</span></span></div>
-        <div class="menu-item" onclick="openMyProducts()"><span>내 상품 관리</span><span class="right"><span class="chev">›</span></span></div>
+        <div class="menu-item market-only" onclick="openMyProducts()"><span>내 상품 관리</span><span class="right"><span class="chev">›</span></span></div>
         <div class="menu-item" onclick="openReport()"><span>빠진 행사 알려주기</span><span class="right"><span class="chev">›</span></span></div>
       </div>
 
@@ -3449,7 +3451,7 @@
         <div class="notif-dot"></div>
       </div>
 
-      <div class="notif-item" onclick="readNotif(this);goTab2('screen-market')">
+      <div class="notif-item market-only" onclick="readNotif(this);goTab2('screen-market')">
         <div class="notif-ico purple">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         </div>
@@ -3985,7 +3987,7 @@
       <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M3.4 7 Q3.4 5.4 5 5.4 H19 Q20.6 5.4 20.6 7 V19 Q20.6 20.6 19 20.6 H5 Q3.4 20.6 3.4 19 Z M7 2.8 Q8 2.8 8 3.8 V5.4 H6 V3.8 Q6 2.8 7 2.8 Z M17 2.8 Q18 2.8 18 3.8 V5.4 H16 V3.8 Q16 2.8 17 2.8 Z M12 11 C12 12.4 13.4 14 15 14 C13.4 14 12 15.6 12 17 C12 15.6 10.6 14 9 14 C10.6 14 12 12.4 12 11 Z"/></svg>
       <span class="label">행사</span>
     </div>
-    <div class="tab" data-screen="screen-market" onclick="goTab(this)">
+    <div class="tab market-only" data-screen="screen-market" onclick="goTab(this)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 6 H15 V4 L20 8 L15 12 V10 H4.5 Z"/><path d="M19.5 18 H9 V20 L4 16 L9 12 V14 H19.5 Z"/><path d="M12 10.1 C12 11 12.9 11.9 13.8 11.9 C12.9 11.9 12 12.8 12 13.7 C12 12.8 11.1 11.9 10.2 11.9 C11.1 11.9 12 11 12 10.1 Z"/></svg>
       <span class="label">거래</span>
     </div>
@@ -4051,7 +4053,13 @@
   function swrFresh(key, ttl) { return (Date.now() - (_swrTs[key] || 0)) < (ttl || 30000); }
   function swrMark(key) { _swrTs[key] = Date.now(); }
   function swrBust(key) { _swrTs[key] = 0; }
+  // ── 거래(굿즈마켓) 보관처리 플래그 ── 출시 초기엔 매물이 없어 탭/진입점을 숨김.
+  //    복구: MARKET_ENABLED = true 로만 바꾸면 탭·메뉴·알림·네비가 전부 되살아남(코드·화면 보존).
+  const MARKET_ENABLED = false;
+  const MARKET_SCREENS = new Set(['screen-market', 'screen-sell', 'screen-myproducts', 'screen-product', 'screen-checkout']);
+  if (!MARKET_ENABLED) document.documentElement.classList.add('no-market');
   function showScreen(id) {
+    if (!MARKET_ENABLED && MARKET_SCREENS.has(id)) id = 'screen-home';   // 보관처리: 거래 화면 진입 차단
     if (typeof closeCalDay === 'function') closeCalDay();   // 화면 이동 시 캘린더 시트 닫기
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const el = document.getElementById(id);
