@@ -1114,9 +1114,16 @@
     align-items: center;
     gap: 8px;
     padding: 10px 14px 22px;
-    background: #FFFFFF;            /* backdrop-filter 제거(스크롤·키보드 렉 방지) */
+    background: rgba(255,255,255,0.72);            /* 리퀴드 글래스: 메시지가 뒤로 비침 */
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
     border-top: 1px solid var(--border);
+    box-shadow: 0 -1px 12px rgba(30,50,90,0.05);
     z-index: 25;
+  }
+  html[data-theme="dark"] .chat-input-bar {
+    background: rgba(24,25,30,0.62);
+    box-shadow: 0 -1px 12px rgba(0,0,0,0.32);
   }
   .chat-input-bar .plus {
     width: 36px; height: 36px;
@@ -5126,17 +5133,30 @@
       const { error } = await sb.rpc('cancel_application', { p_app: appId });
       if (error) throw error;
       toast('신청을 취소했어요');
-      loadCompanionFeed();
-    } catch (e) { toast('취소 실패: ' + (e.message || e)); }
+    } catch (e) {
+      const msg = e.message || String(e);
+      if (/이미|존재하지 않는/.test(msg)) toast('이미 정리된 신청이에요');
+      else toast('취소 실패: ' + msg);
+    } finally { swrBust('comp'); loadCompanionFeed(); }
   }
   async function respondAppHub(appId, accept) {
     const u = await requireLogin(); if (!u) return;
+    // 낙관적 제거: 누른 즉시 카드 빼고 다시 그림(연타·중복수락 방지)
+    const idx = COMP.incoming.findIndex(a => a.app_id === appId);
+    if (idx >= 0) { COMP.incoming.splice(idx, 1); renderCompanionHub(); refreshCompanionBadge(); }
     try {
       const { error } = await sb.rpc('respond_application', { p_app: appId, p_accept: accept });
       if (error) throw error;
       toast(accept ? '동행을 수락했어요 🎉' : '신청을 거절했어요');
-      loadCompanionFeed();
-    } catch (e) { toast('처리 실패: ' + (e.message || e)); }
+    } catch (e) {
+      const msg = e.message || String(e);
+      // 이미 수락/거절·삭제된 신청이면 실패가 아니라 '이미 정리됨' → 새로고침으로 동기화
+      if (/이미 처리된|존재하지 않는/.test(msg)) toast('이미 처리된 신청이에요 — 목록을 새로고침했어요');
+      else toast('처리 실패: ' + msg);
+    } finally {
+      swrBust('comp');          // 캐시 무효화 → 탭 재진입에도 stale 카드 안 뜸
+      loadCompanionFeed();      // 서버 권위 상태로 최종 동기화(낙관적 제거 보정 포함)
+    }
   }
   /* ---------- 동행 익명화 (Phase 1): 닉네임 숨김, 덕력 등급만 노출 ---------- */
   let DUK_TIER = {};   // userId -> 합산 XP (타인 덕력 등급 표시용 캐시)
@@ -6496,8 +6516,11 @@
       const { error } = await sb.rpc('respond_application', { p_app: appId, p_accept: accept });
       if (error) throw error;
       toast(accept ? '동행을 수락했어요 🎉' : '신청을 거절했어요');
-      loadCompanionPosts(CUR_EVENT);
-    } catch (e) { toast('처리 실패: ' + (e.message || e)); }
+    } catch (e) {
+      const msg = e.message || String(e);
+      if (/이미 처리된|존재하지 않는/.test(msg)) toast('이미 처리된 신청이에요 — 새로고침했어요');
+      else toast('처리 실패: ' + msg);
+    } finally { swrBust('comp'); loadCompanionPosts(CUR_EVENT); }
   }
   // --- 실시간 그룹챗 ---
   let CUR_ROOM = null, CUR_CHANNEL = null, CUR_ROOM_OWNER = false;
