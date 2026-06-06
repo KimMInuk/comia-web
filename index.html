@@ -43,16 +43,16 @@
   }
   html[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #0E1422;
-    --bg-elev: #161D2E;
-    --card: #161D2E;
-    --card-hover: #1C2536;
-    --card-active: #232E44;
-    --border: #29334B;
-    --border-soft: #1E2839;
-    --text: #E8ECF5;
-    --text-sub: #9AA6C0;
-    --text-dim: #6B7689;
+    --bg: #16171B;            /* 뉴트럴 차콜(파란 채도 제거) — 블루는 악센트로만 */
+    --bg-elev: #1E2026;
+    --card: #1E2026;
+    --card-hover: #24262E;
+    --card-active: #2A2D36;
+    --border: #2F323B;
+    --border-soft: #24262E;
+    --text: #ECEDF1;
+    --text-sub: #9DA1AC;
+    --text-dim: #6B6F79;
     --accent: #6BA6EE;
     --accent-dim: #5B9BE8;
     --accent-bg: rgba(91,155,232,0.16);
@@ -60,7 +60,7 @@
     --warn: #EEA84A;
     --danger: #EE6A82;
     --success: #3CC089;
-    --chip-bg: #1E2839;
+    --chip-bg: #222530;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -124,8 +124,8 @@
     box-shadow: 0 1px 12px rgba(30,50,90,0.04);
   }
   html[data-theme="dark"] .header {
-    background: rgba(14,20,34,0.60);
-    box-shadow: 0 1px 12px rgba(0,0,0,0.28);
+    background: rgba(20,21,26,0.62);
+    box-shadow: 0 1px 12px rgba(0,0,0,0.30);
   }
   .header h1 {
     font-size: 23px;
@@ -756,9 +756,9 @@
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent);
   }
   html[data-theme="dark"] .tabbar {
-    background: rgba(18,24,38,0.58);
-    border-top: 1px solid rgba(255,255,255,0.10);
-    box-shadow: 0 -8px 24px rgba(0,0,0,0.38);
+    background: rgba(24,25,30,0.62);
+    border-top: 1px solid rgba(255,255,255,0.09);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.40);
   }
   html[data-theme="dark"] .tabbar::before {
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
@@ -1950,8 +1950,8 @@
   .action-sheet-bg.on { opacity: 1; pointer-events: auto; }
   .action-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 61; background: rgba(255,255,255,0.88); -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%); border-radius: 20px 20px 0 0; padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); transform: translateY(110%); transition: transform 0.24s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -8px 30px rgba(10,16,30,0.18); }
   .action-sheet.on { transform: translateY(0); }
-  html[data-theme="dark"] .filter-sheet { background: rgba(20,27,42,0.85); border-top: 1px solid rgba(255,255,255,0.10); }
-  html[data-theme="dark"] .action-sheet { background: rgba(20,27,42,0.88); }
+  html[data-theme="dark"] .filter-sheet { background: rgba(30,32,38,0.86); border-top: 1px solid rgba(255,255,255,0.09); }
+  html[data-theme="dark"] .action-sheet { background: rgba(30,32,38,0.88); }
   .action-sheet .as-title { font-size: 12.5px; font-weight: 600; color: var(--text-sub); text-align: center; padding: 8px 4px 10px; letter-spacing: -0.2px; }
   .as-btn { width: 100%; padding: 15px; border-radius: 13px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; border: none; background: var(--card); color: var(--text); margin-top: 8px; letter-spacing: -0.2px; }
   .as-btn:active { transform: scale(0.985); }
