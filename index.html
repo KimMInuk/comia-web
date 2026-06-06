@@ -327,6 +327,8 @@
   .event-card.past .thumb { filter: grayscale(1); }
   .event-card.past .title { color: var(--text-sub); }
   .tag.ended { color: #fff; background: #9aa6c0; }
+  .tag.live { color: var(--success); background: rgba(52,176,124,0.16); display: inline-flex; align-items: center; gap: 4px; }
+  .tag.live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
   .tag.going-tag svg { width: 9px; height: 9px; flex-shrink: 0; }
   /* 행사 탭 범위 토글 (내 행사 / 전체 탐색) */
   .scope-toggle { display: flex; gap: 8px; margin: 0 16px 12px; }
@@ -3995,7 +3997,7 @@
   }
   let PC_MEET_KEY = null;   // 동행 방 '만나는 날' 선택값
   function openCreate(eventName) {
-    if (CUR_EVENT && (CUR_EVENT._past || (CUR_EVENT.dday != null && CUR_EVENT.dday < 0))) { toast('종료된 행사예요 — 동행 모집은 마감됐어요'); return; }
+    if (CUR_EVENT && isEnded(CUR_EVENT)) { toast('종료된 행사예요 — 동행 모집은 마감됐어요'); return; }
     const name = eventName || (CUR_EVENT && CUR_EVENT.t) || '';
     if (name) document.getElementById('selEventTitle').textContent = name;
     // 상단 행사 카드: 실제 행사 썸네일·날짜/장소 반영(고정값 제거)
@@ -5496,7 +5498,7 @@
     const sort = d ? d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() : 0;
     const dateStr = d ? (fmt(d) + (e && e.toDateString() !== d.toDateString() ? '~' + fmt(e) : '')) : '';
     const meta = [dateStr, row.venue].filter(Boolean).join(' · ');
-    const dday = d ? Math.ceil((d - new Date()) / 86400000) : null;
+    const dday = d ? Math.round((dayStart(d) - dayStart(new Date())) / 86400000) : null;
     // '이번 주말' 필터용: 행사 기간이 다가오는 주말(토~일)과 겹치는지 계산
     let weekend = false;
     if (d) {
@@ -5506,7 +5508,7 @@
       weekend = (d <= sun) && ((e || d) >= sat);
     }
     const badges = [];
-    if (dday !== null && dday >= 0) badges.push({ t: 'D-' + dday, c: dday <= 14 ? 'accent' : '' });
+    if (dday !== null && dday >= 0) badges.push({ t: dday === 0 ? '오늘' : 'D-' + dday, c: dday <= 14 ? 'accent' : '' });
     if (row.type) badges.push({ t: row.type });
     const ev = {
       _id: 'db' + row.id, dbid: row.id,
@@ -5794,9 +5796,10 @@
   function eventCardHtml(ev) {
     const grad = ev.gradStr || IP_GRAD[ev.ip] || '#A9B0C0,#7C8498';
     const going = GOING.has(ev._id);
-    const past = !!ev._past || (ev.dday != null && ev.dday < 0);
+    const past = isEnded(ev);
     let tags = '';
     if (past) tags += '<span class="tag ended">종료</span>';
+    else if (isOngoing(ev) && ev.dday != null && ev.dday < 0) tags += '<span class="tag live">진행 중</span>';
     if (going) tags += '<span class="tag going-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>참여중</span>';
     if (ev.official) tags += '<span class="tag official"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>공식</span>';
     (ev.badges || []).forEach(b => { tags += '<span class="tag' + (b.c ? ' ' + b.c : '') + '">' + b.t + '</span>'; });
@@ -5873,6 +5876,8 @@
     if (s <= t) return 0;
     return 1;
   }
+  function isEnded(ev) { return evPhase(ev) === 2; }
+  function isOngoing(ev) { return evPhase(ev) === 0; }
   function pastEntryHtml() {
     return '<button class="past-entry" onclick="showPastEvents()">🕓 지난 행사 보기 ›</button>';
   }
@@ -6058,8 +6063,8 @@
     const thumbImg = imgSrc ? '<img class="comp-thumb-img" src="' + imgSrc + '" alt="" loading="lazy" onerror="this.remove()">' : '';
     const d = r.starts_at ? new Date(r.starts_at) : null;
     const dstr = d ? (d.getMonth() + 1) + '/' + d.getDate() : '';
-    const dday = d ? Math.ceil((d - new Date()) / 86400000) : null;
-    const ddtxt = (dday !== null && dday >= 0) ? ('D-' + dday) : '';
+    const dday = d ? Math.round((dayStart(d) - dayStart(new Date())) / 86400000) : null;
+    const ddtxt = (dday !== null && dday >= 0) ? (dday === 0 ? '오늘' : 'D-' + dday) : '';
     const ini = htmlesc((r.event_title || '동행').slice(0, 2));
     const unread = r.unread || 0;
     const badge = unread > 0 ? '<span class="unread">' + (unread > 99 ? '99+' : unread) + '</span>' : '';
@@ -6170,8 +6175,8 @@
   }
   function fillEventDetail(ev) {
     CUR_EVENT = ev;
-    // 종료된 행사: 참전·체크인·동행 모집 비활성(이미 끝남)
-    const past = !!ev._past || (ev.dday != null && ev.dday < 0);
+    // 종료된 행사(종료일이 지난 것만): 참전·체크인·동행 모집 비활성. 진행 중은 활성.
+    const past = isEnded(ev);
     const gb = document.getElementById('edGoBtn');
     if (gb) { gb.dataset.eid = ev._id; gb.dataset.dbid = ev.dbid || ''; goBtnState(gb, GOING.has(ev._id)); gb.style.display = past ? 'none' : ''; }
     const cc = document.getElementById('edCheckinCta'); if (cc) cc.style.display = past ? 'none' : 'flex';
@@ -6195,9 +6200,10 @@
       } else { edPr.style.display = 'none'; }
     }
     let b = '';
-    const isPast = !!ev._past || (ev.dday != null && ev.dday < 0);
-    if (isPast) b += '<span class="dday-badge" style="background:#9aa6c0;color:#fff;">종료된 행사</span>';
-    else if (ev.dday !== undefined && ev.dday !== null && ev.dday >= 0)
+    if (isEnded(ev)) b += '<span class="dday-badge" style="background:#9aa6c0;color:#fff;">종료된 행사</span>';
+    else if (ev.dday === 0) b += '<span class="dday-badge now">오늘</span>';
+    else if (isOngoing(ev)) b += '<span class="dday-badge now">진행 중</span>';
+    else if (ev.dday !== undefined && ev.dday !== null && ev.dday > 0)
       b += '<span class="dday-badge' + (ev.dday <= 14 ? ' urgent' : '') + '">D-' + ev.dday + '</span>';
     if (ev.official) b += '<span class="dday-badge" style="background:rgba(0,0,0,0.30);color:#fff;">공식</span>';
     b += '<span class="dday-badge" style="background:rgba(0,0,0,0.30);color:#fff;">' + (ev.type || '행사') + '</span>';
@@ -6342,7 +6348,7 @@
     const btn = document.getElementById('evChatBtn');
     document.querySelectorAll('#evTabCompanion > .post-card').forEach(el => el.style.display = (LIVE && sb) ? 'none' : '');
     if (!LIVE || !sb || !ev || !ev.dbid) { if (box) box.innerHTML = ''; if (btn) btn.style.display = 'none'; return; }
-    const evPast = !!ev._past || (ev.dday != null && ev.dday < 0);
+    const evPast = isEnded(ev);
     if (btn) btn.style.display = evPast ? 'none' : 'block';
     if (evPast) { if (box) box.innerHTML = '<div class="ev-empty"><div class="ee-t">종료된 행사예요</div><div class="ee-s">동행 모집·체크인은 마감됐어요. 정보·굿즈는 위에서 볼 수 있어요.</div></div>'; return; }
     try {
