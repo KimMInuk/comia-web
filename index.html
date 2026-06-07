@@ -358,7 +358,7 @@
   }
   .event-card:hover { background: var(--card-hover); }
   .event-card:active { background: var(--card-active); transform: scale(0.995); }
-  /* 참전 중인 행사: 초록 테두리 + 좌측 액센트 */
+  /* 참여 중인 행사: 초록 테두리 + 좌측 액센트 */
   .event-card.going { position: relative; border-color: rgba(52,176,124,0.30); background: rgba(52,176,124,0.055); }
   .event-card.going::before { content: ''; position: absolute; left: -1px; top: 12px; bottom: 12px; width: 4px; border-radius: 0 4px 4px 0; background: var(--success); }
   .event-card.going:active { background: rgba(52,176,124,0.10); }
@@ -2402,7 +2402,7 @@
           </div>
         </div>
         <div class="hero-cta">
-          <button class="btn-going" id="edGoBtn" onclick="toggleGoing(event, this)">+ 참전</button>
+          <button class="btn-going" id="edGoBtn" onclick="toggleGoing(event, this)">+ 참여</button>
           <button class="btn-ticket" id="edTicket" onclick="openTicket()" style="display:none;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M13 5.5v13"/></svg>
             예매·정보
@@ -2922,7 +2922,7 @@
     <!-- ===================== 예정된 행사 ===================== -->
     <div class="screen" id="screen-set-events">
       <div class="nav-header"><div class="back" onclick="back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div><div class="title">예정된 행사</div></div>
-      <div class="set-note">참전 표시한 행사예요. D-day 알림을 받아요.</div>
+      <div class="set-note">참여 표시한 행사예요. D-day 알림을 받아요.</div>
       <div id="setEventsList"></div>
     </div>
 
@@ -4136,7 +4136,7 @@
     <div class="cds-body" id="calDayEvents"></div>
   </div>
 
-  <!-- 참전 시: 가는 날·시간 정하기 → 캘린더 등록 -->
+  <!-- 참여 시: 가는 날·시간 정하기 → 캘린더 등록 -->
   <div class="caldsheet-bg" id="goPlanBg" onclick="closeGoPlan()"></div>
   <div class="caldsheet" id="goPlanSheet">
     <div class="cds-grip"></div>
@@ -4518,6 +4518,14 @@
       ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l15-5v12L3 13z"/><path d="M11.5 16.5a3 3 0 0 1-5.5-1.6"/></svg></div>';
       text = (p.title ? '<b>' + htmlesc(p.title) + '</b>' : '코미아 공지') + (p.body ? '<br><span class="muted">' + htmlesc(p.body) + '</span>' : '');
       if (p.link && /^https?:/i.test(p.link)) tap = ";openExternal('" + p.link + "')";
+    } else if (n.type === 'info_liked') {
+      ico = '<div class="notif-ico" style="background:var(--accent-bg);color:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg></div>';
+      text = '내 정보글 <b>' + htmlesc(p.post_title || '') + '</b>에 추천 👍이 달렸어요';
+      tap = p.event_id ? (";openMyInfoPost('" + p.event_id + "')") : '';
+    } else if (n.type === 'info_new') {
+      ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" x2="16" y1="13" y2="13"/><line x1="8" x2="16" y1="17" y2="17"/></svg></div>';
+      text = '<b>' + htmlesc(ev) + '</b>에 새 정보글: <b>' + htmlesc(p.post_title || '') + '</b>';
+      tap = p.event_id ? (";openMyInfoPost('" + p.event_id + "')") : '';
     } else {
       ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>';
       text = '새 알림이 도착했어요';
@@ -4811,7 +4819,7 @@
     } catch (e) { toast('저장 실패: ' + (e.message || e)); }
   }
   async function confirmDeleteAccount() {
-    if (!confirm('정말 탈퇴하시겠어요?\n계정과 모든 활동(참전·동행·작성글·채팅·덕력·굿즈)이 영구 삭제되며 되돌릴 수 없어요.')) return;
+    if (!confirm('정말 탈퇴하시겠어요?\n계정과 모든 활동(참여·동행·작성글·채팅·덕력·굿즈)이 영구 삭제되며 되돌릴 수 없어요.')) return;
     if (!(LIVE && sb)) { toast('데모 모드에서는 탈퇴를 지원하지 않아요'); return; }
     try {
       const { error } = await sb.rpc('delete_my_account');   // 본인 데이터 정리 + auth 계정 삭제(SECURITY DEFINER)
@@ -5198,7 +5206,7 @@
     const box = document.getElementById('setEventsList'); if (!box) return;
     const list = EVENTS.filter(e => GOING.has(e._id)).sort((a, b) => a.sort - b.sort);
     box.innerHTML = list.length ? list.map(eventCardHtml).join('')
-      : '<div class="comp-emptybox">참전 표시한 행사가 여기 모여요. 행사에서 「+ 참전」을 눌러보세요.</div>';
+      : '<div class="comp-emptybox">참여 표시한 행사가 여기 모여요. 행사에서 「+ 참여」을 눌러보세요.</div>';
   }
   async function loadSetPosts() {
     const box = document.getElementById('setPostsList'); if (!box) return;
@@ -5624,7 +5632,7 @@
   function goBtnState(btn, on) {
     if (!btn) return;
     btn.classList.toggle('on', on);
-    btn.textContent = on ? '✓ 참전 중' : '+ 참전';
+    btn.textContent = on ? '✓ 참여 중' : '+ 참여';
   }
   function syncGoingButtons(id) {
     const on = GOING.has(id);
@@ -5635,22 +5643,22 @@
     const id = btn.dataset.eid, dbid = btn.dataset.dbid;
     if (!LIVE || !sb || !dbid) {   // 데모/로컬 행사 → 로컬 토글만
       const on = !btn.classList.contains('on');
-      goBtnState(btn, on); if (on) toast('참전 목록에 추가했어요'); return;
+      goBtnState(btn, on); if (on) toast('참여 목록에 추가했어요'); return;
     }
     const u = await requireLogin(); if (!u) return;
-    if (GOING.has(id)) {           // 이미 참전 중 → 취소
+    if (GOING.has(id)) {           // 이미 참여 중 → 취소
       try { await sb.from('event_going').delete().eq('user_id', u.id).eq('event_id', dbid); }
       catch (err) { toast('처리 실패 — 잠시 후 다시'); return; }
       GOING.delete(id); delete GO_DATES[id]; delete GO_TIMES[id];
       syncGoingButtons(id); renderMyEvents(); renderReco();
       if (CUR_EVENT && CUR_EVENT._id === id) fillGoDates(CUR_EVENT);
       refreshCalendarBadge(); rerenderCalIfVisible();
-      toast('참전을 취소했어요');
-    } else {                       // 신규 참전 → 가는 날·시간 팝업(확정 시 저장)
+      toast('참여를 취소했어요');
+    } else {                       // 신규 참여 → 가는 날·시간 팝업(확정 시 저장)
       openGoPlan(EV_BY_ID[id] || CUR_EVENT);
     }
   }
-  /* ---------- 가는 날·시간 팝업 (참전 → 캘린더 등록) ---------- */
+  /* ---------- 가는 날·시간 팝업 (참여 → 캘린더 등록) ---------- */
   let GP_EV = null, GP_DATES = new Set(), GP_TIMES = {};
   function openGoPlan(ev) {
     if (!ev || !ev.dbid) { toast('행사 정보가 없어요'); return; }
@@ -5711,7 +5719,7 @@
   }
   function calVisible() { const s = document.getElementById('screen-calendar'); return !!(s && s.classList.contains('active')); }
   function rerenderCalIfVisible() { if (!calVisible()) return; buildCalMap(); renderCalendar(); }
-  // 다중일 행사: '내가 가는 날' 선택 카드 (참전 상태에서만)
+  // 다중일 행사: '내가 가는 날' 선택 카드 (참여 상태에서만)
   function eventDayKeys(ev) {
     const s = ev._start, e = (ev._end && !isNaN(ev._end)) ? ev._end : ev._start;
     if (!s || isNaN(s)) return [];
@@ -5722,7 +5730,7 @@
   const _WD = ['일', '월', '화', '수', '목', '금', '토'];
   function fmtDayKey(k) { const d = keyToDate(k); return (d.getMonth() + 1) + '/' + d.getDate() + '(' + _WD[d.getDay()] + ')'; }
   function keyToIso(k) { const p = k.split('-'); return p[0] + '-' + String(+p[1]).padStart(2, '0') + '-' + String(+p[2]).padStart(2, '0'); }
-  function fillGoDates(ev) {   // 행사 상세: 내 일정(가는 날·시간) 요약 + 변경 버튼 (참전 중일 때만)
+  function fillGoDates(ev) {   // 행사 상세: 내 일정(가는 날·시간) 요약 + 변경 버튼 (참여 중일 때만)
     const card = document.getElementById('edGoDates'); if (!card) return;
     if (!LIVE || !sb || !ev.dbid || !GOING.has(ev._id)) { card.style.display = 'none'; return; }
     const dates = (GO_DATES[ev._id] || []).slice().sort((a, b) => keyToDate(a) - keyToDate(b));
@@ -5967,7 +5975,7 @@
     indexEvents();
     renderEvents();
     renderHome();
-    loadMyHome();   // 로그인 유저면 참전·관심사·동행 개인화 로드 후 재렌더
+    loadMyHome();   // 로그인 유저면 참여·관심사·동행 개인화 로드 후 재렌더
   }
   // 온보딩 관심사 저장 (라이브 + 로그인 시에만; 아니면 무시)
   async function saveInterests() {
@@ -6133,7 +6141,7 @@
       subscribeNotifications();
       registerPush();   // 네이티브: FCM 토큰 등록(앱 밖 푸시용)
       try { localStorage.setItem('comia_seen', '1'); } catch (e) {}
-      loadEvents();   // 계정 전환 시 개인화 데이터(참전·동행·관심사) 다시 로드
+      loadEvents();   // 계정 전환 시 개인화 데이터(참여·동행·관심사) 다시 로드
       if (forceHome) { goTab2('screen-home'); return; }
       const { data: ints } = await sb.from('profile_interests').select('big_cat').eq('user_id', user.id).limit(1);
       if (ints && ints.length) { goTab2('screen-home'); }
@@ -6164,7 +6172,7 @@
   function emptyFilter() { return { period:[], regions:[], cats:[], price:[], host:[], types:[], ips:[], genres:[] }; }
   let curFilter = emptyFilter();
   let RENDERED = [], CUR_EVENT = null, EV_BY_ID = {};
-  let GOING = new Set();          // 내가 '참전' 표시한 행사 _id ('db'+uuid)
+  let GOING = new Set();          // 내가 '참여' 표시한 행사 _id ('db'+uuid)
   let GO_DATES = {};              // _id -> ['YYYY-M-D'...] 내가 가는 날(다중일 행사)
   let GO_TIMES = {};              // _id -> {'YYYY-M-D':'HH:MM'} 가는 시간(날짜별)
   let MY_CATS = [], MY_ITEMS = [];// 관심 대분류 / 세부(작품) — 추천 알고리즘용
@@ -6350,7 +6358,7 @@
       cnt.innerHTML = '<span>내 행사 <b>' + list.length + '</b>개' + (q ? ' · “' + htmlesc(q) + '”' : '') + '</span>'
         + '<span class="ev-clear" onclick="setEventScope(\'all\')">전체 행사 ›</span>';
       box.innerHTML = list.length ? renderEventGroups(list)
-        : '<div class="ev-empty"><div class="ee-t">' + (q ? '검색 결과가 없어요' : '아직 참전한 행사가 없어요') + '</div><div class="ee-s">행사에 「+ 참전」하면 여기에 모여요</div><div style="margin-top:14px;"><button class="btn-primary" style="padding:10px 18px;font-size:13px;" onclick="setEventScope(\'all\')">전체 행사 탐색하기</button></div></div>';
+        : '<div class="ev-empty"><div class="ee-t">' + (q ? '검색 결과가 없어요' : '아직 참여한 행사가 없어요') + '</div><div class="ee-s">행사에 「+ 참여」하면 여기에 모여요</div><div style="margin-top:14px;"><button class="btn-primary" style="padding:10px 18px;font-size:13px;" onclick="setEventScope(\'all\')">전체 행사 탐색하기</button></div></div>';
       RENDERED = list;
       return;
     }
@@ -6413,7 +6421,7 @@
     return html;
   }
 
-  // 홈: 히어로(임박) + 내 동행 + 내 행사(참전) + 추천(관심사 알고리즘)
+  // 홈: 히어로(임박) + 내 동행 + 내 행사(참여) + 추천(관심사 알고리즘)
   function renderHome() {
     renderHeroCarousel();
     renderMyCompanions();
@@ -6423,7 +6431,7 @@
   function upcomingOnly(e) { return e.dday === undefined || e.dday === null || e.dday >= 0; }
 
   // 홈 히어로 캐러셀: 태그별 추천 7~8개 (곧 시작·인기·종료 임박·내 취향 등)
-  let EV_POP = {};   // _id -> 인기 점수(참전+동행방)
+  let EV_POP = {};   // _id -> 인기 점수(참여+동행방)
   function buildHeroPicks() {
     const now = Date.now(), today = new Date();
     const up = EVENTS.filter(upcomingOnly);
@@ -6434,7 +6442,7 @@
       .sort((a, b) => a._end - b._end).slice(0, 2).forEach(e => add(e, '🔥 종료 임박'));
     // 곧 시작: D-0~10 가까운 순
     up.filter(e => e.dday != null && e.dday >= 0 && e.dday <= 10).sort((a, b) => a.dday - b.dday).slice(0, 3).forEach(e => add(e, '⏰ 곧 시작'));
-    // 인기 많은: 참전+동행방 점수 상위
+    // 인기 많은: 참여+동행방 점수 상위
     up.slice().sort((a, b) => (EV_POP[b._id] || 0) - (EV_POP[a._id] || 0)).filter(e => (EV_POP[e._id] || 0) > 0).slice(0, 2).forEach(e => add(e, '🔥 인기 많은'));
     // 내 취향: 관심사 점수 상위
     up.map(e => ({ e, s: recoScore(e) })).filter(o => o.s >= 5).sort((a, b) => b.s - a.s).slice(0, 2).forEach(o => add(o.e, '💜 내 취향'));
@@ -6457,7 +6465,7 @@
       + '<div class="hero-badges">' + badges + '</div>'
       + '<div class="hero-title">' + htmlesc(ev.t) + '</div>'
       + '<div class="hero-meta">' + htmlesc(ev.meta || '') + '</div>'
-      + '<div class="hero-cta"><button class="btn-going' + (going ? ' on' : '') + '" data-eid="' + ev._id + '" data-dbid="' + (ev.dbid || '') + '" onclick="event.stopPropagation();toggleGoing(event,this)">' + (going ? '✓ 참전 중' : '+ 참전') + '</button></div>'
+      + '<div class="hero-cta"><button class="btn-going' + (going ? ' on' : '') + '" data-eid="' + ev._id + '" data-dbid="' + (ev.dbid || '') + '" onclick="event.stopPropagation();toggleGoing(event,this)">' + (going ? '✓ 참여 중' : '+ 참여') + '</button></div>'
       + '</div>';
   }
   function renderHeroCarousel() {
@@ -6482,7 +6490,7 @@
   }
   function heroGoTo(i) { const box = document.getElementById('homeHeroCarousel'); if (box) box.scrollTo({ left: i * heroStep(), behavior: 'smooth' }); }
 
-  // 내 행사: 내가 참전 표시한 (예정) 행사
+  // 내 행사: 내가 참여 표시한 (예정) 행사
   function renderMyEvents() {
     const box = document.getElementById('homeMine'), sec = document.getElementById('secMine');
     if (!box) return;
@@ -6551,7 +6559,7 @@
     box.innerHTML = scored.slice(0, 8).map(o => eventCardHtml(o.e)).join('');
   }
 
-  // 로그인 유저의 홈 개인화 데이터(참전·관심사·동행) 로드 후 재렌더
+  // 로그인 유저의 홈 개인화 데이터(참여·관심사·동행) 로드 후 재렌더
   async function loadMyHome() {
     if (!LIVE || !sb) { renderMyEvents(); renderMyCompanions(); return; }
     let u = null; try { u = await currentUser(); } catch (e) {}
@@ -6578,12 +6586,12 @@
       MY_ROOMS = rooms || [];
     } catch (e) { MY_ROOMS = []; }
     renderMyCompanions(); renderMyEvents(); renderReco();
-    renderHeroCarousel();   // 참전·내취향 반영해 히어로 캐러셀 재구성
+    renderHeroCarousel();   // 참여·내취향 반영해 히어로 캐러셀 재구성
     loadSavedFilters();   // 저장한 필터 칩 주입
     refreshCompanionBadge();   // 동행 탭 안읽음 레드닷
-    renderEvents();   // 참전 정보 로드됨 → 리스트(내 행사 기본/참여중 배지) 반영
+    renderEvents();   // 참여 정보 로드됨 → 리스트(내 행사 기본/참여중 배지) 반영
     buildCalMap();   // GO_DATES + 범위 반영 → 캘린더 보이면 다시 그림
-    refreshCalendarBadge();   // 캘린더 탭 레드닷(오늘/내일 참전)
+    refreshCalendarBadge();   // 캘린더 탭 레드닷(오늘/내일 참여)
     if (calVisible()) renderCalendar();
   }
   // id로 행사 상세 열기 (리스트·홈 공용)
@@ -6630,7 +6638,7 @@
   }
   function fillEventDetail(ev) {
     CUR_EVENT = ev;
-    // 종료된 행사(종료일이 지난 것만): 참전·체크인·동행 모집 비활성. 진행 중은 활성.
+    // 종료된 행사(종료일이 지난 것만): 참여·체크인·동행 모집 비활성. 진행 중은 활성.
     const past = isEnded(ev);
     const gb = document.getElementById('edGoBtn');
     if (gb) { gb.dataset.eid = ev._id; gb.dataset.dbid = ev.dbid || ''; goBtnState(gb, GOING.has(ev._id)); gb.style.display = past ? 'none' : ''; }
@@ -6641,7 +6649,7 @@
     document.getElementById('edTitle').textContent = ev.t;
     document.getElementById('edDate').textContent = ev.dateStr || ev.meta || '';
     document.getElementById('edVenue').textContent = ev.venue ? (ev.venue + (ev.region ? ' · ' + ev.region : '')) : (ev.region || '');
-    // 더미 카운트 초기화: 탭 라벨/참전 수는 실제 데이터로만 채움
+    // 더미 카운트 초기화: 탭 라벨/참여 수는 실제 데이터로만 채움
     const segC = document.querySelector('#screen-event-detail .ev-seg [data-evtab="companion"]');
     const segI = document.querySelector('#screen-event-detail .ev-seg [data-evtab="info"]');
     if (segC) segC.textContent = '동행';
@@ -7827,7 +7835,7 @@
   function dateFromSort(s) { const y = Math.floor(s / 10000), m = Math.floor(s / 100) % 100, d = s % 100; return new Date(y, m - 1, d); }
   function calKey(dt) { return dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate(); }
   function ymdToKey(s) { const p = String(s).slice(0, 10).split('-'); return (+p[0]) + '-' + (+p[1]) + '-' + (+p[2]); }
-  // 이 행사·이 날이 '내가 가는 날'인가 (참전 + (가는날 선택했으면 그 날 / 미선택이면 전 기간))
+  // 이 행사·이 날이 '내가 가는 날'인가 (참여 + (가는날 선택했으면 그 날 / 미선택이면 전 기간))
   function isMyDay(ev, key) {
     if (!GOING.has(ev._id)) return false;
     const ds = GO_DATES[ev._id];
@@ -7918,7 +7926,7 @@
     const pool = (PAST_EVENTS && PAST_EVENTS.length) ? EVENTS.concat(PAST_EVENTS) : EVENTS;   // 지난 행사도 함께(로드됐을 때)
     pool.forEach(ev => {
       if (typeof ONLY_GOING !== 'undefined' && ONLY_GOING && !GOING.has(ev._id)) return;
-      if (CAL_SCOPE === 'going' && !GOING.has(ev._id)) return;            // 내 행사(참전) 스코프
+      if (CAL_SCOPE === 'going' && !GOING.has(ev._id)) return;            // 내 행사(참여) 스코프
       if (useInt && !GOING.has(ev._id) && !matchesInterest(ev)) return;   // 관심사 모드: 관심 + 내가 가는 행사만
       if (!eventMatches(ev, cf)) return;                                  // 헤더 필터(대분류·지역)
       const s0 = ev._start || (ev.sort ? dateFromSort(ev.sort) : null);
@@ -7956,7 +7964,7 @@
     const diff = Math.round((dayStart(date) - dayStart(new Date())) / 86400000);
     return diff === 0 ? '오늘' : (diff > 0 ? 'D-' + diff : 'D+' + (-diff));
   }
-  // 다가오는 내 참전 행사 → 상단 요약(이번 주 우선, 없으면 다음 1건, 그것도 없으면 안내)
+  // 다가오는 내 참여 행사 → 상단 요약(이번 주 우선, 없으면 다음 1건, 그것도 없으면 안내)
   function calUpcomingMine() {
     const today = dayStart(new Date());
     const ups = [];
@@ -8007,11 +8015,11 @@
   // 스코프 안내문구 — 무엇이 보이는지 자연스럽게 안내(필터링 유도)
   function renderScopeCaption() {
     const el = document.getElementById('calCaption'); if (!el) return;
-    if (CAL_SCOPE === 'going') el.textContent = '참전 표시한 행사만 모아 봐요 — 행사 상세에서 ‘참전’을 누르면 여기 떠요.';
+    if (CAL_SCOPE === 'going') el.textContent = '참여 표시한 행사만 모아 봐요 — 행사 상세에서 ‘참여’을 누르면 여기 떠요.';
     else if (CAL_SCOPE === 'interest') el.textContent = (MY_CATS.length || MY_ITEMS.length) ? '관심 분야·작품에 맞는 행사만 보여요.' : '관심 작품을 설정하면 취향 행사만 모아줘요. (지금은 전체 표시)';
     else el.textContent = '코미아에 등록된 전체 행사를 볼 수 있어요. ‹ 로 지난 달도 둘러봐요.';
   }
-  // 캘린더 탭 레드닷: 내 참전 행사가 오늘/내일이면 표시
+  // 캘린더 탭 레드닷: 내 참여 행사가 오늘/내일이면 표시
   function refreshCalendarBadge() {
     const dot = document.getElementById('calTabDot'); if (!dot) return;
     const today = dayStart(new Date()).getTime(), tmr = today + 86400000;
