@@ -5382,7 +5382,8 @@
     box.innerHTML = '<div class="comp-emptybox">불러오는 중…</div>';
     try {
       const { data } = await sb.from('event_info_posts')
-        .select('id, category, title, body, created_at, author_id, up, down, profiles(nickname)')
+        // profiles 임베딩 FK 명시: votes 테이블이 profiles로도 FK를 가져 경로가 모호(PGRST201)해지므로 author_id FK로 고정
+        .select('id, category, title, body, created_at, author_id, up, down, profiles!event_info_posts_author_id_fkey(nickname)')
         .eq('event_id', ev.dbid).order('created_at', { ascending: false }).limit(60);
       INFO_POSTS = data || [];
       // 내 투표 표시(추천/비추천 하이라이트)
