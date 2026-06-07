@@ -1603,6 +1603,7 @@
   .cw-row { display:flex; align-items:center; gap:7px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:8px 11px; cursor:pointer; }
   .cw-row.mine { border-color:var(--accent); box-shadow: inset 2px 0 0 var(--accent); }
   .cw-row:active { transform: scale(0.99); }
+  .cw-time { font-size:11.5px; font-weight:800; color:var(--accent); flex:0 0 auto; font-variant-numeric:tabular-nums; }
   .cw-t { font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .cw-v { font-size:11px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-left:auto; flex:0 0 auto; max-width:42%; }
   .cw-none { font-size:11.5px; color:var(--text-dim); padding:5px 2px; }
@@ -1631,6 +1632,30 @@
   .caldsheet .cds-head { font-size: 14px; font-weight: 800; padding: 2px 18px 10px; letter-spacing: -0.2px; flex-shrink: 0; }
   .caldsheet .cds-head .c { color: var(--accent); margin-left: 5px; font-size: 12.5px; }
   .caldsheet .cds-body { overflow-y: auto; padding: 0 10px 8px; -webkit-overflow-scrolling: touch; }
+  /* 가는 날·시간 팝업 */
+  .gp-head { padding: 2px 18px 8px; flex-shrink: 0; }
+  .gp-title { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+  .gp-sub { font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 3px; }
+  .gp-body { padding: 4px 8px 6px; }
+  .gp-label { font-size: 12.5px; font-weight: 700; color: var(--text-sub); margin: 10px 0 8px; }
+  .gp-label .gp-opt { color: var(--text-dim); font-weight: 500; }
+  .gp-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .gp-chip { padding: 8px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text-sub); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .gp-chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .gp-dateinput { padding: 8px 11px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 12.5px; background: var(--bg); color: var(--text); }
+  .gp-timerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; margin-top: 7px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+  .gp-timerow .gp-d { font-size: 13px; font-weight: 700; color: var(--text); }
+  .gp-timerow input[type=time] { border: 1px solid var(--border); border-radius: 9px; padding: 7px 10px; font-family: inherit; font-size: 13px; background: var(--bg); color: var(--text); }
+  .gp-empty { font-size: 12.5px; color: var(--text-dim); padding: 14px 4px; text-align: center; }
+  .gp-actions { display: flex; gap: 9px; padding: 8px 16px calc(6px + env(safe-area-inset-bottom)); flex-shrink: 0; }
+  .gp-cancel, .gp-confirm { flex: 1; padding: 13px; border-radius: 13px; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; border: none; letter-spacing: -0.2px; }
+  .gp-cancel { flex: 0 0 92px; background: var(--card); color: var(--text-sub); border: 1px solid var(--border); }
+  .gp-confirm { background: var(--accent); color: #fff; }
+  .gp-confirm:active, .gp-cancel:active { transform: scale(0.98); }
+  /* 행사 상세: 내 일정 요약 카드 */
+  .godates-card .gd-t { font-size: 13px; font-weight: 800; color: var(--text); }
+  .godates-card .gd-summary { font-size: 13px; font-weight: 700; color: var(--accent); margin: 6px 0 10px; line-height: 1.4; }
+  .godates-card .gd-edit { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--text-sub); background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 13px; cursor: pointer; }
   .cal-row { display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
   .cal-row:active { background: var(--card); }
   .cr-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
@@ -4036,6 +4061,21 @@
     <div class="cds-body" id="calDayEvents"></div>
   </div>
 
+  <!-- 참전 시: 가는 날·시간 정하기 → 캘린더 등록 -->
+  <div class="caldsheet-bg" id="goPlanBg" onclick="closeGoPlan()"></div>
+  <div class="caldsheet" id="goPlanSheet">
+    <div class="cds-grip"></div>
+    <div class="gp-head">
+      <div class="gp-title" id="goPlanTitle">내가 가는 날·시간</div>
+      <div class="gp-sub">코미아가 캘린더에 등록해드릴게요!</div>
+    </div>
+    <div class="cds-body"><div class="gp-body" id="goPlanBody"></div></div>
+    <div class="gp-actions">
+      <button class="gp-cancel" onclick="closeGoPlan()">취소</button>
+      <button class="gp-confirm" onclick="confirmGoPlan()">캘린더에 등록</button>
+    </div>
+  </div>
+
   <div class="tabbar">
     <div class="tab active" data-screen="screen-home" onclick="goTab(this)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 3 L20.4 10.1 Q21 10.6 21 11.4 V19.5 Q21 21 19.5 21 H4.5 Q3 21 3 19.5 V11.4 Q3 10.6 3.6 10.1 Z M12 10.5 C12 11.95 13.25 13.2 14.7 13.2 C13.25 13.2 12 14.45 12 15.9 C12 14.45 10.75 13.2 9.3 13.2 C10.75 13.2 12 11.95 12 10.5 Z"/></svg>
@@ -4703,7 +4743,7 @@
       try { await sb.auth.signOut(); } catch (e) {}
       if (NOTIF_CHANNEL) { try { sb.removeChannel(NOTIF_CHANNEL); } catch (e) {} NOTIF_CHANNEL = null; }
       resetProfileUI();
-      GOING = new Set(); GO_DATES = {}; MY_ROOMS = []; MY_CATS = []; MY_ITEMS = [];
+      GOING = new Set(); GO_DATES = {}; GO_TIMES = {}; MY_ROOMS = []; MY_CATS = []; MY_ITEMS = [];
       try { localStorage.removeItem('comia_seen'); } catch (e) {}
       toast('탈퇴가 완료됐어요. 그동안 이용해주셔서 감사합니다.');
       showScreen('screen-auth');
@@ -5393,6 +5433,8 @@
   });
   function hardwareBack() {
     // 1) 열린 오버레이/시트부터 닫기
+    const gpBg = document.getElementById('goPlanBg');
+    if (gpBg && gpBg.classList.contains('on')) { closeGoPlan(); return; }
     const calBg = document.getElementById('calDayBg');
     if (calBg && calBg.classList.contains('on')) { closeCalDay(); return; }
     const sheet = document.getElementById('sheetOverlay');
@@ -5438,16 +5480,76 @@
       goBtnState(btn, on); if (on) toast('참전 목록에 추가했어요'); return;
     }
     const u = await requireLogin(); if (!u) return;
-    const was = GOING.has(id);
-    try {
-      if (was) { await sb.from('event_going').delete().eq('user_id', u.id).eq('event_id', dbid); GOING.delete(id); delete GO_DATES[id]; }
-      else { await sb.from('event_going').upsert({ user_id: u.id, event_id: dbid }); GOING.add(id); }
-    } catch (err) { toast('처리 실패 — 잠시 후 다시'); return; }
-    syncGoingButtons(id);
-    renderMyEvents(); renderReco();
-    if (CUR_EVENT && CUR_EVENT._id === id) fillGoDates(CUR_EVENT);   // 가는 날 선택 카드 노출/숨김
-    rerenderCalIfVisible();
-    toast(was ? '참전을 취소했어요' : '내 행사에 추가했어요 🎌');
+    if (GOING.has(id)) {           // 이미 참전 중 → 취소
+      try { await sb.from('event_going').delete().eq('user_id', u.id).eq('event_id', dbid); }
+      catch (err) { toast('처리 실패 — 잠시 후 다시'); return; }
+      GOING.delete(id); delete GO_DATES[id]; delete GO_TIMES[id];
+      syncGoingButtons(id); renderMyEvents(); renderReco();
+      if (CUR_EVENT && CUR_EVENT._id === id) fillGoDates(CUR_EVENT);
+      refreshCalendarBadge(); rerenderCalIfVisible();
+      toast('참전을 취소했어요');
+    } else {                       // 신규 참전 → 가는 날·시간 팝업(확정 시 저장)
+      openGoPlan(EV_BY_ID[id] || CUR_EVENT);
+    }
+  }
+  /* ---------- 가는 날·시간 팝업 (참전 → 캘린더 등록) ---------- */
+  let GP_EV = null, GP_DATES = new Set(), GP_TIMES = {};
+  function openGoPlan(ev) {
+    if (!ev || !ev.dbid) { toast('행사 정보가 없어요'); return; }
+    GP_EV = ev;
+    const days = eventDayKeys(ev);
+    const existing = GO_DATES[ev._id] || [];
+    GP_DATES = new Set(existing.length ? existing : (days.length === 1 ? [days[0]] : []));
+    GP_TIMES = Object.assign({}, GO_TIMES[ev._id] || {});
+    renderGoPlan();
+    document.getElementById('goPlanBg').classList.add('on');
+    document.getElementById('goPlanSheet').classList.add('on');
+  }
+  function closeGoPlan() {
+    document.getElementById('goPlanBg').classList.remove('on');
+    document.getElementById('goPlanSheet').classList.remove('on');
+  }
+  function toggleGpDay(key) { if (GP_DATES.has(key)) { GP_DATES.delete(key); delete GP_TIMES[key]; } else GP_DATES.add(key); renderGoPlan(); }
+  function setGpTime(key, val) { if (val) GP_TIMES[key] = val; else delete GP_TIMES[key]; }
+  function gpAddDate(input) { if (!input.value) return; const p = input.value.split('-'); GP_DATES.add((+p[0]) + '-' + (+p[1]) + '-' + (+p[2])); input.value = ''; renderGoPlan(); }
+  function renderGoPlan() {
+    const ev = GP_EV, days = eventDayKeys(ev);
+    document.getElementById('goPlanTitle').textContent = days.length > 1 ? '내가 가는 날·시간' : '가는 시간 정하기';
+    let h = '';
+    if (days.length > 1) {
+      h += '<div class="gp-label">가는 날 <span class="gp-opt">(여러 날 선택 가능)</span></div>';
+      if (days.length > 14) {   // 긴 행사(콜라보 카페 등): 날짜 입력기 + 선택 칩
+        const chips = [...GP_DATES].sort((a, b) => keyToDate(a) - keyToDate(b)).map(k => '<span class="gp-chip on" onclick="toggleGpDay(\'' + k + '\')">' + fmtDayKey(k) + ' ✕</span>').join('');
+        h += '<div class="gp-chips"><input type="date" class="gp-dateinput" min="' + keyToIso(days[0]) + '" max="' + keyToIso(days[days.length - 1]) + '" onchange="gpAddDate(this)">' + (chips || '<span class="gp-opt" style="align-self:center;font-size:12px;">날짜를 추가하세요</span>') + '</div>';
+      } else {
+        h += '<div class="gp-chips">' + days.map(k => '<span class="gp-chip' + (GP_DATES.has(k) ? ' on' : '') + '" onclick="toggleGpDay(\'' + k + '\')">' + fmtDayKey(k) + '</span>').join('') + '</div>';
+      }
+    }
+    const sel = [...GP_DATES].sort((a, b) => keyToDate(a) - keyToDate(b));
+    if (sel.length) {
+      h += '<div class="gp-label">가는 시간 <span class="gp-opt">(선택)</span></div>'
+        + sel.map(k => '<div class="gp-timerow"><span class="gp-d">' + fmtDayKey(k) + '</span><input type="time" value="' + (GP_TIMES[k] || '') + '" onchange="setGpTime(\'' + k + '\',this.value)"></div>').join('');
+    } else {
+      h += '<div class="gp-empty">위에서 가는 날을 골라주세요</div>';
+    }
+    document.getElementById('goPlanBody').innerHTML = h;
+  }
+  async function confirmGoPlan() {
+    const ev = GP_EV; if (!ev || !ev.dbid) { closeGoPlan(); return; }
+    const u = await requireLogin(); if (!u) return;
+    const dates = [...GP_DATES];
+    const pTimes = {}; dates.forEach(k => { if (GP_TIMES[k]) pTimes[keyToIso(k)] = GP_TIMES[k]; });
+    try { await sb.rpc('set_going_plan', { p_event: ev.dbid, p_dates: dates.map(keyToIso), p_times: pTimes }); }
+    catch (e) { toast('등록 실패 — 잠시 후 다시'); return; }
+    GOING.add(ev._id);
+    if (dates.length) GO_DATES[ev._id] = dates; else delete GO_DATES[ev._id];
+    const tm = {}; dates.forEach(k => { if (GP_TIMES[k]) tm[k] = GP_TIMES[k]; });
+    if (Object.keys(tm).length) GO_TIMES[ev._id] = tm; else delete GO_TIMES[ev._id];
+    closeGoPlan();
+    syncGoingButtons(ev._id); renderMyEvents(); renderReco();
+    if (CUR_EVENT && CUR_EVENT._id === ev._id) fillGoDates(ev);
+    refreshCalendarBadge(); rerenderCalIfVisible();
+    toast('코미아가 캘린더에 등록했어요 🎌');
   }
   function calVisible() { const s = document.getElementById('screen-calendar'); return !!(s && s.classList.contains('active')); }
   function rerenderCalIfVisible() { if (!calVisible()) return; buildCalMap(); renderCalendar(); }
@@ -5462,21 +5564,17 @@
   const _WD = ['일', '월', '화', '수', '목', '금', '토'];
   function fmtDayKey(k) { const d = keyToDate(k); return (d.getMonth() + 1) + '/' + d.getDate() + '(' + _WD[d.getDay()] + ')'; }
   function keyToIso(k) { const p = k.split('-'); return p[0] + '-' + String(+p[1]).padStart(2, '0') + '-' + String(+p[2]).padStart(2, '0'); }
-  function fillGoDates(ev) {
+  function fillGoDates(ev) {   // 행사 상세: 내 일정(가는 날·시간) 요약 + 변경 버튼 (참전 중일 때만)
     const card = document.getElementById('edGoDates'); if (!card) return;
-    const days = eventDayKeys(ev);
-    if (!LIVE || !sb || !ev.dbid || days.length < 2 || !GOING.has(ev._id)) { card.style.display = 'none'; return; }
-    const sel = new Set(GO_DATES[ev._id] || []);
-    const head = '<div class="gd-t">📅 내가 가는 날</div><div class="gd-s">같은 날 가는 사람과 동행이 매칭돼요. 안 고르면 \'미정\'으로 표시돼요.</div>';
-    let body;
-    if (days.length > 14) {   // 긴 행사: 날짜 입력 + 선택된 날 칩
-      const selChips = days.filter(k => sel.has(k)).map(k => '<span class="gd-chip on" onclick="toggleGoDate(\'' + k + '\')">' + fmtDayKey(k) + ' ✕</span>').join('');
-      body = '<div class="gd-chips"><input type="date" min="' + keyToIso(days[0]) + '" max="' + keyToIso(days[days.length - 1]) + '" onchange="addGoDateInput(this)" style="padding:7px 10px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:12.5px;background:var(--bg);color:var(--text);">'
-        + (selChips || '<span class="gd-s" style="align-self:center;">날짜를 추가하세요</span>') + '</div>';
-    } else {   // 짧은 다중일: 날짜 칩 토글
-      body = '<div class="gd-chips">' + days.map(k => '<span class="gd-chip' + (sel.has(k) ? ' on' : '') + '" onclick="toggleGoDate(\'' + k + '\')">' + fmtDayKey(k) + '</span>').join('') + '</div>';
-    }
-    card.style.display = ''; card.innerHTML = head + body;
+    if (!LIVE || !sb || !ev.dbid || !GOING.has(ev._id)) { card.style.display = 'none'; return; }
+    const dates = (GO_DATES[ev._id] || []).slice().sort((a, b) => keyToDate(a) - keyToDate(b));
+    const times = GO_TIMES[ev._id] || {};
+    const summary = dates.length
+      ? dates.map(k => fmtDayKey(k) + (times[k] ? ' ' + times[k] : '')).join(' · ')
+      : '<span style="color:var(--text-dim);font-weight:600;">가는 날 미정</span>';
+    card.style.display = '';
+    card.innerHTML = '<div class="gd-t">📅 내 일정</div><div class="gd-summary">' + summary + '</div>'
+      + '<button class="gd-edit" onclick="openGoPlan(CUR_EVENT)">날짜·시간 변경</button>';
   }
   async function toggleGoDate(key) {
     const ev = CUR_EVENT; if (!ev || !ev.dbid) return;
@@ -5910,6 +6008,7 @@
   let RENDERED = [], CUR_EVENT = null, EV_BY_ID = {};
   let GOING = new Set();          // 내가 '참전' 표시한 행사 _id ('db'+uuid)
   let GO_DATES = {};              // _id -> ['YYYY-M-D'...] 내가 가는 날(다중일 행사)
+  let GO_TIMES = {};              // _id -> {'YYYY-M-D':'HH:MM'} 가는 시간(날짜별)
   let MY_CATS = [], MY_ITEMS = [];// 관심 대분류 / 세부(작품) — 추천 알고리즘용
   let MY_ROOMS = [];              // 내 동행 방 (my_companion_rooms RPC 결과)
   let HOME_HERO_ID = null;        // 홈 히어로로 쓰인 행사 _id (내 행사/추천 중복 제외용)
@@ -6292,13 +6391,17 @@
   async function loadMyHome() {
     if (!LIVE || !sb) { renderMyEvents(); renderMyCompanions(); return; }
     let u = null; try { u = await currentUser(); } catch (e) {}
-    if (!u) { GOING = new Set(); GO_DATES = {}; MY_ROOMS = []; renderMyEvents(); renderMyCompanions(); renderReco(); return; }
+    if (!u) { GOING = new Set(); GO_DATES = {}; GO_TIMES = {}; MY_ROOMS = []; renderMyEvents(); renderMyCompanions(); renderReco(); return; }
     try {
-      const { data: g } = await sb.from('event_going').select('event_id, go_dates').eq('user_id', u.id);
+      const { data: g } = await sb.from('event_going').select('event_id, go_dates, go_times').eq('user_id', u.id);
       GOING = new Set((g || []).map(r => 'db' + r.event_id));
-      GO_DATES = {};
+      GO_DATES = {}; GO_TIMES = {};
       (g || []).forEach(r => {
         if (r.go_dates && r.go_dates.length) GO_DATES['db' + r.event_id] = r.go_dates.map(ymdToKey);
+        if (r.go_times && Object.keys(r.go_times).length) {
+          const m = {}; Object.keys(r.go_times).forEach(iso => { m[ymdToKey(iso)] = r.go_times[iso]; });
+          GO_TIMES['db' + r.event_id] = m;
+        }
       });
     } catch (e) {}
     try {
@@ -7793,9 +7896,11 @@
   // 주간 보기: 그 주차 블록(wkStart~wkEnd)의 날짜별 아젠다. 각 날짜 + 그 날 행사 행. (요일 배열 _WD 재사용)
   function calWeekRow(ev, key) {
     const mine = isMyDay(ev, key);
+    const t = mine ? ((GO_TIMES[ev._id] || {})[key] || '') : '';
     const venue = ev.venue || ev.region || '';
     return '<div class="cw-row' + (mine ? ' mine' : '') + '" onclick="openEv(\'' + ev._id + '\')">'
       + '<i class="ce-dot" style="background:' + catColor(ev) + '"></i>'
+      + (t ? '<span class="cw-time">' + t + '</span>' : '')
       + '<span class="cw-t">' + htmlesc(ev.t || '') + '</span>'
       + (venue ? '<span class="cw-v">' + htmlesc(venue) + '</span>' : '') + '</div>';
   }
@@ -7838,8 +7943,9 @@
   function myBlockHtml(ev) {
     const c = ev.gradStr ? ev.gradStr.split(',')[0] : (IP_DOT[ev.ip] || '#5B9BE8');
     const venue = ev.venue || ev.region || '';
+    const myT = (GO_TIMES[ev._id] || {})[calSelected];   // 내가 정한 시간 우선
     return '<div class="myblk" style="border-left-color:' + c + '" onclick="openEv(\'' + ev._id + '\')">'
-      + '<div class="mb-time">' + calTimeRange(ev) + '</div>'
+      + '<div class="mb-time">' + (myT || calTimeRange(ev)) + '</div>'
       + calThumb(ev, 'mb-thumb')
       + '<div class="mb-body"><div class="mb-title">' + htmlesc(ev.t) + '</div>'
       + (venue ? '<div class="mb-venue">' + htmlesc(venue) + '</div>' : '') + '</div>'
