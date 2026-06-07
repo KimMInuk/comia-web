@@ -118,14 +118,15 @@
     justify-content: space-between;
     align-items: center;
     position: sticky; top: 0; z-index: 18;            /* 리퀴드 글래스: 스크롤 시 콘텐츠가 뒤로 비침 */
-    background: rgba(255,255,255,0.72);
-    -webkit-backdrop-filter: blur(18px) saturate(180%);
-    backdrop-filter: blur(18px) saturate(180%);
-    box-shadow: 0 1px 12px rgba(30,50,90,0.04);
+    background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.6));
+    -webkit-backdrop-filter: blur(20px) saturate(185%);
+    backdrop-filter: blur(20px) saturate(185%);
+    border-radius: 0 0 22px 22px;                     /* 떠있는 글래스 패널: 둥근 하단 */
+    box-shadow: 0 6px 20px rgba(30,50,90,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
   }
   html[data-theme="dark"] .header {
-    background: rgba(20,21,26,0.62);
-    box-shadow: 0 1px 12px rgba(0,0,0,0.30);
+    background: linear-gradient(180deg, rgba(28,29,35,0.84), rgba(20,21,26,0.52));
+    box-shadow: 0 6px 20px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .header h1 {
     font-size: 23px;
