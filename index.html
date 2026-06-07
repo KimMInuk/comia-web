@@ -2979,7 +2979,7 @@
       <div class="form-field" style="padding:0 16px;">
         <div class="form-label">관심 작품·키워드 <span class="hint">작품·장르 태그</span></div>
         <div class="int-tags" id="intTags"></div>
-        <input class="form-input" id="intTagInput" placeholder="예: 블루아카이브, 코스프레, YOASOBI (입력 후 Enter)" onkeydown="if(event.key==='Enter'){event.preventDefault();addInterestTag();}" style="margin-top:8px;" />
+        <input class="form-input" id="intTagInput" placeholder="예: 좋아하는 작품·아티스트 키워드 (입력 후 Enter)" onkeydown="if(event.key==='Enter'){event.preventDefault();addInterestTag();}" style="margin-top:8px;" />
         <div class="int-sugg" id="intSugg"></div>
       </div>
       <div class="bottom-cta"><button class="btn-primary" onclick="saveInterestsScreen()">저장</button></div>
@@ -3126,13 +3126,13 @@
       </div>
 
       <div class="duk-hero">
-        <div class="duk-hero-lv">종합 Lv.7</div>
-        <div class="duk-hero-name profile-name">@nyaru0</div>
-        <div class="duk-hero-sub">검증된 현장 참석 25회 · 상위 8%</div>
+        <div class="duk-hero-lv" id="dukdLv">종합 Lv.1</div>
+        <div class="duk-hero-name profile-name">@나</div>
+        <div class="duk-hero-sub">현장 체크인으로 덕력을 쌓아보세요</div>
         <div class="duk-sum">
-          <div class="duk-sum-item"><div class="v">25</div><div class="l">현장 인증</div></div>
-          <div class="duk-sum-item"><div class="v">5</div><div class="l">관심 분야</div></div>
-          <div class="duk-sum-item"><div class="v">590</div><div class="l">누적 XP</div></div>
+          <div class="duk-sum-item"><div class="v" id="dukdCnt">0</div><div class="l">현장 인증</div></div>
+          <div class="duk-sum-item"><div class="v" id="dukdCats">0</div><div class="l">관심 분야</div></div>
+          <div class="duk-sum-item"><div class="v" id="dukdXp">0</div><div class="l">누적 XP</div></div>
         </div>
       </div>
 
@@ -3141,58 +3141,11 @@
         <div>덕력은 <b>분야별</b>로 따로 쌓여요. 같은 작품을 오래·자주 현장에서 응원할수록 인증 강도와 가중치가 올라갑니다.</div>
       </div>
 
-      <div class="section-header"><h2>분야별 덕력</h2><span class="more" style="color:var(--text-sub);cursor:default;">5개 분야</span></div>
-      <div class="duk-card">
-        <div class="duk-item">
-          <div class="duk-top"><span class="duk-name">#블루아카이브</span><span class="duk-lv">Lv.7 <span class="xp">315 / 350 XP</span></span></div>
-          <div class="xp-bar"><div class="fill" style="width:90%;"></div></div>
-          <div class="duk-meta"><span>현장 인증 13회</span><span class="cert">✓✓ 인증 강도 중</span></div>
-        </div>
-        <div class="duk-item">
-          <div class="duk-top"><span class="duk-name">#원신</span><span class="duk-lv">Lv.5 <span class="xp">180 / 300 XP</span></span></div>
-          <div class="xp-bar"><div class="fill" style="width:60%;"></div></div>
-          <div class="duk-meta"><span>현장 인증 8회</span><span class="cert">✓✓ 인증 강도 중</span></div>
-        </div>
-        <div class="duk-item">
-          <div class="duk-top"><span class="duk-name">#YOASOBI</span><span class="duk-lv">Lv.4 <span class="xp">140 / 250 XP</span></span></div>
-          <div class="xp-bar"><div class="fill" style="width:56%;"></div></div>
-          <div class="duk-meta"><span>내한공연 3회</span><span class="cert">✓✓✓ 티켓 연동 인증</span></div>
-        </div>
-        <div class="duk-item">
-          <div class="duk-top"><span class="duk-name">#니케</span><span class="duk-lv">Lv.3 <span class="xp">95 / 200 XP</span></span></div>
-          <div class="xp-bar"><div class="fill" style="width:47%;"></div></div>
-          <div class="duk-meta"><span>현장 인증 4회</span><span>✓ 인증 강도 약(GPS)</span></div>
-        </div>
-        <div class="duk-item">
-          <div class="duk-top"><span class="duk-name">#명조</span><span class="duk-lv">Lv.2 <span class="xp">60 / 150 XP</span></span></div>
-          <div class="xp-bar"><div class="fill" style="width:40%;"></div></div>
-          <div class="duk-meta"><span>현장 인증 2회</span><span>✓ 인증 강도 약(GPS)</span></div>
-        </div>
-      </div>
+      <div class="section-header"><h2>분야별 덕력</h2></div>
+      <div class="duk-card" id="dukCardDetail"></div>
 
       <div class="section-header"><h2>최근 활동</h2></div>
-      <div class="duk-hist">
-        <div class="dh-row">
-          <div class="dh-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
-          <div class="dh-main"><div class="dh-t">블루아카이브 4.5주년 카페 체크인</div><div class="dh-s">2026.05.30 · GPS 인증</div></div>
-          <span class="dh-xp">+15</span>
-        </div>
-        <div class="dh-row">
-          <div class="dh-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg></div>
-          <div class="dh-main"><div class="dh-t">YOASOBI 내한공연 티켓 인증</div><div class="dh-s">2026.05.18 · 티켓 연동 (강한 인증)</div></div>
-          <span class="dh-xp">+40</span>
-        </div>
-        <div class="dh-row">
-          <div class="dh-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
-          <div class="dh-main"><div class="dh-t">원신 페스타 현장 체크인</div><div class="dh-s">2026.04.27 · GPS 인증</div></div>
-          <span class="dh-xp">+15</span>
-        </div>
-        <div class="dh-row">
-          <div class="dh-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-          <div class="dh-main"><div class="dh-t">동행 좋은 평가 받음 (+신뢰도)</div><div class="dh-s">2026.04.20 · cherry_aka 님</div></div>
-          <span class="dh-xp">+10</span>
-        </div>
-      </div>
+      <div class="duk-hist" id="dukHist"></div>
       <div style="height:24px;"></div>
     </div>
 
@@ -3525,22 +3478,13 @@
       <!-- 검색 전 -->
       <div id="searchEmpty">
         <div class="search-section">
-          <div class="st">최근 검색어 <span class="clr" onclick="toast('최근 검색어 삭제')">전체 삭제</span></div>
+          <div class="st">추천 검색</div>
           <div class="recent-tags">
-            <div class="recent-chip" onclick="setQuery('블루아카이브')">블루아카이브 <span class="x">×</span></div>
-            <div class="recent-chip" onclick="setQuery('코믹월드')">코믹월드 <span class="x">×</span></div>
-            <div class="recent-chip" onclick="setQuery('호요페스타')">호요페스타 <span class="x">×</span></div>
-            <div class="recent-chip" onclick="setQuery('니케')">니케 <span class="x">×</span></div>
-          </div>
-        </div>
-        <div class="search-section">
-          <div class="st">인기 검색어</div>
-          <div class="pop-list">
-            <div class="pop-item" onclick="setQuery('명조')"><span class="pop-rank">1</span><span class="pop-name">명조 1.0 쇼케이스</span><span class="pop-up">▲ NEW</span></div>
-            <div class="pop-item" onclick="setQuery('니케')"><span class="pop-rank">2</span><span class="pop-name">니케 1.5주년 팝업</span><span class="pop-up">▲ 3</span></div>
-            <div class="pop-item" onclick="setQuery('블루아카이브')"><span class="pop-rank">3</span><span class="pop-name">블루아카이브 4.5주년</span></div>
-            <div class="pop-item" onclick="setQuery('코믹월드')"><span class="pop-rank">4</span><span class="pop-name">코믹월드 여름</span></div>
-            <div class="pop-item" onclick="setQuery('일러스타페스')"><span class="pop-rank">5</span><span class="pop-name">일러스타페스 9</span></div>
+            <div class="recent-chip" onclick="setQuery('팝업스토어')">팝업스토어</div>
+            <div class="recent-chip" onclick="setQuery('콜라보 카페')">콜라보 카페</div>
+            <div class="recent-chip" onclick="setQuery('콘서트')">콘서트</div>
+            <div class="recent-chip" onclick="setQuery('사인회')">사인회</div>
+            <div class="recent-chip" onclick="setQuery('코믹월드')">코믹월드</div>
           </div>
         </div>
       </div>
@@ -4337,6 +4281,7 @@
     if (id === 'screen-set-events') loadSetEvents();
     if (id === 'screen-set-posts') loadSetPosts();
     if (id === 'screen-set-infoposts') loadSetInfoPosts();
+    if (id === 'screen-duk-detail') loadDukDetail();
     if (id === 'screen-set-filters') renderSavedFiltersScreen();
   }
   let PC_MEET_KEY = null;   // 동행 방 '만나는 날' 선택값
@@ -4416,29 +4361,7 @@
   }
 
   /* ---------- 검색 ---------- */
-  const SEARCH_DATA = {
-    events: [
-      { ip:'cw', title:'서울 코믹월드 2026 여름', meta:'7/19~7/20 · SETEC', tags:['동인행사','D-12'], kw:'코믹월드 코믹 동인 seko cw' },
-      { ip:'ba', title:'블루아카이브 4.5주년 카페', meta:'진행중 · 홍대 외 8곳', tags:['콜라보카페','진행중'], kw:'블루아카이브 블아 ba 카페 콜라보' },
-      { ip:'hoyo', title:'호요페스타 2026', meta:'8/2~8/4 · COEX', tags:['팬미팅'], kw:'호요 호요버스 호페 원신 스타레일 젠레스 hoyo genshin' },
-      { ip:'nikke', title:'니케 1.5주년 팝업스토어', meta:'6/20~7/6 · 더현대 서울', tags:['팝업'], kw:'니케 nikke 팝업 승리의여신' },
-      { ip:'wuwa', title:'명조 1.0 한국 쇼케이스', meta:'7/27 · 한남동', tags:['선착순'], kw:'명조 wuwa 쇼케이스 워더링웨이브' },
-      { ip:'illust', title:'일러스타페스 9', meta:'8/9~8/10 · KINTEX', tags:['동인행사'], kw:'일러스타페스 일페 일러스트' },
-      { ip:'treasure', title:'트레져 페스타 2026', meta:'7/13 · 양재 aT센터', tags:['동인행사'], kw:'트레져 페스타 보물 tpf' }
-    ],
-    companions: [
-      { av:'CA', cls:'', name:'cherry_aka', verified:true, sub:'서울 코믹월드 · 7/19(토)', body:'토요일 오전 같이 줄설 분 구해요! 블아 부스 위주로 돌 예정', kw:'코믹월드 블아 블루아카이브 줄서기' },
-      { av:'PL', cls:'a4', name:'paimon_lover', verified:false, sub:'호요페스타 2026 · 8/2(토)', body:'호페 첫날 같이 가실 원신 팬분들~ 부스 같이 돌아요', kw:'호요 호페 원신 스타레일' },
-      { av:'NM', cls:'a2', name:'nikke_main', verified:true, sub:'니케 팝업 · 6/22(일)', body:'더현대 니케 팝업 동행 구합니다. 공동구매도 가능', kw:'니케 팝업 공구' },
-      { av:'RW', cls:'a3', name:'rover_w', verified:false, sub:'명조 쇼케이스 · 7/27(일)', body:'명조 쇼케이스 동행 구해요. 응모 같이 넣어요', kw:'명조 쇼케이스' }
-    ],
-    artists: [
-      { av:'SA', name:'@studio_aria', sub:'블루아카이브 일러스트 · 코믹월드 A-23', kw:'블루아카이브 블아 일러스트 동인' },
-      { av:'NC', name:'@nyancos', sub:'코스프레 의상 제작 · 일러스타페스 B-08', kw:'코스프레 의상 코스' },
-      { av:'DG', name:'@dotgraphic', sub:'원신 도트 굿즈 · 호요페스타 C-12', kw:'원신 호요 도트 굿즈' },
-      { av:'PM', name:'@paper_moon', sub:'동인지 · 트레져 페스타 D-45', kw:'동인지 동인 페이퍼문 트레져' }
-    ]
-  };
+  const SEARCH_DATA = { events: [], companions: [], artists: [] };
   let currentSeg = 'events';
 
   function openSearch() {
@@ -5162,6 +5085,31 @@
     } catch (e) { console.warn('[comia] 덕력', e); }
   }
   // 프로필 더미 스탯 초기화 + 실제 관심작품 태그 (신뢰도·평가 시스템 아직 없음 → 0/–)
+  async function loadDukDetail() {
+    if (!LIVE || !sb) return;
+    const u = await currentUser(); if (!u) return;
+    let rows = [];
+    try {
+      const { data } = await sb.from('duk_ledger').select('cat,delta_xp,reason,created_at').eq('user_id', u.id).order('created_at', { ascending: false });
+      rows = data || [];
+    } catch (e) { return; }
+    const agg = {};
+    rows.forEach(r => { agg[r.cat] = (agg[r.cat] || 0) + (r.delta_xp || 0); });
+    const cats = Object.entries(agg).map(([cat, xp]) => ({ cat, xp })).sort((a, b) => b.xp - a.xp);
+    const totalXp = cats.reduce((acc, c) => acc + c.xp, 0);
+    const lv = Math.max(1, Math.floor(Math.sqrt(Math.max(totalXp, 0) / 10)));
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    set('dukdLv', '종합 Lv.' + lv); set('dukdCnt', rows.length); set('dukdCats', cats.length); set('dukdXp', totalXp);
+    const card = document.getElementById('dukCardDetail');
+    if (card) card.innerHTML = cats.length ? cats.slice(0, 12).map(dukItemHtml).join('') : '<div style="padding:18px 16px;color:var(--text-dim);font-size:13px;text-align:center;">아직 쌓인 덕력이 없어요. 행사 현장에서 체크인해보세요.</div>';
+    const hist = document.getElementById('dukHist');
+    if (hist) hist.innerHTML = rows.length ? rows.slice(0, 10).map(dukHistRow).join('') : '<div style="padding:18px 16px;color:var(--text-dim);font-size:13px;text-align:center;">아직 활동 내역이 없어요</div>';
+  }
+  function dukHistRow(r) {
+    const d = new Date(r.created_at);
+    const ds = d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
+    return '<div class="dh-row"><div class="dh-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div class="dh-main"><div class="dh-t">#' + htmlesc(r.cat || '덕력') + ' 현장 인증</div><div class="dh-s">' + ds + '</div></div><span class="dh-xp">+' + (r.delta_xp || 0) + '</span></div>';
+  }
   async function loadMyProfile() {
     if (!LIVE || !sb) return;
     const sv = document.querySelectorAll('#screen-my .stats-row .stat-value');
@@ -5937,42 +5885,7 @@
     ado:'#6B6B6B,#3A3A3A', eve:'#7FB0D0,#4F86B0', aimer:'#9B8FC4,#6E5FA0',
     mga:'#8FD08F,#5EB05E'
   };
-  let EVENTS = [
-    // 2026.06
-    {t:'블루아카이브 4.5주년 카페', ip:'ba', ini:'블아', type:'콜라보 카페', official:true, region:'서울', genres:['미소녀','이세계·판타지'], ips:['블루아카이브'], month:'2026.06', sort:20260601, meta:'진행중 · 홍대 외 8곳', badges:[{t:'진행중',c:'success'},{t:'콜라보카페'}]},
-    {t:'프로세카 콜라보 카페', ip:'prsk', ini:'프세', type:'콜라보 카페', official:true, region:'서울', genres:['리듬게임','아이돌'], ips:['프로세카'], month:'2026.06', sort:20260606, weekend:true, meta:'6/6(토)~6/28 · 성수', badges:[{t:'진행중',c:'success'},{t:'콜라보카페'}]},
-    {t:'우마무스메 4th 이벤트 라이브', ip:'uma', ini:'우마', type:'콘서트·라이브', official:true, region:'경기·인천', genres:['아이돌','스포츠'], ips:['우마무스메'], month:'2026.06', sort:20260607, weekend:true, meta:'6/7(일) · 고양 킨텍스', badges:[{t:'이번 주말',c:'accent'},{t:'라이브'}]},
-    {t:'주술회전 전시회 KOREA', ip:'jjk', ini:'주술', type:'전시·아트', official:true, region:'서울', genres:['배틀·소년만화','호러·미스터리'], ips:['주술회전'], month:'2026.06', sort:20260613, meta:'6/13(토)~7/13 · DDP', badges:[{t:'전시'}]},
-    {t:"YOASOBI 내한공연 'POP OUT'", ip:'yoasobi', ini:'YOA', type:'내한공연', official:true, region:'서울', genres:['J-POP'], ips:['YOASOBI'], month:'2026.06', sort:20260614, meta:'6/14(일) · 잠실실내체육관', badges:[{t:'내한',c:'accent'},{t:'J-POP'}]},
-    {t:'니케 1.5주년 팝업스토어', ip:'nikke', ini:'니케', type:'팝업스토어', official:true, region:'서울', genres:['미소녀','슈팅·액션'], ips:['니케'], month:'2026.06', sort:20260620, meta:'6/20~7/6 · 더현대 서울', badges:[{t:'D-18'},{t:'팝업'}]},
-    {t:'부산 코믹월드 6월', ip:'cw', ini:'CW', type:'동인행사', official:false, region:'부산', genres:[], ips:['블루아카이브','원신','주술회전'], month:'2026.06', sort:20260628, meta:'6/28(일) · 벡스코', badges:[{t:'동인행사'}]},
-    // 2026.07
-    {t:'귀멸의 칼날 무한열차 상영회', ip:'kimetsu', ini:'귀멸', type:'전시·아트', official:true, region:'대구', genres:['배틀·소년만화'], ips:['귀멸의 칼날'], month:'2026.07', sort:20260704, meta:'7/4(토) · 대구 신세계', badges:[{t:'상영회'}]},
-    {t:'러브라이브! 슈퍼스타 팬미팅', ip:'ll', ini:'러브', type:'팬미팅', official:true, region:'경기·인천', genres:['아이돌','리듬게임'], ips:['러브라이브'], month:'2026.07', sort:20260705, meta:'7/5(일) · 인천 인스파이어', badges:[{t:'팬미팅'}]},
-    {t:"Vaundy 내한 라이브 'replica'", ip:'vaundy', ini:'VAU', type:'내한공연', official:true, region:'서울', genres:['J-POP'], ips:['Vaundy'], month:'2026.07', sort:20260711, meta:'7/11(토) · 올림픽홀', badges:[{t:'내한',c:'accent'},{t:'J-POP'}]},
-    {t:'성우 토크쇼 with 하나자와 카나', ip:'im', ini:'성우', type:'토크·무대', official:true, region:'서울', genres:['성우','아이돌'], ips:['아이마스'], month:'2026.07', sort:20260712, meta:'7/12(일) · 블루스퀘어', badges:[{t:'성우'}]},
-    {t:'트레져 페스타 2026', ip:'treasure', ini:'보물', type:'동인행사', official:false, region:'서울', genres:[], ips:['블루아카이브','원신','니케'], month:'2026.07', sort:20260713, meta:'7/13(일) · 양재 aT센터', badges:[{t:'동인행사'}]},
-    {t:'즛토마요(ZUTOMAYO) 첫 내한', ip:'zutomayo', ini:'ZTM', type:'내한공연', official:true, region:'서울', genres:['J-POP'], ips:['즛토마요'], month:'2026.07', sort:20260718, meta:'7/18(토) · YES24 라이브홀', badges:[{t:'내한',c:'accent'},{t:'J-POP'}]},
-    {t:'서울 코믹월드 2026 여름', ip:'cw', ini:'CW', type:'동인행사', official:false, region:'서울', genres:[], ips:['블루아카이브','원신','니케','주술회전'], month:'2026.07', sort:20260719, meta:'7/19(토)~7/20(일) · SETEC', badges:[{t:'D-47',c:'accent'},{t:'동인행사'}]},
-    {t:'원신 페스타 코리아', ip:'gs', ini:'원신', type:'팬미팅', official:true, region:'서울', genres:['오픈월드','이세계·판타지'], ips:['원신'], month:'2026.07', sort:20260725, meta:'7/25(토) · 코엑스 D홀', badges:[{t:'팬미팅'}]},
-    {t:'명조 1.0 한국 쇼케이스', ip:'wuwa', ini:'명조', type:'팬미팅', official:true, region:'서울', genres:['이세계·판타지','오픈월드'], ips:['명조'], month:'2026.07', sort:20260727, meta:'7/27(일) · 한남동 · 사전응모', badges:[{t:'선착순',c:'warn'}]},
-    // 2026.08
-    {t:'체인소맨 팝업스토어', ip:'csm', ini:'체소', type:'팝업스토어', official:true, region:'서울', genres:['배틀·소년만화','호러·미스터리'], ips:['체인소맨'], month:'2026.08', sort:20260801, meta:'8/1(토)~8/24 · 더현대', badges:[{t:'팝업'}]},
-    {t:'호요페스타 2026', ip:'hoyo', ini:'호요', type:'팬미팅', official:true, region:'서울', genres:['오픈월드','이세계·판타지','슈팅·액션'], ips:['원신','붕괴: 스타레일','젠레스 존 제로'], month:'2026.08', sort:20260802, meta:'8/2(토)~8/4(월) · COEX', badges:[{t:'팬미팅'}]},
-    {t:'사인회: 인기 일러스트레이터', ip:'illust', ini:'사인', type:'사인회', official:false, region:'서울', genres:[], ips:['기타 / 오리지널'], month:'2026.08', sort:20260808, meta:'8/8(토) · 교보문고 광화문', badges:[{t:'사인회'}]},
-    {t:'일러스타페스 9', ip:'illust', ini:'일페', type:'동인행사', official:false, region:'경기·인천', genres:[], ips:['기타 / 오리지널'], month:'2026.08', sort:20260809, meta:'8/9(토)~8/10(일) · KINTEX', badges:[{t:'동인행사'}]},
-    {t:'Ado 월드투어 서울', ip:'ado', ini:'ADO', type:'내한공연', official:true, region:'서울', genres:['J-POP'], ips:['Ado'], month:'2026.08', sort:20260815, meta:'8/15(토) · 고척스카이돔', badges:[{t:'내한',c:'accent'},{t:'J-POP'}]},
-    {t:'프리코네 6.5주년 온리전', ip:'pri', ini:'프리', type:'온리전', official:false, region:'서울', genres:['미소녀','이세계·판타지'], ips:['프리코네'], month:'2026.08', sort:20260816, meta:'8/16(일) · aT센터', badges:[{t:'온리전'}]},
-    {t:'미세스 그린애플 내한', ip:'mga', ini:'MGA', type:'내한공연', official:true, region:'서울', genres:['J-POP'], ips:['미세스 그린애플'], month:'2026.08', sort:20260822, meta:'8/22(토) · 인스파이어 아레나', badges:[{t:'내한',c:'accent'},{t:'J-POP'}]},
-    {t:'부산 일러스트 페어', ip:'illust', ini:'일러', type:'동인행사', official:false, region:'부산', genres:[], ips:['기타 / 오리지널'], month:'2026.08', sort:20260823, meta:'8/23(일) · 벡스코', badges:[{t:'동인행사'}]},
-    {t:'Eve 내한 라이브', ip:'eve', ini:'EVE', type:'내한공연', official:true, region:'서울', genres:['J-POP'], ips:['Eve'], month:'2026.08', sort:20260829, meta:'8/29(토) · 무신사 개러지', badges:[{t:'내한',c:'accent'},{t:'J-POP'}]},
-    // 2026.09
-    {t:'스파이 패밀리 콜라보 카페', ip:'spy', ini:'스파', type:'콜라보 카페', official:true, region:'서울', genres:['일상·힐링','배틀·소년만화'], ips:['스파이 패밀리'], month:'2026.09', sort:20260901, meta:'9/1(화)~9/30 · 성수', badges:[{t:'콜라보카페'}]},
-    {t:'학원아이돌마스터 1주년 라이브', ip:'gakuen', ini:'학마', type:'콘서트·라이브', official:true, region:'서울', genres:['아이돌','리듬게임'], ips:['학원아이돌'], month:'2026.09', sort:20260905, meta:'9/5(토) · 올림픽공원 체조경기장', badges:[{t:'라이브'}]},
-    {t:'페그오 페스 코리아', ip:'fgo', ini:'FGO', type:'팬미팅', official:true, region:'서울', genres:['이세계·판타지','배틀·소년만화'], ips:['페그오'], month:'2026.09', sort:20260912, meta:'9/12(토) · 코엑스', badges:[{t:'팬미팅'}]},
-    {t:'최애의 아이 온리전', ip:'oshi', ini:'아이', type:'온리전', official:false, region:'경기·인천', genres:['아이돌','호러·미스터리'], ips:['최애의 아이'], month:'2026.09', sort:20260913, meta:'9/13(일) · 일산 킨텍스', badges:[{t:'온리전'}]},
-    {t:'Aimer 내한 콘서트', ip:'aimer', ini:'AIM', type:'내한공연', official:true, region:'서울', genres:['J-POP'], ips:['Aimer'], month:'2026.09', sort:20260919, meta:'9/19(토) · 올림픽홀', badges:[{t:'내한',c:'accent'},{t:'J-POP'}]}
-  ];
+  let EVENTS = [];
 
   // 대분류(온보딩·필터 공용) → 세부 작품/아티스트
   const BIG_CATS = {
@@ -6319,9 +6232,7 @@
   function indexEvents() { EV_BY_ID = {}; EVENTS.forEach((e, i) => { if (!e._id) e._id = 'd' + i; EV_BY_ID[e._id] = e; }); buildCalMap(); }
 
   const PRESET_DEFS = {
-    '블아만': { ips:['블루아카이브'] },
     '서울 동인행사': { regions:['서울'], types:['동인행사'] },
-    '호요 행사': { ips:['원신','붕괴: 스타레일','젠레스 존 제로'] },
     '주말 콜라보카페': { types:['콜라보 카페'], period:['이번 주말'] },
     'J-POP 내한': { types:['내한공연'] }
   };
