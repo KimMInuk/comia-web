@@ -5375,6 +5375,17 @@
   /* ===================== 행사 정보 게시판 (event_info_posts) ===================== */
   const INFO_CATS = { goods: '굿즈·시세', live: '줄서기·실시간', trade: '양도·분실물', tip: '팁' };
   let INFO_POSTS = [], IW_CAT = 'tip';
+  function setInfoCount(n) {
+    const segI = document.querySelector('#screen-event-detail .ev-seg [data-evtab="info"]');
+    if (segI) segI.textContent = n ? ('정보 ' + n) : '정보';
+  }
+  async function refreshInfoCount(ev) {   // 정보 탭 진입 전에도 '정보 N' 표시(카운트 전용 경량 쿼리)
+    if (!LIVE || !sb || !ev || !ev.dbid) return;
+    try {
+      const { count } = await sb.from('event_info_posts').select('id', { count: 'exact', head: true }).eq('event_id', ev.dbid);
+      setInfoCount(count || 0);
+    } catch (e) {}
+  }
   async function loadInfoPosts(ev) {
     const box = document.getElementById('infoList'); if (!box) return;
     document.querySelectorAll('#evTabInfo > .post-card').forEach(el => el.style.display = 'none');   // 더미 숨김(혹시 남아있으면)
@@ -5397,8 +5408,7 @@
       // 추천순(추천-비추천) 정렬 → 동점은 최신순. 로드 시 1회만 정렬해 투표 시 카드가 튀지 않게.
       INFO_POSTS.sort((a, b) => (((b.up || 0) - (b.down || 0)) - ((a.up || 0) - (a.down || 0))) || (new Date(b.created_at) - new Date(a.created_at)));
       await ensureDukTiers(INFO_POSTS.map(p => p.author_id));
-      const segI = document.querySelector('#screen-event-detail .ev-seg [data-evtab="info"]');
-      if (segI) segI.textContent = INFO_POSTS.length ? ('정보 ' + INFO_POSTS.length) : '정보';
+      setInfoCount(INFO_POSTS.length);
       renderInfoList();
     } catch (e) { box.innerHTML = '<div class="comp-emptybox">불러오기 실패</div>'; }
   }
@@ -5482,7 +5492,7 @@
   }
   async function delInfo(id) {
     if (!LIVE || !sb) return;
-    try { await sb.from('event_info_posts').delete().eq('id', id); INFO_POSTS = INFO_POSTS.filter(p => p.id !== id); renderInfoList(); toast('삭제했어요'); }
+    try { await sb.from('event_info_posts').delete().eq('id', id); INFO_POSTS = INFO_POSTS.filter(p => p.id !== id); setInfoCount(INFO_POSTS.length); renderInfoList(); toast('삭제했어요'); }
     catch (e) { toast('삭제 실패'); }
   }
   function back() { if (history.length > 1) { history.pop(); showScreen(history[history.length - 1]); } }
@@ -6498,6 +6508,7 @@
     if (!ev) return;
     fillEventDetail(ev);
     loadCompanionPosts(ev);   // 동행 모집글 실연결
+    refreshInfoCount(ev);     // 진입 즉시 '정보 N' 세그먼트 카운트 채움(정보 탭 안 들어가도)
     loadIpInfo(ev);           // 작품 소개(ip_catalog)
     loadGoods(ev);            // 현장 판매 굿즈(official_goods)
     goto('screen-event-detail');
