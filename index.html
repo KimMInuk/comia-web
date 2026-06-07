@@ -1601,6 +1601,21 @@
   .cal-legend { display:flex; flex-wrap:wrap; gap:7px 12px; justify-content:center; margin: 10px 16px 2px; }
   .cal-legend span { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; color:var(--text-dim); font-weight:600; }
   .cal-legend i { width:7px; height:7px; border-radius:50%; }
+  /* 스코프 안내문구 */
+  .cal-caption { font-size:11.5px; color:var(--text-dim); text-align:center; margin:-2px 20px 12px; line-height:1.45; }
+  /* 캘린더 아래 세로 리스트 */
+  .cal-list { padding: 4px 14px 10px; }
+  .cl-head { font-size:13px; font-weight:800; color:var(--text); margin:12px 2px 8px; }
+  .cl-head span { color:var(--accent); margin-left:3px; }
+  .cl-row { display:flex; align-items:center; gap:11px; padding:9px 4px; border-bottom:1px solid var(--border); cursor:pointer; }
+  .cl-row:active { background:var(--card); }
+  .cl-date { flex:0 0 82px; font-size:11.5px; font-weight:700; color:var(--text-sub); display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  .cl-date .ce-dot { margin:0; }
+  .cl-main { flex:1; min-width:0; }
+  .cl-t { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:-0.2px; }
+  .cl-v { font-size:11px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+  .cl-type { font-size:10.5px; color:var(--text-sub); background:var(--card); border:1px solid var(--border); border-radius:6px; padding:3px 7px; flex:0 0 auto; }
+  .cl-empty { font-size:12px; color:var(--text-dim); text-align:center; padding:20px; }
   /* 월간/주간 모드 토글 */
   .cal-modeseg { display:flex; gap:2px; background:var(--chip-bg); border-radius:999px; padding:2px; }
   .cm-btn { border:none; background:transparent; color:var(--text-sub); font-family:inherit; font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:999px; cursor:pointer; letter-spacing:-0.2px; }
@@ -2320,7 +2335,7 @@
           <div class="sc" data-scope="interest" onclick="setCalScope('interest')">관심 행사</div>
           <div class="sc" data-scope="all" onclick="setCalScope('all')">전체 행사</div>
         </div>
-        <div class="cal-summary" id="calSummary"></div>
+        <div class="cal-caption" id="calCaption"></div>
         <div class="cal-grid" id="calMonthGrid">
           <div class="cal-weekdays">
             <div class="cal-weekday sun">일</div><div class="cal-weekday">월</div><div class="cal-weekday">화</div><div class="cal-weekday">수</div><div class="cal-weekday">목</div><div class="cal-weekday">금</div><div class="cal-weekday sat">토</div>
@@ -2336,6 +2351,7 @@
           <span><i style="background:#3FB6A8"></i>애니·만화</span>
           <span><i style="background:#E89B4B"></i>동인·창작</span>
         </div>
+        <div class="cal-list" id="calList"></div>
       </div>
     </div>
 
@@ -7784,9 +7800,11 @@
       const s0 = ev._start || (ev.sort ? dateFromSort(ev.sort) : null);
       if (!s0 || isNaN(s0.getTime())) return;
       const e0 = (ev._end && !isNaN(ev._end.getTime())) ? ev._end : s0;
-      items.push({ ev, s: dayStart(s0), e: dayStart(e0) });
+      const gd = (CAL_SCOPE === 'going' && (GO_DATES[ev._id] || []).length) ? GO_DATES[ev._id] : null;   // 참여 스코프: 내가 가는 날만
+      items.push({ ev, s: dayStart(s0), e: dayStart(e0), gd });
     });
     items.forEach(o => {
+      if (o.gd) { o.gd.forEach(k => { (CAL_MAP[k] = CAL_MAP[k] || []).push(o.ev); }); return; }   // 가는 날만(여러 날 가능)
       let cur = new Date(o.s), n = 0;
       while (cur <= o.e && n < 200) { (CAL_MAP[calKey(cur)] = CAL_MAP[calKey(cur)] || []).push(o.ev); cur.setDate(cur.getDate() + 1); n++; }
     });
@@ -7832,34 +7850,42 @@
     });
     return ups.sort((a, b) => a.date - b.date);
   }
-  function calWeekList() {   // 현재 스코프·필터(CAL_MAP) 기준 다가오는 7일 행사, 행사당 1회
-    const today = dayStart(new Date()); const out = []; const seen = new Set();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today.getTime() + i * 86400000);
-      (CAL_MAP[calKey(d)] || []).forEach(ev => { if (!seen.has(ev._id)) { seen.add(ev._id); out.push({ ev, date: d }); } });
+  function calListRow(ev) {
+    const gd = (GOING.has(ev._id) && (GO_DATES[ev._id] || []).length) ? GO_DATES[ev._id].slice().sort((a, b) => keyToDate(a) - keyToDate(b)) : null;
+    let dlabel = '', tlabel = '';
+    if (gd) {
+      const k = gd[0], d = keyToDate(k);
+      dlabel = (d.getMonth() + 1) + '/' + d.getDate() + (gd.length > 1 ? ' 외 ' + (gd.length - 1) + '일' : '');
+      tlabel = (GO_TIMES[ev._id] || {})[k] || '';
+    } else if (ev._start && !isNaN(ev._start)) {
+      const s = ev._start, e = ev._end;
+      dlabel = (s.getMonth() + 1) + '/' + s.getDate();
+      if (e && !isNaN(e) && dayStart(e) > dayStart(s)) dlabel += '~' + (e.getMonth() + 1) + '/' + e.getDate();
     }
-    return out;
+    const venue = ev.venue || ev.region || '';
+    return '<div class="cl-row" onclick="openEv(\'' + ev._id + '\')">'
+      + '<div class="cl-date"><i class="ce-dot" style="background:' + catColor(ev) + '"></i>' + dlabel + (tlabel ? ' ' + tlabel : '') + '</div>'
+      + '<div class="cl-main"><div class="cl-t">' + htmlesc(ev.t || '') + '</div>' + (venue ? '<div class="cl-v">' + htmlesc(venue) + '</div>' : '') + '</div>'
+      + (ev.type ? '<span class="cl-type">' + htmlesc(ev.type) + '</span>' : '') + '</div>';
   }
-  function renderCalSummary() {
-    const box = document.getElementById('calSummary'); if (!box) return;
-    const chip = u => '<button class="cs-chip" onclick="openEv(\'' + u.ev._id + '\')"><b>' + calDday(u.date) + '</b>' + htmlesc((u.ev.t || '').slice(0, 18)) + '</button>';
-    const card = (title, list) => '<div class="cs-title">' + title + ' <span>' + list.length + '</span></div><div class="cs-chips">' + list.slice(0, 8).map(chip).join('') + '</div>';
-    if (CAL_SCOPE === 'going') {   // 내 행사: 참전 표시한 것만(정확한 가는 날 기준)
-      const ups = calUpcomingMine();
-      const week = ups.filter(u => u.date.getTime() <= dayStart(new Date()).getTime() + 7 * 86400000);
-      if (week.length) box.innerHTML = card('이번 주 내 일정', week);
-      else if (ups.length) box.innerHTML = card('다가오는 내 행사', ups.slice(0, 3));
-      else box.innerHTML = '<div class="cs-empty">참전 표시한 행사가 여기 모여요. 행사 상세에서 <b>참여 표시</b>를 해보세요 ✨</div>';
-      return;
-    }
-    const list = calWeekList();
-    if (CAL_SCOPE === 'interest') {   // 내 관심사
-      if (list.length) box.innerHTML = card('이번 주 관심 행사', list);
-      else box.innerHTML = '<div class="cs-empty">' + ((MY_CATS.length || MY_ITEMS.length) ? '이번 주엔 관심사에 맞는 행사가 없어요' : '<b>관심사</b>를 설정하면 취향에 맞는 행사를 모아줘요') + '</div>';
-    } else {   // 전체
-      if (list.length) box.innerHTML = card('이번 주 행사', list);
-      else box.innerHTML = '<div class="cs-empty">이번 주엔 등록된 행사가 없어요</div>';
-    }
+  // 캘린더 아래: 현재 보기(스코프·기간·필터)의 행사를 날짜순 세로 리스트로
+  function renderCalList() {
+    const box = document.getElementById('calList'); if (!box) return;
+    if (CAL_MODE === 'week') { box.innerHTML = ''; box.style.display = 'none'; return; }
+    box.style.display = '';
+    const evs = visibleCalEvents().slice().sort((a, b) => {
+      const ta = (a._start && !isNaN(a._start)) ? a._start.getTime() : 0, tb = (b._start && !isNaN(b._start)) ? b._start.getTime() : 0; return ta - tb;
+    });
+    const title = CAL_SCOPE === 'going' ? '참여 행사' : (CAL_SCOPE === 'interest' ? '관심 행사' : '전체 행사');
+    if (!evs.length) { box.innerHTML = '<div class="cl-empty">이 달에 표시할 행사가 없어요</div>'; return; }
+    box.innerHTML = '<div class="cl-head">' + title + ' <span>' + evs.length + '</span></div>' + evs.map(calListRow).join('');
+  }
+  // 스코프 안내문구 — 무엇이 보이는지 자연스럽게 안내(필터링 유도)
+  function renderScopeCaption() {
+    const el = document.getElementById('calCaption'); if (!el) return;
+    if (CAL_SCOPE === 'going') el.textContent = '참전 표시한 행사만 모아 봐요 — 행사 상세에서 ‘참전’을 누르면 여기 떠요.';
+    else if (CAL_SCOPE === 'interest') el.textContent = (MY_CATS.length || MY_ITEMS.length) ? '관심 분야·작품에 맞는 행사만 보여요.' : '관심 작품을 설정하면 취향 행사만 모아줘요. (지금은 전체 표시)';
+    else el.textContent = '지금 열리는 전체 행사예요. 필터로 더 좁힐 수 있어요.';
   }
   // 캘린더 탭 레드닷: 내 참전 행사가 오늘/내일이면 표시
   function refreshCalendarBadge() {
@@ -7982,7 +8008,8 @@
       const eff = CAL_SCOPE === 'going' ? 'going' : (calInterestActive() ? 'interest' : 'all');
       scopeEl.querySelectorAll('.sc').forEach(b => b.classList.toggle('on', b.dataset.scope === eff));
     }
-    renderCalSummary();
+    renderScopeCaption();
+    renderCalList();
     document.querySelectorAll('.cal-modeseg .cm-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === CAL_MODE));
     const monthGrid = document.getElementById('calMonthGrid'), weekView = document.getElementById('calWeekView'), cap = document.getElementById('calCap');
     if (CAL_MODE === 'week') {
