@@ -2348,10 +2348,10 @@
 
       <!-- ===== 커뮤니티 피드 ===== -->
       <div class="section-header" style="margin-top:16px;"><h2>방금 올라온 정보글</h2></div>
-      <div class="feed-list" id="feedInfo"></div>
+      <div class="home-rail" id="feedInfo"></div>
 
       <div class="section-header"><h2>같이 갈 사람 구해요</h2><span class="more" onclick="goTab2('screen-companions')">전체 ›</span></div>
-      <div class="feed-list" id="feedComp"></div>
+      <div class="home-rail" id="feedComp"></div>
 
       <div class="section-header"><h2>신규 행사 모아보기</h2><span class="more" onclick="goNewEvents()">전체 ›</span></div>
       <div class="home-rail" id="feedNew"></div>
@@ -6709,16 +6709,17 @@
       const { data } = await sb.from('event_info_posts')
         .select('id, title, category, up, comments, created_at, event_id, events(title)')
         .order('created_at', { ascending: false }).limit(10);
-      const list = (data || []).slice(0, 4);
+      const list = (data || []).slice(0, 10);
       box.innerHTML = list.length ? list.map(infoFeedCard).join('') : feedEmpty('아직 올라온 정보글이 없어요');
     } catch (e) { box.innerHTML = feedEmpty('불러오기 실패'); }
   }
-  const FR_CHEV = '<svg class="fr-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
   function infoFeedCard(p) {
     const evName = (p.events && p.events.title) || '행사';
-    const meta = htmlesc(evName) + ' · 추천 ' + (p.up || 0) + ' · 댓글 ' + (p.comments || 0) + ' · ' + timeAgo(p.created_at);
-    return '<div class="feed-row" onclick="openMyInfoPost(\'' + p.event_id + '\')">'
-      + '<div class="fr-body"><div class="fr-title">' + htmlesc(p.title) + '</div><div class="fr-meta">' + meta + '</div></div>' + FR_CHEV + '</div>';
+    const cat = INFO_CATS[p.category] || '팁';
+    return '<div class="rail-card info" onclick="openMyInfoPost(\'' + p.event_id + '\')">'
+      + '<div class="rc-top"><span class="cat-badge ' + p.category + '">' + cat + '</span><span class="rc-ev">' + htmlesc(evName) + '</span></div>'
+      + '<div class="rc-title">' + htmlesc(p.title) + '</div>'
+      + '<div class="rc-meta">추천 ' + (p.up || 0) + ' · 댓글 ' + (p.comments || 0) + ' · ' + timeAgo(p.created_at) + '</div></div>';
   }
   async function loadHomeCompFeed() {
     const box = document.getElementById('feedComp'); if (!box) return;
@@ -6727,17 +6728,19 @@
       const { data } = await sb.from('companion_posts')
         .select('id, body, capacity, filled, status, meet_at, created_at, event_id, events(title)')
         .eq('status', 'open').order('created_at', { ascending: false }).limit(12);
-      const list = (data || []).filter(r => !r.capacity || (r.filled || 0) < r.capacity).slice(0, 3);
+      const list = (data || []).filter(r => !r.capacity || (r.filled || 0) < r.capacity).slice(0, 10);
       box.innerHTML = list.length ? list.map(compFeedCard).join('') : feedEmpty('지금 모집 중인 동행이 없어요');
     } catch (e) { box.innerHTML = feedEmpty('불러오기 실패'); }
   }
   function compFeedCard(r) {
     const evName = (r.events && r.events.title) || '행사';
-    const cap = r.capacity ? ((r.filled || 1) + '/' + r.capacity + '명 모집') : '모집 중';
-    const meet = (r.meet_at && typeof fmtMeet === 'function') ? ' · ' + fmtMeet(r.meet_at) + ' 집합' : '';
-    const meta = cap + meet + ' · ' + timeAgo(r.created_at);
-    return '<div class="feed-row" onclick="openEventGo(\'' + r.event_id + '\')">'
-      + '<div class="fr-body"><div class="fr-title">' + htmlesc(evName) + '</div><div class="fr-meta">' + htmlesc(meta) + '</div></div>' + FR_CHEV + '</div>';
+    const cap = r.capacity ? ((r.filled || 1) + '/' + r.capacity + '명') : '모집 중';
+    const meet = (r.meet_at && typeof fmtMeet === 'function') ? fmtMeet(r.meet_at) + ' 집합' : '';
+    const body = (r.body || '').trim();
+    return '<div class="rail-card comp" onclick="openEventGo(\'' + r.event_id + '\')">'
+      + '<div class="rc-ev2">' + htmlesc(evName) + '</div>'
+      + '<div class="rc-body">' + (body ? htmlesc(body) : '같이 가요!') + '</div>'
+      + '<div class="rc-meta"><span class="rc-cap">' + cap + '</span>' + (meet ? ' · ' + htmlesc(meet) : '') + '</div></div>';
   }
   function renderHomeNewEvents() {
     const box = document.getElementById('feedNew'); if (!box) return;
