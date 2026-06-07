@@ -630,6 +630,8 @@
   .iv-btn:active { transform: scale(0.94); }
   .iv-btn.on { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
   .iv-btn.down.on { color: #FF6B6B; border-color: #FF6B6B; background: rgba(255,107,107,0.10); }
+  .mip-votes { font-size: 12.5px; color: var(--text-sub); font-weight: 600; margin-top: 2px; letter-spacing: -0.2px; }
+  .mip-votes b { font-weight: 800; color: var(--text); }
   .info-post-meta { display: flex; align-items: center; gap: 14px; font-size: 11.5px; color: var(--text-sub); font-weight: 500; }
   .info-post-meta .m { display: inline-flex; align-items: center; gap: 4px; }
   .info-post-meta svg { width: 13px; height: 13px; }
@@ -2720,7 +2722,7 @@
     <!-- ===================== MY ===================== -->
     <div class="screen" id="screen-my">
       <div class="header">
-        <h1><span class="htitle-ic"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="11" cy="8" r="3.4"/><path d="M4.5 21 V19.5 a6.5 6.5 0 0 1 13 0 V21 Z"/><path d="M18.5 6.8 C18.5 7.8 19.5 9 20.7 9 C19.5 9 18.5 10.2 18.5 11.2 C18.5 10.2 17.5 9 16.3 9 C17.5 9 18.5 7.8 18.5 6.8 Z"/></svg></span>마이</h1>
+        <h1><span class="htitle-ic"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="11" cy="8" r="3.4"/><path d="M4.5 21 V19.5 a6.5 6.5 0 0 1 13 0 V21 Z"/><path d="M18.5 6.8 C18.5 7.8 19.5 9 20.7 9 C19.5 9 18.5 10.2 18.5 11.2 C18.5 10.2 17.5 9 16.3 9 C17.5 9 18.5 7.8 18.5 6.8 Z"/></svg></span>MY</h1>
         <div class="actions">
           <div class="icon-btn" title="설정" onclick="goto('screen-set-account')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -2792,6 +2794,7 @@
         <div class="menu-item" onclick="goto('screen-set-filters')"><span>저장한 필터</span><span class="right"><span id="mcFilters"></span> <span class="chev">›</span></span></div>
         <div class="menu-item" onclick="goto('screen-set-events')"><span>예정된 행사</span><span class="right"><span id="mcEvents"></span> <span class="chev">›</span></span></div>
         <div class="menu-item" onclick="goto('screen-set-posts')"><span>내 동행 모집글</span><span class="right"><span id="mcPosts"></span> <span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="goto('screen-set-infoposts')"><span>내가 쓴 정보글</span><span class="right"><span id="mcInfoPosts"></span> <span class="chev">›</span></span></div>
         <div class="menu-item market-only" onclick="openMyProducts()"><span>내 상품 관리</span><span class="right"><span class="chev">›</span></span></div>
         <div class="menu-item" onclick="openReport()"><span>빠진 행사 알려주기</span><span class="right"><span class="chev">›</span></span></div>
       </div>
@@ -2928,6 +2931,13 @@
       <div class="nav-header"><div class="back" onclick="back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div><div class="title">내 동행 모집글</div></div>
       <div class="set-note">내가 만든 동행 방이에요. 탭하면 그룹챗으로 들어가요.</div>
       <div id="setPostsList"></div>
+    </div>
+
+    <!-- ===================== 내가 쓴 정보글 ===================== -->
+    <div class="screen" id="screen-set-infoposts">
+      <div class="nav-header"><div class="back" onclick="back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div><div class="title">내가 쓴 정보글</div></div>
+      <div class="set-note">행사 정보 게시판에 올린 글이에요. 탭하면 해당 행사의 정보 탭으로 가요.</div>
+      <div id="setInfoPostsList"></div>
     </div>
 
     <!-- ===================== 차단·신고 목록 ===================== -->
@@ -4166,7 +4176,7 @@
     </div>
     <div class="tab" data-screen="screen-my" onclick="goTab(this)">
       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="11" cy="8" r="3.4"/><path d="M4.5 21 V19.5 a6.5 6.5 0 0 1 13 0 V21 Z"/><path d="M18.5 6.8 C18.5 7.8 19.5 9 20.7 9 C19.5 9 18.5 10.2 18.5 11.2 C18.5 10.2 17.5 9 16.3 9 C17.5 9 18.5 7.8 18.5 6.8 Z"/></svg>
-      <span class="label">마이</span>
+      <span class="label">MY</span>
     </div>
   </div>
 
@@ -4253,6 +4263,7 @@
     if (id === 'screen-set-interests') loadInterestsScreen();
     if (id === 'screen-set-events') loadSetEvents();
     if (id === 'screen-set-posts') loadSetPosts();
+    if (id === 'screen-set-infoposts') loadSetInfoPosts();
     if (id === 'screen-set-filters') renderSavedFiltersScreen();
   }
   let PC_MEET_KEY = null;   // 동행 방 '만나는 날' 선택값
@@ -5107,6 +5118,7 @@
       setMc('mcEvents', GOING.size, '건');
       try { const { count } = await sb.from('saved_filters').select('id', { count: 'exact', head: true }).eq('user_id', u.id); setMc('mcFilters', count || 0, '개'); } catch (e) {}
       try { const { count } = await sb.from('companion_posts').select('id', { count: 'exact', head: true }).eq('author_id', u.id); setMc('mcPosts', count || 0, '건'); } catch (e) {}
+      try { const { count } = await sb.from('event_info_posts').select('id', { count: 'exact', head: true }).eq('author_id', u.id); setMc('mcInfoPosts', count || 0, '개'); } catch (e) {}
       swrMark('my');
     } catch (e) {}
   }
@@ -5199,6 +5211,39 @@
       box.innerHTML = mine.length ? mine.map(companionRoomCardHtml).join('')
         : '<div class="comp-emptybox">내가 만든 동행 방이 없어요.<br>행사 상세에서 「동행 구하기」로 만들어보세요.</div>';
     } catch (e) { box.innerHTML = '<div class="comp-emptybox">불러오기 실패</div>'; }
+  }
+  // 내가 쓴 정보글(행사 정보 게시판) — 마이 > '내가 쓴 정보글'
+  async function loadSetInfoPosts() {
+    const box = document.getElementById('setInfoPostsList'); if (!box) return;
+    if (!LIVE || !sb) { box.innerHTML = ''; return; }
+    const u = await currentUser(); if (!u) { box.innerHTML = '<div class="comp-emptybox">로그인이 필요해요</div>'; return; }
+    box.innerHTML = '<div class="comp-emptybox">불러오는 중…</div>';
+    try {
+      const { data } = await sb.from('event_info_posts')
+        .select('id, category, title, body, created_at, up, down, event_id, events(title)')
+        .eq('author_id', u.id).order('created_at', { ascending: false }).limit(80);
+      const list = data || [];
+      box.innerHTML = list.length ? list.map(myInfoPostCard).join('')
+        : '<div class="comp-emptybox">아직 쓴 정보글이 없어요.<br>행사 상세 → 정보 탭에서 공유해보세요.</div>';
+    } catch (e) { box.innerHTML = '<div class="comp-emptybox">불러오기 실패</div>'; }
+  }
+  function myInfoPostCard(p) {
+    const evName = (p.events && p.events.title) || '행사';
+    const catLabel = INFO_CATS[p.category] || '팁';
+    const when = timeAgo(p.created_at);
+    return '<div class="post-card" onclick="openMyInfoPost(\'' + p.event_id + '\')">'
+      + '<div class="info-post-top"><span class="cat-badge ' + p.category + '">' + catLabel + '</span>'
+      + '<span class="info-post-author">' + htmlesc(evName) + ' · ' + when + '</span></div>'
+      + '<div class="info-post-title">' + htmlesc(p.title) + '</div>'
+      + (p.body ? '<div class="info-post-body">' + htmlesc(p.body) + '</div>' : '')
+      + '<div class="mip-votes">👍 <b>' + (p.up || 0) + '</b>　👎 <b>' + (p.down || 0) + '</b></div></div>';
+  }
+  function openMyInfoPost(dbid) {
+    const pool = (typeof PAST_EVENTS !== 'undefined' && PAST_EVENTS && PAST_EVENTS.length) ? EVENTS.concat(PAST_EVENTS) : EVENTS;
+    const ev = pool.find(e => e.dbid === dbid);
+    if (!ev) { toast('행사를 찾을 수 없어요 (종료·보관됨)'); return; }
+    openEv(ev._id);
+    setTimeout(() => { if (typeof setEventTab === 'function') setEventTab('info'); }, 80);
   }
   // ===== 동행 탭 허브: [내 동행](받은 신청·참여 방·내 신청) / [모집 둘러보기] =====
   let COMP_VIEW = 'mine';
