@@ -632,6 +632,20 @@
   .iv-btn.down.on { color: #FF6B6B; border-color: #FF6B6B; background: rgba(255,107,107,0.10); }
   .mip-votes { font-size: 12.5px; color: var(--text-sub); font-weight: 600; margin-top: 2px; letter-spacing: -0.2px; }
   .mip-votes b { font-weight: 800; color: var(--text); }
+  /* 정보글 댓글 */
+  .info-cmts { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .cmt-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 10px; }
+  .cmt-head { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+  .cmt-au { font-size: 11.5px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
+  .cmt-tm { font-size: 10.5px; color: var(--text-dim); font-weight: 500; }
+  .cmt-del { font-size: 10.5px; color: var(--text-dim); margin-left: auto; cursor: pointer; }
+  .cmt-bd { font-size: 13px; line-height: 1.45; color: var(--text-sub); letter-spacing: -0.2px; white-space: pre-wrap; word-break: break-word; }
+  .cmt-empty { font-size: 12px; color: var(--text-dim); padding: 2px 0 10px; }
+  .cmt-input { display: flex; gap: 7px; }
+  .cmt-input input { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: inherit; font-size: 13px; }
+  .cmt-input input:focus { outline: none; border-color: var(--accent); }
+  .cmt-input button { flex: none; padding: 0 14px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-family: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+  .cmt-input button:active { transform: scale(0.96); }
   .info-post-meta { display: flex; align-items: center; gap: 14px; font-size: 11.5px; color: var(--text-sub); font-weight: 500; }
   .info-post-meta .m { display: inline-flex; align-items: center; gap: 4px; }
   .info-post-meta svg { width: 13px; height: 13px; }
@@ -2348,7 +2362,7 @@
         </div>
         <!-- 범위 -->
         <div class="cal-scope" id="calScope">
-          <div class="sc" data-scope="going" onclick="setCalScope('going')">참여 행사</div>
+          <div class="sc" data-scope="going" onclick="setCalScope('going')">갈래요</div>
           <div class="sc" data-scope="interest" onclick="setCalScope('interest')">관심 행사</div>
           <div class="sc" data-scope="all" onclick="setCalScope('all')">전체 행사</div>
         </div>
@@ -2402,7 +2416,7 @@
           </div>
         </div>
         <div class="hero-cta">
-          <button class="btn-going" id="edGoBtn" onclick="toggleGoing(event, this)">+ 참여</button>
+          <button class="btn-going" id="edGoBtn" onclick="toggleGoing(event, this)">+ 갈래요</button>
           <button class="btn-ticket" id="edTicket" onclick="openTicket()" style="display:none;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M13 5.5v13"/></svg>
             예매·정보
@@ -2922,7 +2936,7 @@
     <!-- ===================== 예정된 행사 ===================== -->
     <div class="screen" id="screen-set-events">
       <div class="nav-header"><div class="back" onclick="back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div><div class="title">예정된 행사</div></div>
-      <div class="set-note">참여 표시한 행사예요. D-day 알림을 받아요.</div>
+      <div class="set-note">갈래요 표시한 행사예요. D-day 알림을 받아요.</div>
       <div id="setEventsList"></div>
     </div>
 
@@ -4526,6 +4540,10 @@
       ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" x2="16" y1="13" y2="13"/><line x1="8" x2="16" y1="17" y2="17"/></svg></div>';
       text = '<b>' + htmlesc(ev) + '</b>에 새 정보글: <b>' + htmlesc(p.post_title || '') + '</b>';
       tap = p.event_id ? (";openMyInfoPost('" + p.event_id + "')") : '';
+    } else if (n.type === 'info_comment') {
+      ico = '<div class="notif-ico" style="background:var(--accent-bg);color:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>';
+      text = '내 정보글 <b>' + htmlesc(p.post_title || '') + '</b>에 댓글 💬이 달렸어요';
+      tap = p.event_id ? (";openMyInfoPost('" + p.event_id + "')") : '';
     } else {
       ico = '<div class="notif-ico blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>';
       text = '새 알림이 도착했어요';
@@ -5206,7 +5224,7 @@
     const box = document.getElementById('setEventsList'); if (!box) return;
     const list = EVENTS.filter(e => GOING.has(e._id)).sort((a, b) => a.sort - b.sort);
     box.innerHTML = list.length ? list.map(eventCardHtml).join('')
-      : '<div class="comp-emptybox">참여 표시한 행사가 여기 모여요. 행사에서 「+ 참여」을 눌러보세요.</div>';
+      : '<div class="comp-emptybox">갈래요 표시한 행사가 여기 모여요. 행사에서 「+ 갈래요」를 눌러보세요.</div>';
   }
   async function loadSetPosts() {
     const box = document.getElementById('setPostsList'); if (!box) return;
@@ -5486,7 +5504,7 @@
     try {
       const { data } = await sb.from('event_info_posts')
         // profiles 임베딩 FK 명시: votes 테이블이 profiles로도 FK를 가져 경로가 모호(PGRST201)해지므로 author_id FK로 고정
-        .select('id, category, title, body, created_at, author_id, up, down, profiles!event_info_posts_author_id_fkey(nickname)')
+        .select('id, category, title, body, created_at, author_id, up, down, comments, profiles!event_info_posts_author_id_fkey(nickname)')
         .eq('event_id', ev.dbid).order('created_at', { ascending: false }).limit(60);
       INFO_POSTS = data || [];
       // 내 투표 표시(추천/비추천 하이라이트)
@@ -5515,19 +5533,23 @@
     const nick = (p.profiles && p.profiles.nickname) || '익명';
     const when = timeAgo(p.created_at);
     const del = (myId && p.author_id === myId) ? '<span class="more" style="font-size:11px;" onclick="event.stopPropagation();delInfo(\'' + p.id + '\')">삭제</span>' : '';
-    const up = p.up || 0, down = p.down || 0;
-    const votes = '<div class="info-vote">'
+    const up = p.up || 0, down = p.down || 0, cc = p.comments || 0;
+    const bar = '<div class="info-vote">'
       + '<button class="iv-btn' + (p.myVote === 1 ? ' on' : '') + '" onclick="event.stopPropagation();voteInfo(\'' + p.id + '\',1)" title="추천">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>'
       + '<b>' + up + '</b></button>'
       + '<button class="iv-btn down' + (p.myVote === -1 ? ' on' : '') + '" onclick="event.stopPropagation();voteInfo(\'' + p.id + '\',-1)" title="비추천">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V3"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>'
-      + '<b>' + down + '</b></button></div>';
+      + '<b>' + down + '</b></button>'
+      + '<button class="iv-btn cmt" onclick="event.stopPropagation();toggleInfoComments(\'' + p.id + '\')" title="댓글">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+      + '<b id="cmtCount-' + p.id + '">' + cc + '</b></button></div>';
     return '<div class="post-card">'
       + '<div class="info-post-top"><span class="cat-badge ' + p.category + '">' + catLabel + '</span>'
       + '<span class="info-post-author">@' + htmlesc(nick) + ' ' + dukBadge(p.author_id) + ' · ' + when + '</span>' + del + '</div>'
       + '<div class="info-post-title">' + htmlesc(p.title) + '</div>'
-      + (p.body ? '<div class="info-post-body">' + htmlesc(p.body) + '</div>' : '') + votes + '</div>';
+      + (p.body ? '<div class="info-post-body">' + htmlesc(p.body) + '</div>' : '') + bar
+      + '<div class="info-cmts" id="cmts-' + p.id + '" style="display:none;"></div></div>';
   }
   async function voteInfo(postId, v) {
     if (!LIVE || !sb) { toast('로그인 후 이용할 수 있어요'); return; }
@@ -5553,6 +5575,63 @@
         if (error) throw error;
       }
     } catch (e) { toast('반영 실패'); loadInfoPosts(CUR_EVENT); }
+  }
+  // ===== 정보글 댓글 =====
+  const INFO_CMTS = {};   // postId -> 로드된 댓글 배열(캐시)
+  async function toggleInfoComments(postId) {
+    const box = document.getElementById('cmts-' + postId); if (!box) return;
+    if (box.style.display === 'none' || !box.style.display) {
+      box.style.display = 'block';
+      if (!INFO_CMTS[postId]) await loadInfoComments(postId); else renderInfoComments(postId);
+    } else { box.style.display = 'none'; }
+  }
+  async function loadInfoComments(postId) {
+    const box = document.getElementById('cmts-' + postId); if (!box) return;
+    box.innerHTML = '<div class="cmt-empty">불러오는 중…</div>';
+    if (!LIVE || !sb) { INFO_CMTS[postId] = []; renderInfoComments(postId); return; }
+    try {
+      const { data } = await sb.from('event_info_comments')
+        .select('id, body, created_at, author_id, profiles!event_info_comments_author_id_fkey(nickname)')
+        .eq('post_id', postId).order('created_at', { ascending: true }).limit(100);
+      INFO_CMTS[postId] = data || [];
+      await ensureDukTiers(INFO_CMTS[postId].map(c => c.author_id));
+    } catch (e) { INFO_CMTS[postId] = []; }
+    renderInfoComments(postId);
+  }
+  async function renderInfoComments(postId) {
+    const box = document.getElementById('cmts-' + postId); if (!box) return;
+    const u = await currentUser(); const myId = u && u.id;
+    const list = INFO_CMTS[postId] || [];
+    const rows = list.map(c => {
+      const nick = (c.profiles && c.profiles.nickname) || '익명';
+      const del = (myId && c.author_id === myId) ? '<span class="cmt-del" onclick="event.stopPropagation();delInfoComment(\'' + c.id + '\',\'' + postId + '\')">삭제</span>' : '';
+      return '<div class="cmt"><div class="cmt-head"><span class="cmt-au">@' + htmlesc(nick) + '</span> ' + dukBadge(c.author_id) + '<span class="cmt-tm">' + timeAgo(c.created_at) + '</span>' + del + '</div><div class="cmt-bd">' + htmlesc(c.body) + '</div></div>';
+    }).join('');
+    box.innerHTML = (list.length ? '<div class="cmt-list">' + rows + '</div>' : '<div class="cmt-empty">첫 댓글을 남겨보세요 ✍️</div>')
+      + '<div class="cmt-input"><input id="cmtIn-' + postId + '" maxlength="300" placeholder="댓글 달기…" onkeydown="if(event.key===\'Enter\')addInfoComment(\'' + postId + '\')"><button onclick="addInfoComment(\'' + postId + '\')">등록</button></div>';
+  }
+  async function addInfoComment(postId) {
+    const u = await requireLogin(); if (!u) return;
+    if (!LIVE || !sb) return;
+    const inp = document.getElementById('cmtIn-' + postId); if (!inp) return;
+    const body = (inp.value || '').trim(); if (!body) return;
+    inp.value = '';
+    try {
+      const { error } = await sb.from('event_info_comments').insert({ post_id: postId, author_id: u.id, body: body });
+      if (error) throw error;
+      const p = INFO_POSTS.find(x => x.id === postId); if (p) p.comments = (p.comments || 0) + 1;
+      const cnt = document.getElementById('cmtCount-' + postId); if (cnt && p) cnt.textContent = p.comments;
+      delete INFO_CMTS[postId]; await loadInfoComments(postId);
+    } catch (e) { toast('댓글 등록 실패'); inp.value = body; }
+  }
+  async function delInfoComment(id, postId) {
+    if (!LIVE || !sb) return;
+    try {
+      await sb.from('event_info_comments').delete().eq('id', id);
+      const p = INFO_POSTS.find(x => x.id === postId); if (p) p.comments = Math.max(0, (p.comments || 0) - 1);
+      const cnt = document.getElementById('cmtCount-' + postId); if (cnt && p) cnt.textContent = p.comments;
+      delete INFO_CMTS[postId]; await loadInfoComments(postId);
+    } catch (e) { toast('삭제 실패'); }
   }
   function timeAgo(ts) {
     const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
@@ -5632,7 +5711,7 @@
   function goBtnState(btn, on) {
     if (!btn) return;
     btn.classList.toggle('on', on);
-    btn.textContent = on ? '✓ 참여 중' : '+ 참여';
+    btn.textContent = on ? '✓ 갈래요' : '+ 갈래요';
   }
   function syncGoingButtons(id) {
     const on = GOING.has(id);
@@ -5643,7 +5722,7 @@
     const id = btn.dataset.eid, dbid = btn.dataset.dbid;
     if (!LIVE || !sb || !dbid) {   // 데모/로컬 행사 → 로컬 토글만
       const on = !btn.classList.contains('on');
-      goBtnState(btn, on); if (on) toast('참여 목록에 추가했어요'); return;
+      goBtnState(btn, on); if (on) toast('「갈래요」에 담았어요 ✨'); return;
     }
     const u = await requireLogin(); if (!u) return;
     if (GOING.has(id)) {           // 이미 참여 중 → 취소
@@ -5653,7 +5732,7 @@
       syncGoingButtons(id); renderMyEvents(); renderReco();
       if (CUR_EVENT && CUR_EVENT._id === id) fillGoDates(CUR_EVENT);
       refreshCalendarBadge(); rerenderCalIfVisible();
-      toast('참여를 취소했어요');
+      toast('갈래요를 취소했어요');
     } else {                       // 신규 참여 → 가는 날·시간 팝업(확정 시 저장)
       openGoPlan(EV_BY_ID[id] || CUR_EVENT);
     }
@@ -6239,7 +6318,7 @@
     let tags = '';
     if (past) tags += '<span class="tag ended">종료</span>';
     else if (isOngoing(ev) && ev.dday != null && ev.dday < 0) tags += '<span class="tag live">진행 중</span>';
-    if (going) tags += '<span class="tag going-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>참여중</span>';
+    if (going) tags += '<span class="tag going-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>갈래요</span>';
     if (ev.official) tags += '<span class="tag official"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>공식</span>';
     (ev.badges || []).forEach(b => { tags += '<span class="tag' + (b.c ? ' ' + b.c : '') + '">' + b.t + '</span>'; });
     tags += cardTagChips(ev);
@@ -6358,7 +6437,7 @@
       cnt.innerHTML = '<span>내 행사 <b>' + list.length + '</b>개' + (q ? ' · “' + htmlesc(q) + '”' : '') + '</span>'
         + '<span class="ev-clear" onclick="setEventScope(\'all\')">전체 행사 ›</span>';
       box.innerHTML = list.length ? renderEventGroups(list)
-        : '<div class="ev-empty"><div class="ee-t">' + (q ? '검색 결과가 없어요' : '아직 참여한 행사가 없어요') + '</div><div class="ee-s">행사에 「+ 참여」하면 여기에 모여요</div><div style="margin-top:14px;"><button class="btn-primary" style="padding:10px 18px;font-size:13px;" onclick="setEventScope(\'all\')">전체 행사 탐색하기</button></div></div>';
+        : '<div class="ev-empty"><div class="ee-t">' + (q ? '검색 결과가 없어요' : '아직 갈래요 표시한 행사가 없어요') + '</div><div class="ee-s">행사에서 「+ 갈래요」하면 여기에 모여요</div><div style="margin-top:14px;"><button class="btn-primary" style="padding:10px 18px;font-size:13px;" onclick="setEventScope(\'all\')">전체 행사 탐색하기</button></div></div>';
       RENDERED = list;
       return;
     }
@@ -6465,7 +6544,7 @@
       + '<div class="hero-badges">' + badges + '</div>'
       + '<div class="hero-title">' + htmlesc(ev.t) + '</div>'
       + '<div class="hero-meta">' + htmlesc(ev.meta || '') + '</div>'
-      + '<div class="hero-cta"><button class="btn-going' + (going ? ' on' : '') + '" data-eid="' + ev._id + '" data-dbid="' + (ev.dbid || '') + '" onclick="event.stopPropagation();toggleGoing(event,this)">' + (going ? '✓ 참여 중' : '+ 참여') + '</button></div>'
+      + '<div class="hero-cta"><button class="btn-going' + (going ? ' on' : '') + '" data-eid="' + ev._id + '" data-dbid="' + (ev.dbid || '') + '" onclick="event.stopPropagation();toggleGoing(event,this)">' + (going ? '✓ 갈래요' : '+ 갈래요') + '</button></div>'
       + '</div>';
   }
   function renderHeroCarousel() {
@@ -8008,14 +8087,14 @@
     const evs = visibleCalEvents().slice().sort((a, b) => {
       const ta = (a._start && !isNaN(a._start)) ? a._start.getTime() : 0, tb = (b._start && !isNaN(b._start)) ? b._start.getTime() : 0; return ta - tb;
     });
-    const title = CAL_SCOPE === 'going' ? '참여 행사' : (CAL_SCOPE === 'interest' ? '관심 행사' : '전체 행사');
+    const title = CAL_SCOPE === 'going' ? '갈래요' : (CAL_SCOPE === 'interest' ? '관심 행사' : '전체 행사');
     if (!evs.length) { box.innerHTML = '<div class="cl-empty">이 달에 표시할 행사가 없어요</div>'; return; }
     box.innerHTML = '<div class="cl-head">' + title + ' <span>' + evs.length + '</span></div>' + evs.map(calListRow).join('');
   }
   // 스코프 안내문구 — 무엇이 보이는지 자연스럽게 안내(필터링 유도)
   function renderScopeCaption() {
     const el = document.getElementById('calCaption'); if (!el) return;
-    if (CAL_SCOPE === 'going') el.textContent = '참여 표시한 행사만 모아 봐요 — 행사 상세에서 ‘참여’을 누르면 여기 떠요.';
+    if (CAL_SCOPE === 'going') el.textContent = '갈래요 표시한 행사만 모아 봐요 — 행사 상세에서 ‘갈래요’를 누르면 여기 떠요.';
     else if (CAL_SCOPE === 'interest') el.textContent = (MY_CATS.length || MY_ITEMS.length) ? '관심 분야·작품에 맞는 행사만 보여요.' : '관심 작품을 설정하면 취향 행사만 모아줘요. (지금은 전체 표시)';
     else el.textContent = '코미아에 등록된 전체 행사를 볼 수 있어요. ‹ 로 지난 달도 둘러봐요.';
   }
@@ -8059,7 +8138,7 @@
     }).sort((a, b) => a.d - b.d);
     const MAXR = 12, more = rows.length > MAXR ? rows.length - MAXR : 0, show = rows.slice(0, MAXR);
     const scope = (typeof CAL_SCOPE !== 'undefined' ? CAL_SCOPE : 'all');
-    const scopeLabel = scope === 'going' ? '내 참여 행사' : (scope === 'interest' ? '관심 행사' : '행사 일정');
+    const scopeLabel = scope === 'going' ? '내가 갈 행사' : (scope === 'interest' ? '관심 행사' : '행사 일정');
     const period = (typeof CAL_MODE !== 'undefined' && CAL_MODE === 'week') ? '이번 주' : (calYear + '년 ' + calMonth + '월');
     try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
     const SC = 2, W = 540, PAD = 30, rowH = 60, headH = 116, footH = 62;
