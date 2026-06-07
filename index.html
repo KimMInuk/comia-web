@@ -12,7 +12,7 @@
   })();
 </script>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>코미아 — 서브컬쳐 행사·동행</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -94,8 +94,7 @@
     flex-direction: column;
     overflow: hidden;
     position: relative;
-    padding-top: env(safe-area-inset-top, 0px);   /* 노치/상태바 영역 회피 */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* safe-area는 헤더(위)·탭바(아래)가 직접 흡수 → 배경이 화면 끝까지 꽉 차고 '한 칸 내려감' 현상 제거 */
   }
   /* ---------- 상태바 ---------- */
   .statusbar {
@@ -113,20 +112,18 @@
   .statusbar-icons { display: flex; gap: 6px; align-items: center; }
   /* ---------- 헤더 ---------- */
   .header {
-    padding: 6px 20px 14px;
+    /* 상단 safe-area(상태바 높이)를 헤더가 직접 흡수 → 배경이 화면 맨 위까지 꽉 참 */
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 20px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky; top: 0; z-index: 18;            /* 리퀴드 글래스: 스크롤 시 콘텐츠가 뒤로 비침 */
-    background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.6));
-    -webkit-backdrop-filter: blur(20px) saturate(185%);
-    backdrop-filter: blur(20px) saturate(185%);
-    border-radius: 0 0 22px 22px;                     /* 떠있는 글래스 패널: 둥근 하단 */
-    box-shadow: 0 6px 20px rgba(30,50,90,0.08), inset 0 1px 0 rgba(255,255,255,0.7);
+    position: sticky; top: 0; z-index: 18;            /* 고정 솔리드 헤더(글래스 제거) */
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
   }
   html[data-theme="dark"] .header {
-    background: linear-gradient(180deg, rgba(28,29,35,0.84), rgba(20,21,26,0.52));
-    box-shadow: 0 6px 20px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.06);
+    background: var(--bg);
+    border-bottom-color: var(--border);
   }
   .header h1 {
     font-size: 23px;
@@ -171,7 +168,7 @@
   .scroll-area::-webkit-scrollbar { display: none; }
   .screen {
     display: none;
-    padding-bottom: 88px;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));   /* 탭바(78px+safe) 회피 */
   }
   /* 화면 전환: 빠릿한 페이드(140ms). 탭 탭마다 0.25s는 답답하게 느껴져 단축. translateZ로 GPU 합성 고정. */
   .screen.active { display: block; animation: fadeIn 0.14s ease-out; }
@@ -749,7 +746,7 @@
   .comment-body { font-size: 13.5px; color: var(--text); line-height: 1.55; letter-spacing: -0.2px; }
   /* ---------- 바텀 탭 ---------- */
   .tabbar {
-    height: 78px;
+    height: calc(78px + env(safe-area-inset-bottom, 0px));
     background: rgba(255,255,255,0.70);                  /* 리퀴드 글래스: 반투명 + 블러 */
     -webkit-backdrop-filter: blur(18px) saturate(180%);
     backdrop-filter: blur(18px) saturate(180%);
@@ -760,7 +757,8 @@
     align-items: flex-start;
     position: absolute;
     bottom: 0; left: 0; right: 0;
-    padding: 8px 0 18px;
+    /* 하단 safe-area(홈 인디케이터)를 탭바가 흡수 → 배경은 화면 끝까지, 아이콘은 그 위로 */
+    padding: 8px 0 calc(18px + env(safe-area-inset-bottom, 0px));
     z-index: 20;
   }
   .tabbar::before {                                       /* 윗면 광택(글래스 엣지) */
@@ -792,7 +790,7 @@
   .tab svg { width: 24px; height: 24px; margin: 0 auto 3px; display: block; }
   .tab .label { font-size: 10.5px; font-weight: 700; letter-spacing: -0.2px; }
   /* ---------- 백 헤더 ---------- */
-  .nav-header { padding: 4px 12px 10px; display: flex; align-items: center; gap: 6px; }
+  .nav-header { padding: calc(4px + env(safe-area-inset-top, 0px)) 12px 10px; display: flex; align-items: center; gap: 6px; }
   .nav-header .back {
     width: 36px; height: 36px;
     display: grid; place-items: center;
@@ -808,7 +806,7 @@
   /* ---------- 하단 CTA ---------- */
   .bottom-cta {
     position: absolute;
-    bottom: 78px;
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
     left: 0; right: 0;
     padding: 16px 16px 12px;
     background: linear-gradient(to top, var(--bg) 50%, rgba(255,255,255,0));
@@ -1004,7 +1002,7 @@
   .btn-save svg { width: 16px; height: 16px; }
   .btn-apply { flex: 1; }
   /* ---------- 그룹챗 ---------- */
-  #screen-groupchat { padding-bottom: 80px; padding-top: 4px; }
+  #screen-groupchat { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); padding-top: 4px; }
   .chat-event-bar {
     display: flex;
     align-items: center;
@@ -1125,7 +1123,7 @@
     display: none;
     align-items: center;
     gap: 8px;
-    padding: 10px 14px 22px;
+    padding: 10px 14px calc(22px + env(safe-area-inset-bottom, 0px));
     background: rgba(255,255,255,0.72);            /* 리퀴드 글래스: 메시지가 뒤로 비침 */
     -webkit-backdrop-filter: blur(18px) saturate(180%);
     backdrop-filter: blur(18px) saturate(180%);
