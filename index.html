@@ -622,6 +622,14 @@
   .info-post-author { font-size: 11.5px; color: var(--text-sub); font-weight: 500; display: flex; align-items: center; gap: 3px; }
   .info-post-title { font-size: 14.5px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.2px; line-height: 1.35; }
   .info-post-body { font-size: 13px; line-height: 1.5; color: var(--text-sub); margin-bottom: 12px; letter-spacing: -0.2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  /* 정보글 추천/비추천 */
+  .info-vote { display: flex; gap: 8px; margin-top: 2px; }
+  .iv-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--text-sub); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+  .iv-btn svg { width: 14px; height: 14px; }
+  .iv-btn b { font-weight: 800; }
+  .iv-btn:active { transform: scale(0.94); }
+  .iv-btn.on { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+  .iv-btn.down.on { color: #FF6B6B; border-color: #FF6B6B; background: rgba(255,107,107,0.10); }
   .info-post-meta { display: flex; align-items: center; gap: 14px; font-size: 11.5px; color: var(--text-sub); font-weight: 500; }
   .info-post-meta .m { display: inline-flex; align-items: center; gap: 4px; }
   .info-post-meta svg { width: 13px; height: 13px; }
@@ -2516,15 +2524,7 @@
 
       <!-- 정보 탭 -->
       <div id="evTabInfo" style="display:none;">
-        <div class="chips-row" id="infoCatChips" style="padding-top:2px;">
-          <div class="chip active" data-ic="all" onclick="setInfoCat('all')">전체</div>
-          <div class="chip" data-ic="goods" onclick="setInfoCat('goods')">굿즈·시세</div>
-          <div class="chip" data-ic="live" onclick="setInfoCat('live')">줄서기·실시간</div>
-          <div class="chip" data-ic="trade" onclick="setInfoCat('trade')">양도·분실물</div>
-          <div class="chip" data-ic="tip" onclick="setInfoCat('tip')">팁</div>
-        </div>
-
-        <div class="section-header" style="padding-top:0;">
+        <div class="section-header" style="padding-top:6px;">
           <span style="font-size:12.5px;color:var(--text-sub);font-weight:500;">이 행사 정보를 나눠요</span>
           <span class="more" onclick="openInfoWrite()">+ 글쓰기</span>
         </div>
@@ -5374,7 +5374,7 @@
 
   /* ===================== 행사 정보 게시판 (event_info_posts) ===================== */
   const INFO_CATS = { goods: '굿즈·시세', live: '줄서기·실시간', trade: '양도·분실물', tip: '팁' };
-  let INFO_POSTS = [], INFO_CAT = 'all', IW_CAT = 'tip';
+  let INFO_POSTS = [], IW_CAT = 'tip';
   async function loadInfoPosts(ev) {
     const box = document.getElementById('infoList'); if (!box) return;
     document.querySelectorAll('#evTabInfo > .post-card').forEach(el => el.style.display = 'none');   // 더미 숨김(혹시 남아있으면)
@@ -5382,25 +5382,29 @@
     box.innerHTML = '<div class="comp-emptybox">불러오는 중…</div>';
     try {
       const { data } = await sb.from('event_info_posts')
-        .select('id, category, title, body, created_at, author_id, profiles(nickname)')
+        .select('id, category, title, body, created_at, author_id, up, down, profiles(nickname)')
         .eq('event_id', ev.dbid).order('created_at', { ascending: false }).limit(60);
       INFO_POSTS = data || [];
+      // 내 투표 표시(추천/비추천 하이라이트)
+      const u = await currentUser();
+      if (u && INFO_POSTS.length) {
+        const ids = INFO_POSTS.map(p => p.id);
+        const { data: mv } = await sb.from('event_info_post_votes').select('post_id, vote').eq('user_id', u.id).in('post_id', ids);
+        const vm = {}; (mv || []).forEach(v => { vm[v.post_id] = v.vote; });
+        INFO_POSTS.forEach(p => { p.myVote = vm[p.id] || 0; });
+      } else { INFO_POSTS.forEach(p => { p.myVote = 0; }); }
+      // 추천순(추천-비추천) 정렬 → 동점은 최신순. 로드 시 1회만 정렬해 투표 시 카드가 튀지 않게.
+      INFO_POSTS.sort((a, b) => (((b.up || 0) - (b.down || 0)) - ((a.up || 0) - (a.down || 0))) || (new Date(b.created_at) - new Date(a.created_at)));
       await ensureDukTiers(INFO_POSTS.map(p => p.author_id));
       const segI = document.querySelector('#screen-event-detail .ev-seg [data-evtab="info"]');
       if (segI) segI.textContent = INFO_POSTS.length ? ('정보 ' + INFO_POSTS.length) : '정보';
       renderInfoList();
     } catch (e) { box.innerHTML = '<div class="comp-emptybox">불러오기 실패</div>'; }
   }
-  function setInfoCat(c) {
-    INFO_CAT = c;
-    document.querySelectorAll('#infoCatChips .chip').forEach(ch => ch.classList.toggle('active', ch.dataset.ic === c));
-    renderInfoList();
-  }
   async function renderInfoList() {
     const box = document.getElementById('infoList'); if (!box) return;
     const u = await currentUser();
-    const list = INFO_POSTS.filter(p => INFO_CAT === 'all' || p.category === INFO_CAT);
-    box.innerHTML = list.length ? list.map(p => infoPostCard(p, u && u.id)).join('')
+    box.innerHTML = INFO_POSTS.length ? INFO_POSTS.map(p => infoPostCard(p, u && u.id)).join('')
       : '<div class="comp-emptybox">아직 올라온 정보가 없어요.<br>「+ 글쓰기」로 첫 정보를 공유해보세요!</div>';
   }
   function infoPostCard(p, myId) {
@@ -5408,11 +5412,44 @@
     const nick = (p.profiles && p.profiles.nickname) || '익명';
     const when = timeAgo(p.created_at);
     const del = (myId && p.author_id === myId) ? '<span class="more" style="font-size:11px;" onclick="event.stopPropagation();delInfo(\'' + p.id + '\')">삭제</span>' : '';
+    const up = p.up || 0, down = p.down || 0;
+    const votes = '<div class="info-vote">'
+      + '<button class="iv-btn' + (p.myVote === 1 ? ' on' : '') + '" onclick="event.stopPropagation();voteInfo(\'' + p.id + '\',1)" title="추천">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>'
+      + '<b>' + up + '</b></button>'
+      + '<button class="iv-btn down' + (p.myVote === -1 ? ' on' : '') + '" onclick="event.stopPropagation();voteInfo(\'' + p.id + '\',-1)" title="비추천">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V3"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>'
+      + '<b>' + down + '</b></button></div>';
     return '<div class="post-card">'
       + '<div class="info-post-top"><span class="cat-badge ' + p.category + '">' + catLabel + '</span>'
       + '<span class="info-post-author">@' + htmlesc(nick) + ' ' + dukBadge(p.author_id) + ' · ' + when + '</span>' + del + '</div>'
       + '<div class="info-post-title">' + htmlesc(p.title) + '</div>'
-      + (p.body ? '<div class="info-post-body">' + htmlesc(p.body) + '</div>' : '') + '</div>';
+      + (p.body ? '<div class="info-post-body">' + htmlesc(p.body) + '</div>' : '') + votes + '</div>';
+  }
+  async function voteInfo(postId, v) {
+    if (!LIVE || !sb) { toast('로그인 후 이용할 수 있어요'); return; }
+    const u = await requireLogin(); if (!u) return;
+    const p = INFO_POSTS.find(x => x.id === postId); if (!p) return;
+    const prev = p.myVote || 0;
+    // 낙관적 갱신(카운트만; 정렬은 다음 로드 때 재반영해 투표 중 카드 점프 방지)
+    if (prev === v) {
+      if (v === 1) p.up = Math.max(0, (p.up || 0) - 1); else p.down = Math.max(0, (p.down || 0) - 1);
+      p.myVote = 0;
+    } else {
+      if (prev === 1) p.up = Math.max(0, (p.up || 0) - 1);
+      if (prev === -1) p.down = Math.max(0, (p.down || 0) - 1);
+      if (v === 1) p.up = (p.up || 0) + 1; else p.down = (p.down || 0) + 1;
+      p.myVote = v;
+    }
+    renderInfoList();
+    try {
+      if (p.myVote === 0) {
+        await sb.from('event_info_post_votes').delete().eq('post_id', postId).eq('user_id', u.id);
+      } else {
+        const { error } = await sb.from('event_info_post_votes').upsert({ post_id: postId, user_id: u.id, vote: v }, { onConflict: 'post_id,user_id' });
+        if (error) throw error;
+      }
+    } catch (e) { toast('반영 실패'); loadInfoPosts(CUR_EVENT); }
   }
   function timeAgo(ts) {
     const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
