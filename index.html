@@ -6599,30 +6599,13 @@
     } else { box.innerHTML = ''; if (sec) sec.style.display = 'none'; }
     renderFocusCard();
   }
-  // 포커스 행사 선정: 갈래요 행사 중 가장 임박한 것.
-  //  ① 안 지난 '가는 날' > ② 진행 중(오늘 포함) > ③ 예정(시작일). 완전히 지난 건 제외.
-  function focusPick() {
-    const today = dayStart(new Date());
-    let best = null;
-    GOING.forEach(id => {
-      const ev = EV_BY_ID[id]; if (!ev) return;
-      const s = (ev._start && !isNaN(ev._start)) ? dayStart(ev._start) : null;
-      const e = (ev._end && !isNaN(ev._end)) ? dayStart(ev._end) : s;
-      let date = null;
-      const gd = (GO_DATES[id] || []).map(keyToDate).map(dayStart).filter(d => d >= today).sort((a, b) => a - b);
-      if (gd.length) date = gd[0];                              // 안 지난 가는 날
-      else if (s && e && today >= s && today <= e) date = today; // 진행 중 → 오늘
-      else if (s && s >= today) date = s;                       // 예정
-      if (date && (!best || date < best.date)) best = { ev: ev, date: date };
-    });
-    return best;
-  }
   // 오늘의 포커스: 가장 임박한 '갈래요' 행사 + 그 행사에 맞춘 원탭 액션(길찾기/예매/동행/체크인)
+  //  ※ 선정은 calUpcomingMine()(=안 지난 가는 날 기준). 가는 날을 지난 날로 찍었으면 의도대로 안 뜸.
   function renderFocusCard() {
     const box = document.getElementById('homeFocus'); if (!box) return;
-    const pick = focusPick();
-    if (!LIVE || !sb || !pick) { box.style.display = 'none'; box.innerHTML = ''; return; }
-    const ev = pick.ev, date = pick.date;
+    const ups = (typeof calUpcomingMine === 'function') ? calUpcomingMine() : [];
+    if (!LIVE || !sb || !ups.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    const ev = ups[0].ev, date = ups[0].date;
     const diff = Math.round((dayStart(date) - dayStart(new Date())) / 86400000);
     const isToday = diff === 0;
     const dlabel = isToday ? '오늘' : (diff === 1 ? '내일' : 'D-' + diff);
