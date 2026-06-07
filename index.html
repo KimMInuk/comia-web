@@ -269,7 +269,16 @@
   .feed-divider span { font-size: 12px; font-weight: 800; color: var(--text-sub); letter-spacing: -0.2px; }
   .home-rail { display: flex; gap: 10px; overflow-x: auto; padding: 4px 16px 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .home-rail::-webkit-scrollbar { display: none; }
-  .feed-empty { font-size: 12.5px; color: var(--text-dim); padding: 10px 2px; }
+  .feed-empty { font-size: 12.5px; color: var(--text-dim); padding: 8px 16px 12px; }
+  /* 세로 피드(정보글·동행) */
+  .feed-list { padding: 0 16px; }
+  .feed-row { display: flex; align-items: center; gap: 10px; padding: 12px 2px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .feed-row:last-child { border-bottom: none; }
+  .feed-row:active { opacity: 0.6; }
+  .fr-body { flex: 1; min-width: 0; }
+  .fr-title { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-meta { font-size: 11.5px; color: var(--text-sub); font-weight: 500; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-chev { width: 16px; height: 16px; color: var(--text-dim); flex: none; }
   .rail-card { flex: none; background: var(--card); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: transform 0.1s, border-color 0.15s; }
   .rail-card:active { transform: scale(0.98); }
   .rail-card:hover { border-color: var(--accent); }
@@ -2337,16 +2346,14 @@
       <div class="section-header" id="secCompanion" style="display:none;"><h2>내 동행 <span class="count" id="homeCompCount"></span></h2><span class="more" onclick="goTab2('screen-companions')">전체 ›</span></div>
       <div id="homeCompanions"></div>
 
-      <!-- ===== 커뮤니티 피드: 지금 코미아에선 ===== -->
-      <div class="feed-divider"><span>지금 코미아에선 👀</span></div>
+      <!-- ===== 커뮤니티 피드 ===== -->
+      <div class="section-header" style="margin-top:16px;"><h2>방금 올라온 정보글</h2></div>
+      <div class="feed-list" id="feedInfo"></div>
 
-      <div class="section-header"><h2>🆕 방금 올라온 정보글</h2></div>
-      <div class="home-rail" id="feedInfo"></div>
+      <div class="section-header"><h2>같이 갈 사람 구해요</h2><span class="more" onclick="goTab2('screen-companions')">전체 ›</span></div>
+      <div class="feed-list" id="feedComp"></div>
 
-      <div class="section-header"><h2>👋 같이 갈 사람 구해요</h2><span class="more" onclick="goTab2('screen-companions')">전체 ›</span></div>
-      <div class="home-rail" id="feedComp"></div>
-
-      <div class="section-header"><h2>✨ 새로 들어온 행사</h2><span class="more" onclick="goTab2('screen-events')">전체 ›</span></div>
+      <div class="section-header"><h2>신규 행사 모아보기</h2><span class="more" onclick="goNewEvents()">전체 ›</span></div>
       <div class="home-rail" id="feedNew"></div>
 
       <div style="height:24px"></div>
@@ -2687,7 +2694,7 @@
         </div>
         <div class="comment">
           <div class="comment-head"><span class="comment-author" style="color:var(--accent);">cherry_aka (작성자)</span><span class="comment-time">1시간 전</span></div>
-          <div class="comment-body">네 좋아요! 그룹챗 초대 보낼게요 ✨</div>
+          <div class="comment-body">네 좋아요! 그룹챗 초대 보낼게요</div>
         </div>
         <div class="comment">
           <div class="comment-head"><span class="comment-author">@blue_arona</span><span class="comment-time">45분 전</span></div>
@@ -3271,7 +3278,7 @@
           <div class="msg-avatar">CA</div>
           <div class="msg-content">
             <div class="msg-name">cherry_aka <span class="verified">✓</span></div>
-            <div class="msg-line"><div class="bubble">사고 싶은 굿즈 리스트도 미리 공유해요! 줄 나눠서 서면 효율적일듯 🙌</div><span class="msg-time">09:22</span></div>
+            <div class="msg-line"><div class="bubble">사고 싶은 굿즈 리스트도 미리 공유해요! 줄 나눠서 서면 효율적일듯</div><span class="msg-time">09:22</span></div>
           </div>
         </div>
       </div>
@@ -4396,13 +4403,13 @@
       if (error) { toast('등록 실패: ' + error.message); return; }
       if (titleEl) titleEl.value = ''; if (bodyEl) bodyEl.value = '';
       const row = data && data[0];
-      toast('방이 만들어졌어요 ✨ 친구는 초대 링크로 부르세요');
+      toast('방이 만들어졌어요 친구는 초대 링크로 부르세요');
       loadCompanionPosts(CUR_EVENT);
       back();
       if (row && row.invite_token) setTimeout(() => shareInvite(row.invite_token), 300);
       return;
     }
-    toast('모집글이 등록됐어요 ✨');
+    toast('모집글이 등록됐어요');
     setTimeout(back, 650);
   }
 
@@ -4882,7 +4889,7 @@
       const { error } = await sb.from('profiles').update({ nickname: nick }).eq('id', u.id);
       if (error) throw error;
       applyNickname(nick);
-      toast('프로필을 저장했어요 ✨');
+      toast('프로필을 저장했어요');
       loadMyProfile(); back();
     } catch (e) { toast('저장 실패: ' + (e.message || e)); }
   }
@@ -4953,7 +4960,7 @@
     saveInterests();   // 라이브 모드면 DB에 관심사 저장(아니면 무시)
     try { localStorage.setItem('comia_seen', '1'); } catch (e) {}
     goTab2('screen-home');
-    toast('환영해요! 코미아를 시작합니다 ✨');
+    toast('환영해요! 코미아를 시작합니다');
   }
   // 온보딩에서 고른 대분류 → 행사 탭 '내 취향' 프리셋으로 반영
   function saveOnboardingTaste() {
@@ -5254,7 +5261,7 @@
       if (rows.length) await sb.from('profile_interests').upsert(rows);
       MY_CATS = [...INT_CATS]; MY_ITEMS = [...INT_TAGS];
       renderReco(); loadMyProfile();
-      toast('관심 작품을 저장했어요 ✨'); setTimeout(back, 450);
+      toast('관심 작품을 저장했어요'); setTimeout(back, 450);
     } catch (e) { toast('저장 실패: ' + (e.message || e)); }
   }
 
@@ -5657,7 +5664,7 @@
       const del = (myId && c.author_id === myId) ? '<span class="cmt-del" onclick="event.stopPropagation();delInfoComment(\'' + c.id + '\',\'' + postId + '\')">삭제</span>' : '';
       return '<div class="cmt"><div class="cmt-head"><span class="cmt-au">@' + htmlesc(nick) + '</span> ' + dukBadge(c.author_id) + '<span class="cmt-tm">' + timeAgo(c.created_at) + '</span>' + del + '</div><div class="cmt-bd">' + htmlesc(c.body) + '</div></div>';
     }).join('');
-    box.innerHTML = (list.length ? '<div class="cmt-list">' + rows + '</div>' : '<div class="cmt-empty">첫 댓글을 남겨보세요 ✍️</div>')
+    box.innerHTML = (list.length ? '<div class="cmt-list">' + rows + '</div>' : '<div class="cmt-empty">첫 댓글을 남겨보세요</div>')
       + '<div class="cmt-input"><input id="cmtIn-' + postId + '" maxlength="300" placeholder="댓글 달기…" onkeydown="if(event.key===\'Enter\')addInfoComment(\'' + postId + '\')"><button onclick="addInfoComment(\'' + postId + '\')">등록</button></div>';
   }
   async function addInfoComment(postId) {
@@ -5707,7 +5714,7 @@
     try {
       const { error } = await sb.from('event_info_posts').insert({ event_id: CUR_EVENT.dbid, author_id: u.id, category: IW_CAT, title: title, body: body });
       if (error) throw error;
-      toast('정보를 올렸어요 🙌');
+      toast('정보를 올렸어요');
       back(); loadInfoPosts(CUR_EVENT);
     } catch (e) { toast('등록 실패: ' + (e.message || e)); }
   }
@@ -5717,7 +5724,7 @@
     catch (e) { toast('삭제 실패'); }
   }
   function back() { if (history.length > 1) { history.pop(); showScreen(history[history.length - 1]); } }
-  function goTab(el) { const id = el.dataset.screen; if (id === 'screen-events') ONLY_GOING = false; history.length = 0; history.push(id); showScreen(id); }
+  function goTab(el) { const id = el.dataset.screen; if (id === 'screen-events') { ONLY_GOING = false; NEW_ONLY = false; } history.length = 0; history.push(id); showScreen(id); }
   function goTab2(id) { history.length = 0; history.push(id); showScreen(id); }
 
   /* ---------- 안드로이드 하드웨어 뒤로가기 (앱 종료 방지) ---------- */
@@ -5772,7 +5779,7 @@
     const id = btn.dataset.eid, dbid = btn.dataset.dbid;
     if (!LIVE || !sb || !dbid) {   // 데모/로컬 행사 → 로컬 토글만
       const on = !btn.classList.contains('on');
-      goBtnState(btn, on); if (on) toast('「갈래요」에 담았어요 ✨'); return;
+      goBtnState(btn, on); if (on) toast('「갈래요」에 담았어요'); return;
     }
     const u = await requireLogin(); if (!u) return;
     if (GOING.has(id)) {           // 이미 참여 중 → 취소
@@ -6184,7 +6191,7 @@
       if (sb.auth.getSession) { const { data } = await sb.auth.getSession(); if (data && data.session) await sb.auth.signOut(); }
       const r = await sb.auth.signInWithPassword({ email: email, password: 'test1234' });
       if (r.error) { toast('로그인 실패: ' + r.error.message); return; }
-      toast(email.replace('@comia.app', '') + '(으)로 로그인 ✨');
+      toast(email.replace('@comia.app', '') + '(으)로 로그인');
       await afterLogin(r.data.user, true);
     } catch (e) { toast('오류: ' + (e.message || e)); }
   }
@@ -6201,7 +6208,7 @@
         : await sb.auth.signInWithPassword({ email, password: pw });
       if (res.error) { toast(res.error.message); return; }
       if (!res.data.session) { toast('가입 확인 메일을 보냈어요. 메일의 링크를 눌러주세요'); return; }
-      toast(authMode === 'signup' ? '환영해요! ✨' : '로그인됐어요');
+      toast(authMode === 'signup' ? '환영해요!' : '로그인됐어요');
       await afterLogin(res.data.user);
     } catch (e) { toast('오류: ' + (e.message || e)); }
   }
@@ -6248,7 +6255,7 @@
         const { error } = await sb.auth.exchangeCodeForSession(code);
         if (error) throw error;
         const { data: { user } } = await sb.auth.getUser();
-        if (user) { toast('로그인됐어요 ✨'); afterLogin(user); }
+        if (user) { toast('로그인됐어요'); afterLogin(user); }
       } catch (e) { toast('로그인 처리 실패: ' + (e.message || e)); }
     });
   }
@@ -6380,13 +6387,16 @@
   }
 
   let ONLY_GOING = false;   // 행사 탭 기본 = 전체 행사. (내 행사는 홈 '내 행사' 섹션에서)
+  let NEW_ONLY = false;     // 행사 탭 '신규 등록순' 모드 (홈 '신규 행사 모아보기 ›'에서 진입)
   let EV_QUERY = '';        // 행사 탭 검색어 (필터와 AND 결합)
   function goMyEvents() {
     setEventScope('going');
     goTab2('screen-events');
   }
+  function goNewEvents() { NEW_ONLY = true; ONLY_GOING = false; EV_QUERY = ''; goTab2('screen-events'); }
+  function exitNewEvents() { NEW_ONLY = false; renderEvents(); }
   function setEventScope(s) {
-    ONLY_GOING = (s === 'going');
+    ONLY_GOING = (s === 'going'); NEW_ONLY = false;
     document.querySelectorAll('#scopeToggle .scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === s));
     buildCalMap();
     renderEvents();
@@ -6482,6 +6492,16 @@
     const cnt = document.getElementById('evCount');
     if (!box || !cnt) return;
     const q = EV_QUERY;
+    if (NEW_ONLY) {   // 신규 등록순(최근 추가된 행사 모아보기)
+      const list = EVENTS.filter(ev => ev._created && evPhase(ev) !== 2 && eventMatchesQuery(ev, q))
+        .sort((a, b) => new Date(b._created) - new Date(a._created));
+      cnt.innerHTML = '<span>신규 등록 <b>' + list.length + '</b>개 · 최근 추가순' + (q ? ' · “' + htmlesc(q) + '”' : '') + '</span>'
+        + '<span class="ev-clear" onclick="exitNewEvents()">전체 행사 ›</span>';
+      box.innerHTML = list.length ? list.map(eventCardHtml).join('')
+        : '<div class="ev-empty"><div class="ee-t">신규 등록 행사가 없어요</div><div class="ee-s">새로 추가되는 대로 여기에 모여요</div></div>';
+      RENDERED = list;
+      return;
+    }
     if (ONLY_GOING) {
       const list = EVENTS.filter(ev => GOING.has(ev._id) && eventMatchesQuery(ev, q)).sort((a, b) => a.sort - b.sort);
       cnt.innerHTML = '<span>내 행사 <b>' + list.length + '</b>개' + (q ? ' · “' + htmlesc(q) + '”' : '') + '</span>'
@@ -6661,7 +6681,7 @@
     if (hasTicket) acts += '<button class="fc-btn" onclick="focusTicket(\'' + id + '\')">' + tkSvg + '예매·공식</button>';
     acts += '<button class="fc-btn" onclick="openEv(\'' + id + '\')">' + ppSvg + '동행</button>';
     box.innerHTML = '<div class="focus-card' + (isToday ? ' today' : '') + '">'
-      + '<div class="fc-label"><span class="fc-dday">' + dlabel + '</span>' + (isToday ? '오늘 가는 행사예요! 🎏' : '다가오는 내 행사') + '</div>'
+      + '<div class="fc-label"><span class="fc-dday">' + dlabel + '</span>' + (isToday ? '오늘 가는 행사예요' : '다가오는 내 행사') + '</div>'
       + '<div class="fc-title" onclick="openEv(\'' + id + '\')">' + htmlesc(ev.t || '행사') + '</div>'
       + '<div class="fc-meta">' + meta + '</div>'
       + '<div class="fc-acts">' + acts + '</div></div>';
@@ -6689,17 +6709,16 @@
       const { data } = await sb.from('event_info_posts')
         .select('id, title, category, up, comments, created_at, event_id, events(title)')
         .order('created_at', { ascending: false }).limit(10);
-      const list = data || [];
+      const list = (data || []).slice(0, 4);
       box.innerHTML = list.length ? list.map(infoFeedCard).join('') : feedEmpty('아직 올라온 정보글이 없어요');
     } catch (e) { box.innerHTML = feedEmpty('불러오기 실패'); }
   }
+  const FR_CHEV = '<svg class="fr-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
   function infoFeedCard(p) {
     const evName = (p.events && p.events.title) || '행사';
-    const cat = INFO_CATS[p.category] || '팁';
-    return '<div class="rail-card info" onclick="openMyInfoPost(\'' + p.event_id + '\')">'
-      + '<div class="rc-top"><span class="cat-badge ' + p.category + '">' + cat + '</span><span class="rc-ev">' + htmlesc(evName) + '</span></div>'
-      + '<div class="rc-title">' + htmlesc(p.title) + '</div>'
-      + '<div class="rc-meta">👍 ' + (p.up || 0) + '　💬 ' + (p.comments || 0) + ' · ' + timeAgo(p.created_at) + '</div></div>';
+    const meta = htmlesc(evName) + ' · 추천 ' + (p.up || 0) + ' · 댓글 ' + (p.comments || 0) + ' · ' + timeAgo(p.created_at);
+    return '<div class="feed-row" onclick="openMyInfoPost(\'' + p.event_id + '\')">'
+      + '<div class="fr-body"><div class="fr-title">' + htmlesc(p.title) + '</div><div class="fr-meta">' + meta + '</div></div>' + FR_CHEV + '</div>';
   }
   async function loadHomeCompFeed() {
     const box = document.getElementById('feedComp'); if (!box) return;
@@ -6708,19 +6727,17 @@
       const { data } = await sb.from('companion_posts')
         .select('id, body, capacity, filled, status, meet_at, created_at, event_id, events(title)')
         .eq('status', 'open').order('created_at', { ascending: false }).limit(12);
-      const list = (data || []).filter(r => !r.capacity || (r.filled || 0) < r.capacity).slice(0, 10);
+      const list = (data || []).filter(r => !r.capacity || (r.filled || 0) < r.capacity).slice(0, 3);
       box.innerHTML = list.length ? list.map(compFeedCard).join('') : feedEmpty('지금 모집 중인 동행이 없어요');
     } catch (e) { box.innerHTML = feedEmpty('불러오기 실패'); }
   }
   function compFeedCard(r) {
     const evName = (r.events && r.events.title) || '행사';
-    const cap = r.capacity ? ((r.filled || 1) + '/' + r.capacity + '명') : '모집 중';
-    const meet = r.meet_at ? (typeof fmtMeet === 'function' ? fmtMeet(r.meet_at) + ' 집합' : '') : '';
-    const body = (r.body || '').trim();
-    return '<div class="rail-card comp" onclick="openEventGo(\'' + r.event_id + '\')">'
-      + '<div class="rc-ev2">' + htmlesc(evName) + '</div>'
-      + '<div class="rc-body">' + (body ? htmlesc(body) : '같이 가요!') + '</div>'
-      + '<div class="rc-meta"><span class="rc-cap">👥 ' + cap + '</span>' + (meet ? ' · ' + htmlesc(meet) : '') + '</div></div>';
+    const cap = r.capacity ? ((r.filled || 1) + '/' + r.capacity + '명 모집') : '모집 중';
+    const meet = (r.meet_at && typeof fmtMeet === 'function') ? ' · ' + fmtMeet(r.meet_at) + ' 집합' : '';
+    const meta = cap + meet + ' · ' + timeAgo(r.created_at);
+    return '<div class="feed-row" onclick="openEventGo(\'' + r.event_id + '\')">'
+      + '<div class="fr-body"><div class="fr-title">' + htmlesc(evName) + '</div><div class="fr-meta">' + htmlesc(meta) + '</div></div>' + FR_CHEV + '</div>';
   }
   function renderHomeNewEvents() {
     const box = document.getElementById('feedNew'); if (!box) return;
@@ -7097,7 +7114,7 @@
     try {
       const { error } = await sb.rpc('apply_companion', { p_post: postId, p_message: null });
       if (error) throw error;
-      toast('동행을 신청했어요 ✨ 글쓴이가 수락하면 알림이 가요');
+      toast('동행을 신청했어요 글쓴이가 수락하면 알림이 가요');
       loadCompanionPosts(CUR_EVENT);
     } catch (e) { toast('신청 실패: ' + (e.message || e)); }
   }
@@ -7189,7 +7206,7 @@
     try {
       const { error } = await sb.rpc('update_companion_room', { p_room: RS.room, p_capacity: RS.cap, p_meet_at: meetAt });
       if (error) throw error;
-      toast('동행 방 설정을 저장했어요 ✨');
+      toast('동행 방 설정을 저장했어요');
       back(); loadCompanionFeed();
     } catch (e) { toast('저장 실패: ' + (e.message || e)); }
   }
@@ -7592,7 +7609,7 @@
     try {
       const { error } = await sb.from('products').insert({ seller_id: u.id, title: title.slice(0, 120), price, description: desc || null, condition, status: 'selling', images });
       if (error) throw error;
-      toast('상품을 등록했어요 ✨');
+      toast('상품을 등록했어요');
       document.getElementById('sellTitle').value = '';
       document.getElementById('sellPrice').value = '';
       document.getElementById('sellDesc').value = '';
@@ -7659,7 +7676,7 @@
     try {
       const { error } = await sb.rpc('submit_event', { p_title: title, p_when: v('rpWhen'), p_venue: v('rpVenue'), p_url: v('rpUrl'), p_note: v('rpNote') });
       if (error) throw error;
-      toast('제보 고마워요! 확인 후 등록할게요 🙌');
+      toast('제보 고마워요! 확인 후 등록할게요');
       ['rpTitle', 'rpWhen', 'rpVenue', 'rpUrl', 'rpNote'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       setTimeout(back, 550);
     } catch (e) { toast('제보 실패: ' + (e.message || e)); }
@@ -7722,6 +7739,7 @@
 
   function clearEventFilter() {
     curFilter = emptyFilter();   // 범위(내 행사/전체)는 유지, 검색·필터만 초기화
+    NEW_ONLY = false;
     EV_QUERY = '';
     const inp = document.getElementById('evSearch'); if (inp) inp.value = '';
     const x = document.getElementById('evSearchClear'); if (x) x.style.display = 'none';
@@ -7861,7 +7879,7 @@
     });
     // SUBGENRES에 없지만 행사엔 있는 장르 → 기타
     const extra = [...present].filter(g => !shown.has(g)).sort((a, b) => a.localeCompare(b, 'ko'));
-    if (extra.length) { h += '<div class="fsub-head">✨ 기타</div>'; extra.forEach(g => { h += '<div class="opt' + (on.has(g) ? ' on' : '') + '">' + htmlesc(g) + '</div>'; }); }
+    if (extra.length) { h += '<div class="fsub-head">기타</div>'; extra.forEach(g => { h += '<div class="opt' + (on.has(g) ? ' on' : '') + '">' + htmlesc(g) + '</div>'; }); }
     grid.innerHTML = h;
     const hint = document.getElementById('genreHint'); if (hint) hint.textContent = selCats.length ? selCats.length + '개 분야' : '전체';
   }
@@ -8000,6 +8018,7 @@
   })();
   function applyFilter() {
     curFilter = collectFilterFromSheet();
+    NEW_ONLY = false;
     document.querySelectorAll('.preset').forEach(p => p.classList.remove('active'));
     renderEvents();
     closeFilter();
@@ -8330,7 +8349,7 @@
       const a = document.createElement('a'); a.href = url; a.download = 'comia_일정.png';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1500);
-      toast('이미지를 저장했어요 — 카톡·SNS에 올려보세요 🖼️');
+      toast('이미지를 저장했어요 — 카톡·SNS에 올려보세요');
     }, 'image/png');
   }
   // 참여(GOING) 행사를 .ics 파일로 내보내기 → 구글/애플 캘린더에 '가져오기'로 등록
