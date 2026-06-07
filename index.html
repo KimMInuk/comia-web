@@ -263,6 +263,30 @@
   .fc-btn:active { transform: scale(0.96); }
   .fc-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .focus-card.today .fc-btn.primary { background: var(--success); color: #07321A; border-color: var(--success); }
+  /* 홈 커뮤니티 피드 */
+  .feed-divider { display: flex; align-items: center; gap: 10px; margin: 18px 16px 4px; }
+  .feed-divider::before, .feed-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .feed-divider span { font-size: 12px; font-weight: 800; color: var(--text-sub); letter-spacing: -0.2px; }
+  .home-rail { display: flex; gap: 10px; overflow-x: auto; padding: 4px 16px 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .home-rail::-webkit-scrollbar { display: none; }
+  .feed-empty { font-size: 12.5px; color: var(--text-dim); padding: 10px 2px; }
+  .rail-card { flex: none; background: var(--card); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: transform 0.1s, border-color 0.15s; }
+  .rail-card:active { transform: scale(0.98); }
+  .rail-card:hover { border-color: var(--accent); }
+  .rail-card.info, .rail-card.comp { width: 215px; padding: 12px 13px; display: flex; flex-direction: column; gap: 5px; }
+  .rc-top { display: flex; align-items: center; gap: 6px; }
+  .rc-ev { font-size: 11px; color: var(--text-sub); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rc-ev2 { font-size: 11.5px; color: var(--accent); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rc-title { font-size: 13.5px; font-weight: 700; color: var(--text); line-height: 1.35; letter-spacing: -0.2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 36px; }
+  .rc-body { font-size: 12.5px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px; }
+  .rc-meta { font-size: 11.5px; color: var(--text-dim); font-weight: 600; margin-top: 1px; }
+  .rc-cap { color: var(--accent); font-weight: 800; }
+  .rail-card.newev { width: 140px; padding: 0; overflow: hidden; }
+  .ne-thumb { position: relative; width: 100%; height: 92px; }
+  .ne-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ne-new { position: absolute; top: 7px; left: 7px; background: #EB5757; color: #fff; font-size: 9.5px; font-weight: 800; padding: 2px 6px; border-radius: 6px; letter-spacing: 0.3px; }
+  .ne-title { font-size: 12.5px; font-weight: 700; color: var(--text); line-height: 1.3; letter-spacing: -0.2px; padding: 9px 10px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ne-meta { font-size: 11px; color: var(--text-dim); font-weight: 600; padding: 3px 10px 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hero-title {
     font-size: 22px;
     font-weight: 800;
@@ -2299,13 +2323,13 @@
         </div>
       </div>
 
-      <!-- 오늘의 포커스: 가장 임박한 내 갈래요 행사 + 원탭 액션 -->
-      <div id="homeFocus" style="display:none;"></div>
-
       <div class="hero-wrap">
         <div class="hero-carousel" id="homeHeroCarousel"></div>
         <div class="hero-dots" id="heroDots"></div>
       </div>
+
+      <!-- 오늘의 포커스: 가장 임박한 내 갈래요 행사 + 원탭 액션 (배너 아래) -->
+      <div id="homeFocus" style="display:none;"></div>
 
       <div class="section-header" id="secMine" style="display:none;"><h2>내 행사 <span class="count" id="homeMineCount"></span></h2><span class="more" onclick="goMyEvents()">전체 ›</span></div>
       <div id="homeMine"></div>
@@ -2313,10 +2337,19 @@
       <div class="section-header" id="secCompanion" style="display:none;"><h2>내 동행 <span class="count" id="homeCompCount"></span></h2><span class="more" onclick="goTab2('screen-companions')">전체 ›</span></div>
       <div id="homeCompanions"></div>
 
-      <div class="section-header"><h2>추천 행사</h2><span class="more" onclick="goTab2('screen-events')">더보기 ›</span></div>
-      <div id="homeReco"></div>
+      <!-- ===== 커뮤니티 피드: 지금 코미아에선 ===== -->
+      <div class="feed-divider"><span>지금 코미아에선 👀</span></div>
 
-      <div style="height:20px"></div>
+      <div class="section-header"><h2>🆕 방금 올라온 정보글</h2></div>
+      <div class="home-rail" id="feedInfo"></div>
+
+      <div class="section-header"><h2>👋 같이 갈 사람 구해요</h2><span class="more" onclick="goTab2('screen-companions')">전체 ›</span></div>
+      <div class="home-rail" id="feedComp"></div>
+
+      <div class="section-header"><h2>✨ 새로 들어온 행사</h2><span class="more" onclick="goTab2('screen-events')">전체 ›</span></div>
+      <div class="home-rail" id="feedNew"></div>
+
+      <div style="height:24px"></div>
     </div>
 
     <!-- ===================== EVENTS ===================== -->
@@ -4285,7 +4318,7 @@
     else { document.getElementById('scrollArea').scrollTop = 0; }
     if (id === 'screen-events') renderEvents();
     if (id === 'screen-calendar') { if (LIVE && sb && !(typeof EVENTS !== 'undefined' && EVENTS.length)) loadEvents(); else { buildCalMap(); renderCalendar(); } }
-    if (id === 'screen-home' && LIVE && sb) refreshCompanionBadge();
+    if (id === 'screen-home' && LIVE && sb) { refreshCompanionBadge(); loadHomeFeeds(); }
     // 탭 재진입: 캐시가 신선하면 즉시 캐시 렌더(네트워크 생략), 아니면 로드.
     if (id === 'screen-market' && LIVE && sb) { if (swrFresh('market') && MARKET.length) renderMarket(); else loadProducts(); }
     if (id === 'screen-companions') { if (swrFresh('comp') && (COMP.rooms.length || COMP.browse.length || COMP.incoming.length)) renderCompanionHub(); else loadCompanionFeed(); }
@@ -6043,7 +6076,7 @@
       t: row.title, type: row.type, official: !!row.official, region: row.region,
       genres: row.genres || [], ips: row.ip_tags || [], cats: row.cats || [], weekend,
       month, sort, meta, badges, dateStr, venue: row.venue || '', source: row.source_name || '주최',
-      sourceUrl: row.source_url || '', ticketUrl: row.ticket_url || '', dday, _start: d, _end: e || d,
+      sourceUrl: row.source_url || '', ticketUrl: row.ticket_url || '', dday, _start: d, _end: e || d, _created: row.created_at || null,
       price: row.price || '', description: row.description || '',
       lat: (row.lat != null ? Number(row.lat) : null), lng: (row.lng != null ? Number(row.lng) : null),
       address: row.address || '',
@@ -6639,6 +6672,71 @@
   function focusTicket(id) { if (focusEvSet(id)) openTicket(); }
   function focusCheckin(id) { if (focusEvSet(id)) goto('screen-checkin'); }
 
+  // ===== 홈 커뮤니티 피드: 방금 올라온 정보글 / 같이 갈 사람 / 새로 들어온 행사 =====
+  function feedEmpty(msg) { return '<div class="feed-empty">' + msg + '</div>'; }
+  function openEventGo(dbid) {   // 행사 상세(동행 탭 기본) 열기 — 피드 카드 탭
+    const ev = EV_BY_ID['db' + dbid] || (EVENTS || []).find(e => e.dbid === dbid);
+    if (ev) openEv(ev._id); else toast('행사를 찾을 수 없어요');
+  }
+  function loadHomeFeeds() {
+    if (!LIVE || !sb) return;
+    loadHomeInfoFeed(); loadHomeCompFeed(); renderHomeNewEvents();
+  }
+  async function loadHomeInfoFeed() {
+    const box = document.getElementById('feedInfo'); if (!box) return;
+    if (!box.children.length) box.innerHTML = feedEmpty('불러오는 중…');
+    try {
+      const { data } = await sb.from('event_info_posts')
+        .select('id, title, category, up, comments, created_at, event_id, events(title)')
+        .order('created_at', { ascending: false }).limit(10);
+      const list = data || [];
+      box.innerHTML = list.length ? list.map(infoFeedCard).join('') : feedEmpty('아직 올라온 정보글이 없어요');
+    } catch (e) { box.innerHTML = feedEmpty('불러오기 실패'); }
+  }
+  function infoFeedCard(p) {
+    const evName = (p.events && p.events.title) || '행사';
+    const cat = INFO_CATS[p.category] || '팁';
+    return '<div class="rail-card info" onclick="openMyInfoPost(\'' + p.event_id + '\')">'
+      + '<div class="rc-top"><span class="cat-badge ' + p.category + '">' + cat + '</span><span class="rc-ev">' + htmlesc(evName) + '</span></div>'
+      + '<div class="rc-title">' + htmlesc(p.title) + '</div>'
+      + '<div class="rc-meta">👍 ' + (p.up || 0) + '　💬 ' + (p.comments || 0) + ' · ' + timeAgo(p.created_at) + '</div></div>';
+  }
+  async function loadHomeCompFeed() {
+    const box = document.getElementById('feedComp'); if (!box) return;
+    if (!box.children.length) box.innerHTML = feedEmpty('불러오는 중…');
+    try {
+      const { data } = await sb.from('companion_posts')
+        .select('id, body, capacity, filled, status, meet_at, created_at, event_id, events(title)')
+        .eq('status', 'open').order('created_at', { ascending: false }).limit(12);
+      const list = (data || []).filter(r => !r.capacity || (r.filled || 0) < r.capacity).slice(0, 10);
+      box.innerHTML = list.length ? list.map(compFeedCard).join('') : feedEmpty('지금 모집 중인 동행이 없어요');
+    } catch (e) { box.innerHTML = feedEmpty('불러오기 실패'); }
+  }
+  function compFeedCard(r) {
+    const evName = (r.events && r.events.title) || '행사';
+    const cap = r.capacity ? ((r.filled || 1) + '/' + r.capacity + '명') : '모집 중';
+    const meet = r.meet_at ? (typeof fmtMeet === 'function' ? fmtMeet(r.meet_at) + ' 집합' : '') : '';
+    const body = (r.body || '').trim();
+    return '<div class="rail-card comp" onclick="openEventGo(\'' + r.event_id + '\')">'
+      + '<div class="rc-ev2">' + htmlesc(evName) + '</div>'
+      + '<div class="rc-body">' + (body ? htmlesc(body) : '같이 가요!') + '</div>'
+      + '<div class="rc-meta"><span class="rc-cap">👥 ' + cap + '</span>' + (meet ? ' · ' + htmlesc(meet) : '') + '</div></div>';
+  }
+  function renderHomeNewEvents() {
+    const box = document.getElementById('feedNew'); if (!box) return;
+    const list = (EVENTS || []).filter(e => e._created && (typeof upcomingOnly !== 'function' || upcomingOnly(e)))
+      .sort((a, b) => new Date(b._created) - new Date(a._created)).slice(0, 10);
+    box.innerHTML = list.length ? list.map(newEventCard).join('') : feedEmpty('새 행사가 없어요');
+  }
+  function newEventCard(ev) {
+    const grad = ev.gradStr || '#5B9BE8,#3A6FB5';
+    const img = (ev.img && !String(ev.img).startsWith('data:')) ? '<img src="' + ev.img + '" alt="" loading="lazy" onerror="this.remove()">' : '';
+    return '<div class="rail-card newev" onclick="openEv(\'' + ev._id + '\')">'
+      + '<div class="ne-thumb" style="background:linear-gradient(135deg,' + grad + ')">' + img + '<span class="ne-new">NEW</span></div>'
+      + '<div class="ne-title">' + htmlesc(ev.t || '행사') + '</div>'
+      + '<div class="ne-meta">' + htmlesc(ev.dateStr || '') + (ev.region ? ' · ' + htmlesc(ev.region) : '') + '</div></div>';
+  }
+
   // 내 동행: 현재 참여 중인 동행 방 + 안읽음 배지
   function renderMyCompanions() {
     const box = document.getElementById('homeCompanions'), sec = document.getElementById('secCompanion');
@@ -6722,6 +6820,7 @@
       MY_ROOMS = rooms || [];
     } catch (e) { MY_ROOMS = []; }
     renderMyCompanions(); renderMyEvents(); renderReco();
+    loadHomeFeeds();   // 커뮤니티 피드(정보글·동행모집·신규행사)
     renderHeroCarousel();   // 참여·내취향 반영해 히어로 캐러셀 재구성
     loadSavedFilters();   // 저장한 필터 칩 주입
     refreshCompanionBadge();   // 동행 탭 안읽음 레드닷
