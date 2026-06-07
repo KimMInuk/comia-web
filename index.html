@@ -1635,7 +1635,7 @@
   .cal-more { font-size: 9px; font-weight: 700; color: var(--text-dim); line-height: 1; margin-top: 1px; }
   .cal-cap { text-align: center; font-size: 11.5px; color: var(--text-dim); font-weight: 500; padding: 16px 16px 4px; }
   /* 캘린더 범위 토글(관심사/전체) */
-  .cal-scope { display: inline-flex; gap: 2px; margin: 0 16px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 3px; }
+  .cal-scope { display: flex; gap: 2px; width: fit-content; margin: 0 auto 12px; background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 3px; }
   .cal-scope .sc { padding: 6px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; letter-spacing: -0.2px; transition: background .13s, color .13s; }
   .cal-scope .sc.on { background: var(--accent); color: #fff; }
   /* 캘린더 날짜별 행사 바텀시트 */
@@ -7883,41 +7883,47 @@
     if (allDay) return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate());
     return d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + 'T' + p(d.getUTCHours()) + p(d.getUTCMinutes()) + '00Z';
   }
+  // 지금 화면(스코프·보기·기간·필터)에 보이는 행사 = CAL_MAP의 현재 표시 범위
+  function visibleCalEvents() {
+    const keys = [];
+    if (CAL_MODE === 'week') { const s = wkStart(), n = Math.round((wkEnd() - s) / 86400000) + 1; for (let i = 0; i < n; i++) keys.push(calKey(addDays(s, i))); }
+    else { const dim = new Date(calYear, calMonth, 0).getDate(); for (let d = 1; d <= dim; d++) keys.push(calYear + '-' + calMonth + '-' + d); }
+    const seen = new Set(), out = [];
+    keys.forEach(k => (CAL_MAP[k] || []).forEach(ev => { if (!seen.has(ev._id)) { seen.add(ev._id); out.push(ev); } }));
+    return out;
+  }
   function exportMyCalendar() {
-    const ids = [...GOING];
-    if (!ids.length) { toast('참여 표시한 행사가 없어요 — 행사에서 참전을 눌러보세요'); return; }
-    const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Comia//KR//', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:코미아 내 일정'];
+    const evs = visibleCalEvents();
+    if (!evs.length) { toast('지금 화면에 표시된 행사가 없어요'); return; }
+    const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Comia//KR//', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:코미아 일정'];
     let n = 0;
-    ids.forEach(id => {
-      const ev = EV_BY_ID[id]; if (!ev) return;
+    const meta = ev => { L.push('SUMMARY:' + icsEsc(ev.t || '행사')); const loc = ev.venue || ev.region || ''; if (loc) L.push('LOCATION:' + icsEsc(loc)); const link = ev.ticketUrl || ev.sourceUrl || ''; if (link) L.push('DESCRIPTION:' + icsEsc(link + '\n\nvia 코미아')); };
+    const timed = (ev, s, e, uid) => { L.push('BEGIN:VEVENT', 'UID:' + uid, 'DTSTART:' + icsStamp(s), 'DTEND:' + icsStamp(e)); meta(ev); L.push('END:VEVENT'); n++; };
+    const allday = (ev, sd, ed, uid) => { L.push('BEGIN:VEVENT', 'UID:' + uid, 'DTSTART;VALUE=DATE:' + icsStamp(sd, true), 'DTEND;VALUE=DATE:' + icsStamp(ed, true)); meta(ev); L.push('END:VEVENT'); n++; };
+    evs.forEach(ev => {
       const times = GO_TIMES[ev._id] || {};
-      const days = (GO_DATES[ev._id] && GO_DATES[ev._id].length) ? GO_DATES[ev._id].slice()
-        : ((ev._start && !isNaN(ev._start)) ? [calKey(dayStart(ev._start))] : []);
-      days.forEach(k => {
-        const base = keyToDate(k), t = times[k];
-        L.push('BEGIN:VEVENT', 'UID:comia-' + ev._id + '-' + k + '@comia.app');
-        if (t) {
-          const [hh, mm] = t.split(':').map(Number);
-          const s = new Date(base.getFullYear(), base.getMonth(), base.getDate(), hh, mm);
-          L.push('DTSTART:' + icsStamp(s), 'DTEND:' + icsStamp(new Date(s.getTime() + 2 * 3600000)));
-        } else {
-          const e = new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1);
-          L.push('DTSTART;VALUE=DATE:' + icsStamp(base, true), 'DTEND;VALUE=DATE:' + icsStamp(e, true));
-        }
-        L.push('SUMMARY:' + icsEsc(ev.t || '행사'));
-        const loc = ev.venue || ev.region || ''; if (loc) L.push('LOCATION:' + icsEsc(loc));
-        const link = ev.ticketUrl || ev.sourceUrl || ''; if (link) L.push('DESCRIPTION:' + icsEsc(link + '\n\nvia 코미아'));
-        L.push('END:VEVENT'); n++;
-      });
+      const goDates = (GOING.has(ev._id) && (GO_DATES[ev._id] || []).length) ? GO_DATES[ev._id] : null;
+      if (goDates) {   // 참여 + 가는 날 지정 → 그 날짜(+시간)만
+        goDates.forEach(k => {
+          const base = keyToDate(k), t = times[k];
+          if (t) { const [hh, mm] = t.split(':').map(Number); const s = new Date(base.getFullYear(), base.getMonth(), base.getDate(), hh, mm); timed(ev, s, new Date(s.getTime() + 2 * 3600000), 'comia-' + ev._id + '-' + k + '@comia.app'); }
+          else allday(ev, base, new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1), 'comia-' + ev._id + '-' + k + '@comia.app');
+        });
+      } else {   // 그 외 → 행사 실제 기간 1건
+        const s = (ev._start && !isNaN(ev._start)) ? ev._start : null; if (!s) return;
+        const e = (ev._end && !isNaN(ev._end)) ? ev._end : s;
+        if (s.getHours() || s.getMinutes()) timed(ev, s, (e.getTime() > s.getTime() && (e - s) < 86400000) ? e : new Date(s.getTime() + 2 * 3600000), 'comia-' + ev._id + '@comia.app');
+        else allday(ev, dayStart(s), new Date(dayStart(e).getFullYear(), dayStart(e).getMonth(), dayStart(e).getDate() + 1), 'comia-' + ev._id + '@comia.app');
+      }
     });
     L.push('END:VCALENDAR');
     try {
       const blob = new Blob([L.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'comia_내일정.ics';
+      const a = document.createElement('a'); a.href = url; a.download = 'comia_일정.ics';
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1500);
-      toast(n + '개 일정을 캘린더 파일(.ics)로 내보냈어요 📅');
+      toast('현재 보기의 ' + n + '개 일정을 캘린더로 내보냈어요 📅');
     } catch (e) { toast('내보내기 실패 — 잠시 후 다시'); }
   }
   // 월간 셀 막대: 연속 막대(짧은 다중일·단일) + 장기행사 점(.pt). 주 단위로 레인(겹침 회피) 배치.
