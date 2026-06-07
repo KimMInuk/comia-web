@@ -3946,6 +3946,31 @@
     </div>
     <div class="filter-summary" id="filterSummary"></div>
     <div class="sheet-body" id="sheetBody">
+      <!-- 기간 -->
+      <div class="filter-group">
+        <div class="label">기간</div>
+        <div class="opt-grid" data-single>
+          <div class="opt">이번 주말</div>
+          <div class="opt">이번 달</div>
+          <div class="opt">다음 달</div>
+          <div class="opt">3개월 내</div>
+          <div class="opt">지난 행사</div>
+          <div class="opt">직접 선택</div>
+        </div>
+      </div>
+      <!-- 지역 -->
+      <div class="filter-group">
+        <div class="label">지역</div>
+        <div class="opt-grid" data-multi>
+          <div class="opt">서울</div>
+          <div class="opt">경기·인천</div>
+          <div class="opt">부산</div>
+          <div class="opt">대구</div>
+          <div class="opt">대전·충청</div>
+          <div class="opt">광주·전라</div>
+          <div class="opt">온라인</div>
+        </div>
+      </div>
       <!-- 관심 분야 (대분류) -->
       <div class="filter-group">
         <div class="label">관심 분야 <span style="font-weight:600;color:var(--text-dim);font-size:11px;">대분류</span></div>
@@ -3955,6 +3980,14 @@
           <div class="opt"><span class="ico-dot" style="background:#4F6FC8"></span>음악</div>
           <div class="opt"><span class="ico-dot" style="background:#E04F8A"></span>아이돌·버튜버</div>
           <div class="opt"><span class="ico-dot" style="background:#4FB89A"></span>동인·창작</div>
+        </div>
+      </div>
+      <!-- 가격 -->
+      <div class="filter-group">
+        <div class="label">가격</div>
+        <div class="opt-grid" data-single>
+          <div class="opt">무료</div>
+          <div class="opt">유료</div>
         </div>
       </div>
       <!-- 주최 -->
@@ -3984,40 +4017,15 @@
           <div class="opt">e스포츠</div>
         </div>
       </div>
-      <!-- 게임 / IP -->
-      <div class="filter-group">
-        <div class="label">게임 · IP <span class="cnt" id="ipCnt"></span></div>
-        <div class="opt-grid" data-multi id="ipGrid"></div>
-      </div>
       <!-- 세부 장르(소분류) — 위 '관심 분야' 선택에 따라 동적 표시 -->
       <div class="filter-group">
         <div class="label">세부 장르 <span class="cnt" id="genreHint" style="font-weight:600;color:var(--text-dim);"></span></div>
         <div class="opt-grid" data-multi id="genreGrid"></div>
       </div>
-      <!-- 지역 -->
+      <!-- 게임 / IP -->
       <div class="filter-group">
-        <div class="label">지역</div>
-        <div class="opt-grid" data-multi>
-          <div class="opt">서울</div>
-          <div class="opt">경기·인천</div>
-          <div class="opt">부산</div>
-          <div class="opt">대구</div>
-          <div class="opt">대전·충청</div>
-          <div class="opt">광주·전라</div>
-          <div class="opt">온라인</div>
-        </div>
-      </div>
-      <!-- 기간 -->
-      <div class="filter-group">
-        <div class="label">기간</div>
-        <div class="opt-grid" data-single>
-          <div class="opt">이번 주말</div>
-          <div class="opt">이번 달</div>
-          <div class="opt">다음 달</div>
-          <div class="opt">3개월 내</div>
-          <div class="opt">지난 행사</div>
-          <div class="opt">직접 선택</div>
-        </div>
+        <div class="label">게임 · IP <span class="cnt" id="ipCnt"></span></div>
+        <div class="opt-grid" data-multi id="ipGrid"></div>
       </div>
       <div style="height: 12px;"></div>
     </div>
@@ -6003,7 +6011,7 @@
     } catch (e) { showScreen(seenBefore() ? 'screen-home' : 'screen-auth'); }
   }
 
-  function emptyFilter() { return { cats:[], host:[], types:[], ips:[], genres:[], regions:[], period:[] }; }
+  function emptyFilter() { return { period:[], regions:[], cats:[], price:[], host:[], types:[], ips:[], genres:[] }; }
   let curFilter = emptyFilter();
   let RENDERED = [], CUR_EVENT = null, EV_BY_ID = {};
   let GOING = new Set();          // 내가 '참전' 표시한 행사 _id ('db'+uuid)
@@ -6022,8 +6030,14 @@
     'J-POP 내한': { types:['내한공연'] }
   };
 
+  function isFreeEvent(ev) { return /무료|free/i.test(ev.price || ''); }
+  function isPaidEvent(ev) { return /\d/.test(ev.price || '') && !isFreeEvent(ev); }   // 가격에 숫자 있고 무료 아님
   function eventMatches(ev, f) {
     if (f.cats.length && !f.cats.some(x => ev.cats.includes(x))) return false;
+    if (f.price && f.price.length) {
+      if (f.price[0] === '무료' && !isFreeEvent(ev)) return false;
+      if (f.price[0] === '유료' && !isPaidEvent(ev)) return false;
+    }
     if (f.host.length) {
       const h = f.host[0];
       if (h === '공식 행사' && !ev.official) return false;
@@ -7370,13 +7384,7 @@
   function renderQuickChips() {
     const row = document.getElementById('quickRow'); if (!row) return;
     let h = '';
-    // 관심 대분류(MY_CATS)를 앞으로 정렬
-    const orderedCats = QUICK_CATS.slice().sort((a, b) => (MY_CATS.indexOf(b) >= 0 ? 1 : 0) - (MY_CATS.indexOf(a) >= 0 ? 1 : 0));
-    orderedCats.forEach(c => {
-      const m = CAT_META[c] || {};
-      h += '<div class="quick-chip' + (curFilter.cats.includes(c) ? ' on' : '') + '" data-qk="cats" data-qv="' + attresc(c) + '"><span class="ico-dot" style="background:' + (m.c || '#888') + '"></span>' + htmlesc(c) + '</div>';
-    });
-    h += '<div class="quick-div"></div>';
+    // 대분류 칩은 제거(필터 시트에서 세부 설정) — 퀵행은 지역·기간 빠른 토글만
     QUICK_REGIONS.forEach(r => {
       h += '<div class="quick-chip' + (curFilter.regions.includes(r) ? ' on' : '') + '" data-qk="regions" data-qv="' + attresc(r) + '">' + htmlesc(r) + '</div>';
     });
@@ -7405,7 +7413,7 @@
   })();
 
   /* ---------- 필터 시트 ---------- */
-  const GROUP_KEYS = ['cats', 'host', 'types', 'ips', 'genres', 'regions', 'period'];
+  const GROUP_KEYS = ['period', 'regions', 'cats', 'price', 'host', 'types', 'genres', 'ips'];
   function sheetGroups() { return document.querySelectorAll('#sheetBody .filter-group'); }
   function collectFilterFromSheet() {
     const f = emptyFilter();
@@ -7870,11 +7878,16 @@
         it.long = eventDayKeys(it.ev).length > LONG;
         it.startKey = (it.ev._start && !isNaN(it.ev._start)) ? calKey(dayStart(it.ev._start)) : null;
       });
-      const spans = items.filter(it => !it.long).sort((a, b) => a.s - b.s || (b.e - b.s) - (a.e - a.s));
+      const allspans = items.filter(it => !it.long);
       const points = items.filter(it => it.long);
-      const laneEnd = [];
-      spans.forEach(it => { let l = 0; while (l < laneEnd.length && laneEnd[l] >= it.s) l++; it.lane = l; laneEnd[l] = it.e; });
-      const nLanes = Math.min(MAXLANE, laneEnd.length);
+      // 다중일 먼저(연속 막대 윗줄) → 단일일은 그날 빈 레인에 (하루짜리 행사도 안 묻히게)
+      const multi = allspans.filter(it => it.e > it.s).sort((a, b) => a.s - b.s || (b.e - b.s) - (a.e - a.s));
+      const single = allspans.filter(it => it.e === it.s);
+      const placed = [];
+      const assign = it => { let l = 0; while (placed.some(p => p.lane === l && p.s <= it.e && p.e >= it.s)) l++; it.lane = l; placed.push({ s: it.s, e: it.e, lane: l }); };
+      multi.forEach(assign); single.forEach(assign);
+      const spans = multi.concat(single);
+      const nLanes = Math.min(MAXLANE, placed.reduce((m, p) => Math.max(m, p.lane + 1), 0));
       for (let j = 0; j < 7; j++) {
         const k = week[j]; if (!k) continue;
         let bars = '';
