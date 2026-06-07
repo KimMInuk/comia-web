@@ -117,7 +117,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky; top: 0; z-index: 18;            /* 고정 솔리드 헤더(글래스 제거) */
+    /* 뷰포트에 완전 고정 — sticky는 일부 안드로이드 WebView에서 조상 합성 레이어 때문에
+       깨져 헤더가 콘텐츠와 같이 스크롤되므로, fixed로 확실히 고정. 콘텐츠는 syncHeaderOffset()이 오프셋. */
+    position: fixed; top: 0; left: 0; right: 0; z-index: 18;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
   }
@@ -170,11 +172,13 @@
     display: none;
     padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));   /* 탭바(78px+safe) 회피 */
   }
-  /* 화면 전환: 빠릿한 페이드(140ms). 탭 탭마다 0.25s는 답답하게 느껴져 단축. translateZ로 GPU 합성 고정. */
+  /* 화면 전환: 빠릿한 페이드(140ms). 탭 탭마다 0.25s는 답답하게 느껴져 단축. (opacity-only — sticky 헤더 보호) */
   .screen.active { display: block; animation: fadeIn 0.14s ease-out; }
   @keyframes fadeIn {
-    from { opacity: 0; transform: translate3d(0, 3px, 0); }
-    to { opacity: 1; transform: translate3d(0, 0, 0); }
+    /* opacity만 사용 — transform을 쓰면 .screen이 sticky 헤더의 containing block이 되어
+       (특히 안드로이드 WebView에서 합성 레이어가 남으면) sticky가 깨져 헤더가 같이 스크롤됨 */
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
   @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } }
   /* ---------- 썸네일 (SVG 심볼) ---------- */
@@ -4196,6 +4200,22 @@
   const MARKET_ENABLED = false;
   const MARKET_SCREENS = new Set(['screen-market', 'screen-sell', 'screen-myproducts', 'screen-product', 'screen-checkout']);
   if (!MARKET_ENABLED) document.documentElement.classList.add('no-market');
+  // 활성 화면의 fixed 헤더 높이(상태바 safe-area 포함)만큼 스크롤 영역에 상단 여백을 줘
+  // 콘텐츠 첫 항목이 헤더에 가리지 않게 한다. 헤더 없는 화면(상세=nav-header 등)은 여백 0.
+  function syncHeaderOffset() {
+    try {
+      const sa = document.getElementById('scrollArea');
+      if (!sa) return;
+      const act = document.querySelector('.screen.active');
+      let hd = null;
+      if (act) { for (const c of act.children) { if (c.classList && c.classList.contains('header')) { hd = c; break; } } }
+      sa.style.paddingTop = hd ? (hd.offsetHeight + 'px') : '';
+    } catch (e) {}
+  }
+  window.addEventListener('resize', syncHeaderOffset);
+  window.addEventListener('orientationchange', () => setTimeout(syncHeaderOffset, 220));
+  window.addEventListener('load', () => setTimeout(syncHeaderOffset, 0));
+
   function showScreen(id) {
     if (!MARKET_ENABLED && MARKET_SCREENS.has(id)) id = 'screen-home';   // 보관처리: 거래 화면 진입 차단
     if (typeof closeCalDay === 'function') closeCalDay();   // 화면 이동 시 캘린더 시트 닫기
@@ -4212,6 +4232,7 @@
     document.getElementById('chatInputBar').style.display = isChat ? 'flex' : 'none';
     if (isChat) { setTimeout(scrollChatBottom, 0); }
     else { document.getElementById('scrollArea').scrollTop = 0; }
+    syncHeaderOffset();   // fixed 헤더 높이만큼 스크롤 영역 상단 여백 동기화
     if (id === 'screen-events') renderEvents();
     if (id === 'screen-calendar') { if (LIVE && sb && !(typeof EVENTS !== 'undefined' && EVENTS.length)) loadEvents(); else { buildCalMap(); renderCalendar(); } }
     if (id === 'screen-home' && LIVE && sb) refreshCompanionBadge();
