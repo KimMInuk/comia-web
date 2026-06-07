@@ -7563,16 +7563,19 @@
   let CAL_SCOPE = 'interest';   // 'going'(내 행사) | 'interest'(내 관심사) | 'all'(전체)
   let CAL_MODE = 'month';       // 'month' | 'week'
   function dayStart(dt) { return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()); }
-  function startOfWeek(d) { const x = dayStart(d); x.setDate(x.getDate() - x.getDay()); return x; }   // 일요일 시작
   function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
-  let calWeekStart = startOfWeek(new Date());
+  // 주차 = '월 기준 7일 블록'(1~7=1주차, 8~14=2주차 …) — 카드뉴스 주차 표기와 동일
+  let _wkNow = new Date();
+  let calWkYear = _wkNow.getFullYear(), calWkMonth = _wkNow.getMonth() + 1, calWkIdx = Math.floor((_wkNow.getDate() - 1) / 7);
+  function weeksInMonth(y, m) { return Math.ceil(new Date(y, m, 0).getDate() / 7); }
+  function wkStart() { return new Date(calWkYear, calWkMonth - 1, calWkIdx * 7 + 1); }
+  function wkEnd() { const last = new Date(calWkYear, calWkMonth, 0).getDate(); return new Date(calWkYear, calWkMonth - 1, Math.min(calWkIdx * 7 + 7, last)); }
+  function setWeekToToday() { const t = new Date(); calWkYear = t.getFullYear(); calWkMonth = t.getMonth() + 1; calWkIdx = Math.floor((t.getDate() - 1) / 7); }
   function weekTitle() {
-    const s = calWeekStart, e = addDays(s, 6);
-    return (s.getMonth() === e.getMonth())
-      ? (s.getMonth() + 1) + '월 ' + s.getDate() + '–' + e.getDate() + '일'
-      : (s.getMonth() + 1) + '월 ' + s.getDate() + '일 – ' + (e.getMonth() + 1) + '월 ' + e.getDate() + '일';
+    const s = wkStart(), e = wkEnd();
+    return calWkMonth + '월 ' + (calWkIdx + 1) + '주차 (' + calWkMonth + '.' + s.getDate() + '~' + calWkMonth + '.' + e.getDate() + ')';
   }
-  function setCalMode(m) { CAL_MODE = m; if (m === 'week') calWeekStart = startOfWeek(new Date()); renderCalendar(); }
+  function setCalMode(m) { CAL_MODE = m; if (m === 'week') setWeekToToday(); renderCalendar(); }
   function keyToDate(k) { const p = k.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
   function matchesInterest(ev) {
     if ((ev.cats || []).some(c => MY_CATS.indexOf(c) >= 0)) return true;
@@ -7787,7 +7790,7 @@
     document.getElementById('calDays').innerHTML = html;
     renderCalDayEvents();
   }
-  // 주간 보기: calWeekStart(일)부터 7일 아젠다. 각 날짜 + 그 날 행사 행. (요일 배열 _WD 재사용)
+  // 주간 보기: 그 주차 블록(wkStart~wkEnd)의 날짜별 아젠다. 각 날짜 + 그 날 행사 행. (요일 배열 _WD 재사용)
   function calWeekRow(ev, key) {
     const mine = isMyDay(ev, key);
     const venue = ev.venue || ev.region || '';
@@ -7798,9 +7801,10 @@
   }
   function renderCalWeek() {
     const today = dayStart(new Date()).getTime();
+    const s = wkStart(), n = Math.round((wkEnd() - s) / 86400000) + 1;
     let html = '';
-    for (let i = 0; i < 7; i++) {
-      const d = addDays(calWeekStart, i), key = calKey(d), evs = CAL_MAP[key] || [];
+    for (let i = 0; i < n; i++) {
+      const d = addDays(s, i), key = calKey(d), evs = CAL_MAP[key] || [];
       const dowCls = d.getDay() === 0 ? 'sun' : (d.getDay() === 6 ? 'sat' : '');
       const isToday = dayStart(d).getTime() === today;
       html += '<div class="cw-day' + (isToday ? ' today' : '') + (evs.length ? '' : ' empty') + '">'
@@ -7868,8 +7872,16 @@
     const sh = document.getElementById('calDaySheet'); if (sh) sh.classList.remove('on');
   }
   function selectCalDay(key) { calSelected = key; renderCalendar(); openCalDay(); }
-  function calPrev() { if (CAL_MODE === 'week') calWeekStart = addDays(calWeekStart, -7); else { calMonth--; if (calMonth < 1) { calMonth = 12; calYear--; } } renderCalendar(); }
-  function calNext() { if (CAL_MODE === 'week') calWeekStart = addDays(calWeekStart, 7); else { calMonth++; if (calMonth > 12) { calMonth = 1; calYear++; } } renderCalendar(); }
+  function calPrev() {
+    if (CAL_MODE === 'week') { calWkIdx--; if (calWkIdx < 0) { calWkMonth--; if (calWkMonth < 1) { calWkMonth = 12; calWkYear--; } calWkIdx = weeksInMonth(calWkYear, calWkMonth) - 1; } }
+    else { calMonth--; if (calMonth < 1) { calMonth = 12; calYear--; } }
+    renderCalendar();
+  }
+  function calNext() {
+    if (CAL_MODE === 'week') { calWkIdx++; if (calWkIdx >= weeksInMonth(calWkYear, calWkMonth)) { calWkIdx = 0; calWkMonth++; if (calWkMonth > 12) { calWkMonth = 1; calWkYear++; } } }
+    else { calMonth++; if (calMonth > 12) { calMonth = 1; calYear++; } }
+    renderCalendar();
+  }
 
   /* ---------- 토스트 ---------- */
   let toastTimer = null;
