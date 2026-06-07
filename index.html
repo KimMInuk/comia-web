@@ -442,6 +442,17 @@
   }
   .preset.add svg { width: 14px; height: 14px; }
   /* ---------- 상단 퀵필터 칩 ---------- */
+  /* 프로미넌트 필터 진입 버튼 */
+  .filter-bar { display: flex; align-items: center; gap: 11px; width: calc(100% - 32px); margin: 2px 16px 12px; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; font-family: inherit; box-shadow: 0 1px 6px rgba(30,50,90,0.04); transition: border-color .15s, background .15s; }
+  .filter-bar:active { transform: scale(0.995); }
+  .filter-bar.on { border-color: var(--accent); background: var(--accent-bg); }
+  .fb-ic { width: 31px; height: 31px; border-radius: 9px; background: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+  .fb-ic svg { width: 17px; height: 17px; color: #fff; }
+  .fb-main { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; gap: 1px; }
+  .fb-main b { font-size: 14px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
+  .fb-sub { font-size: 11.5px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .filter-bar.on .fb-sub { color: var(--accent); }
+  .fb-chev { width: 18px; height: 18px; color: var(--text-dim); flex-shrink: 0; }
   .quick-row { display: flex; gap: 7px; padding: 2px 16px 10px; overflow-x: auto; scrollbar-width: none; align-items: center; }
   .quick-row::-webkit-scrollbar { display: none; }
   .quick-chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; background: var(--card); color: var(--text-sub); border: 1px solid var(--border); padding: 7px 12px; border-radius: 11px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .13s; letter-spacing: -.2px; white-space: nowrap; }
@@ -2262,15 +2273,14 @@
       </div>
 
       <div id="eventsListView">
-      <!-- 퀵필터: 1탭 토글 (대분류·지역·기간) -->
-      <div class="quick-row" id="quickRow"></div>
+      <!-- 필터 진입(프로미넌트) — 모든 조건은 여기서 -->
+      <button class="filter-bar" id="filterBar" onclick="openFilter()">
+        <span class="fb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span>
+        <span class="fb-main"><b>필터</b><span class="fb-sub" id="filterBarSub">기간 · 지역 · 관심분야 · 가격 …</span></span>
+        <svg class="fb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
       <!-- 저장된 필터 프리셋 (DB에서 동적 주입) -->
-      <div class="preset-row" id="presetRow">
-        <div class="preset add" onclick="openFilter()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          필터
-        </div>
-      </div>
+      <div class="preset-row" id="presetRow" style="display:none;"></div>
 
       <div class="ev-count" id="evCount"></div>
       <div id="evList"></div>
@@ -6130,6 +6140,9 @@
       if (dot) dot.style.display = on ? '' : 'none';
       if (btn) btn.classList.toggle('on', on);
     });
+    const bar = document.getElementById('filterBar'), sub = document.getElementById('filterBarSub');
+    if (bar) bar.classList.toggle('on', on);
+    if (sub) sub.textContent = on ? (filterSummary(curFilter) || '필터 적용 중') : '기간 · 지역 · 관심분야 · 가격 …';
     rerenderCalIfVisible();   // 필터 바뀌면 캘린더(보일 때)도 즉시 갱신
   }
   let PAST_EVENTS = null, PAST_LOADING = false;   // 지난 행사(status='past') 지연 로드
@@ -7627,14 +7640,14 @@
   }
   function renderSavedFilterChips() {
     const row = document.getElementById('presetRow'); if (!row) return;
-    row.querySelectorAll('.preset:not(.add)').forEach(c => c.remove());
-    const add = row.querySelector('.preset.add');
+    row.innerHTML = '';
     SAVED_FILTERS.forEach(sf => {
       const chip = document.createElement('div'); chip.className = 'preset';
       chip.innerHTML = '<span class="star">★</span> ' + htmlesc(sf.name);
       chip.onclick = () => applySavedFilter(sf);
-      row.insertBefore(chip, add);
+      row.appendChild(chip);
     });
+    row.style.display = SAVED_FILTERS.length ? '' : 'none';
   }
   function renderSavedFiltersScreen() {
     const box = document.getElementById('savedFiltersList'); if (!box) return;
