@@ -6549,6 +6549,14 @@
     const isAdmin = t => REGION.includes(t) || REGION.some(r => t.startsWith(r)) || (/(특별시|광역시|특별자치시|특별자치도|시|도|군|구)$/.test(t) && t.length <= 4);
     return toks.every(isAdmin);   // 모든 토큰이 행정구역이면 모호
   }
+  // 장소명 검색 보강용 지역 힌트: 주소/지역에서 구·군 우선, 없으면 시/광역 한 토큰
+  function mapLocality(ev) {
+    const src = (ev.address || '') + ' ' + (ev.region || '');
+    const m = src.match(/[가-힣]{2,4}(?:구|군)/);
+    if (m) return m[0];
+    const r = (ev.region || '').split(/[·,\s]/)[0];
+    return (r && r.length <= 3) ? r : '';
+  }
   // 지도·길찾기: 카카오맵/네이버지도 앱으로 딥링크(공식 link URL, API키 불필요).
   // 정확도: 좌표(핀) > 도로명주소(검색) > 장소명(검색). 행정구역뿐이면 열지 않음.
   function openMap() {
@@ -6559,7 +6567,11 @@
     const hasGeo = ev.lat != null && ev.lng != null && !isNaN(ev.lat) && !isNaN(ev.lng);
     if (!hasGeo && !addr && isVagueVenue(venue)) { toast('장소가 정확하지 않아 지도를 열 수 없어요'); return; }
     const label = venue || ev.t || '행사장';
-    const query = addr || venue;                 // 주소가 있으면 주소로 검색(명칭 불일치 방지)
+    // 장소'명'으로 검색해야 결과에 건물 이름이 떠서 식별이 쉬움(주소 검색은 무명 핀). 모호하면 주소로 폴백.
+    const hint = mapLocality(ev);
+    const query = isVagueVenue(venue)
+      ? (addr || venue)
+      : (venue + (hint && venue.indexOf(hint) < 0 ? ' ' + hint : ''));
     const encQ = encodeURIComponent(query);
     const kakao = hasGeo
       ? 'https://map.kakao.com/link/map/' + encodeURIComponent(label) + ',' + ev.lat + ',' + ev.lng
