@@ -2421,7 +2421,7 @@
         </div>
         <!-- 범위 -->
         <div class="cal-scope" id="calScope">
-          <div class="sc" data-scope="going" onclick="setCalScope('going')">갈래요</div>
+          <div class="sc" data-scope="going" onclick="setCalScope('going')">참여 예정</div>
           <div class="sc" data-scope="interest" onclick="setCalScope('interest')">관심 행사</div>
           <div class="sc" data-scope="all" onclick="setCalScope('all')">전체 행사</div>
         </div>
@@ -8184,16 +8184,16 @@
     const evs = visibleCalEvents().slice().sort((a, b) => {
       const ta = (a._start && !isNaN(a._start)) ? a._start.getTime() : 0, tb = (b._start && !isNaN(b._start)) ? b._start.getTime() : 0; return ta - tb;
     });
-    const title = CAL_SCOPE === 'going' ? '갈래요' : (CAL_SCOPE === 'interest' ? '관심 행사' : '전체 행사');
+    const title = CAL_SCOPE === 'going' ? '참여 예정' : (CAL_SCOPE === 'interest' ? '관심 행사' : '전체 행사');
     if (!evs.length) { box.innerHTML = '<div class="cl-empty">이 달에 표시할 행사가 없어요</div>'; return; }
     box.innerHTML = '<div class="cl-head">' + title + ' <span>' + evs.length + '</span></div>' + evs.map(calListRow).join('');
   }
   // 스코프 안내문구 — 무엇이 보이는지 자연스럽게 안내(필터링 유도)
   function renderScopeCaption() {
     const el = document.getElementById('calCaption'); if (!el) return;
-    if (CAL_SCOPE === 'going') el.textContent = '갈래요 표시한 행사만 모아 봐요 — 행사 상세에서 ‘갈래요’를 누르면 여기 떠요.';
+    if (CAL_SCOPE === 'going') el.textContent = '참여 예정인 행사만 모아서 볼 수 있어요.';
     else if (CAL_SCOPE === 'interest') el.textContent = (MY_CATS.length || MY_ITEMS.length) ? '관심 분야·작품에 맞는 행사만 보여요.' : '관심 작품을 설정하면 취향 행사만 모아줘요. (지금은 전체 표시)';
-    else el.textContent = '코미아에 등록된 전체 행사를 볼 수 있어요. ‹ 로 지난 달도 둘러봐요.';
+    else el.textContent = '코미아에 등록된 전체 행사를 볼 수 있어요.';
   }
   // 캘린더 탭 레드닷: 내 참여 행사가 오늘/내일이면 표시
   function refreshCalendarBadge() {
