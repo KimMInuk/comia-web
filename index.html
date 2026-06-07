@@ -1565,6 +1565,7 @@
     transition: background 0.15s;
     min-width: 0;
     overflow: hidden;
+    position: relative;
   }
   .cal-cell:hover { background: var(--card); }
   .cal-cell.empty { cursor: default; }
@@ -1573,7 +1574,7 @@
   .cal-cell.sun .cal-num { color: #FF6B6B; }
   .cal-cell.sat .cal-num { color: #5AA6EC; }
   .cal-cell.holiday .cal-num { color: #FF6B6B; }   /* 공휴일 */
-  .cal-hol { display:block; font-size:8px; font-weight:800; color:#FF6B6B; line-height:1; margin-top:1px; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cal-hol { position:absolute; left:1px; right:1px; bottom:2px; text-align:center; font-size:7px; font-weight:700; color:#FF6B6B; line-height:1; pointer-events:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .cw-date.hol span { color:#FF6B6B; font-weight:700; }
   .cal-cell.today .cal-num { background: var(--text); color: var(--bg); font-weight: 800; }
   .cal-cell.iam .cal-num { background: var(--accent); color: #fff; font-weight: 800; }   /* 내가 가는 날 */
@@ -8000,7 +8001,7 @@
           }
         });
         const hidden = (CAL_MAP[k] || []).length - shown.size;
-        out[w + j] = '<div class="cal-bars">' + bars + '</div>' + (hidden > 0 ? '<span class="cal-more">+' + hidden + '</span>' : '');
+        out[w + j] = '<div class="cal-bars">' + bars + '</div>' + ((hidden > 0 && !HOLIDAYS[k]) ? '<span class="cal-more">+' + hidden + '</span>' : '');
       }
     }
     return out;
