@@ -1573,6 +1573,8 @@
   .cal-cell.sun .cal-num { color: #FF6B6B; }
   .cal-cell.sat .cal-num { color: #5AA6EC; }
   .cal-cell.holiday .cal-num { color: #FF6B6B; }   /* 공휴일 */
+  .cal-hol { display:block; font-size:8px; font-weight:800; color:#FF6B6B; line-height:1; margin-top:1px; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cw-date.hol span { color:#FF6B6B; font-weight:700; }
   .cal-cell.today .cal-num { background: var(--text); color: var(--bg); font-weight: 800; }
   .cal-cell.iam .cal-num { background: var(--accent); color: #fff; font-weight: 800; }   /* 내가 가는 날 */
   .cal-cell.selected { background: var(--accent-bg-strong); }
@@ -7952,6 +7954,8 @@
       toast('현재 보기의 ' + n + '개 일정을 캘린더로 내보냈어요 📅');
     } catch (e) { toast('내보내기 실패 — 잠시 후 다시'); }
   }
+  // 공휴일 짧은 이름(셀에 표기)
+  function holShort(name) { return (name || '').replace(' 연휴', '').replace('부처님오신날', '부처님').replace('대체공휴일', '대체휴일').replace('임시공휴일', '임시휴일'); }
   // 월간 셀 막대: 연속 막대(짧은 다중일·단일) + 장기행사 점(.pt). 주 단위로 레인(겹침 회피) 배치.
   function computeWeekBars(cells) {
     const out = new Array(cells.length).fill('<div class="cal-bars"></div>');
@@ -8041,7 +8045,8 @@
       if (key === CAL_TODAY) cls.push('today');
       if (key === calSelected) cls.push('selected');
       if ((CAL_MAP[key] || []).some(ev => isMyDay(ev, key))) cls.push('iam');   // 내가 가는 날 강조
-      html += '<div class="' + cls.join(' ') + '" onclick="selectCalDay(\'' + key + '\')"><span class="cal-num">' + d + '</span>' + bars[i] + '</div>';
+      const hol = HOLIDAYS[key] ? '<span class="cal-hol">' + holShort(HOLIDAYS[key]) + '</span>' : '';
+      html += '<div class="' + cls.join(' ') + '" onclick="selectCalDay(\'' + key + '\')"><span class="cal-num">' + d + '</span>' + hol + bars[i] + '</div>';
     });
     document.getElementById('calDays').innerHTML = html;
     renderCalDayEvents();
@@ -8066,7 +8071,7 @@
       const dowCls = d.getDay() === 0 ? 'sun' : (d.getDay() === 6 ? 'sat' : '');
       const isToday = dayStart(d).getTime() === today;
       html += '<div class="cw-day' + (isToday ? ' today' : '') + (evs.length ? '' : ' empty') + '">'
-        + '<div class="cw-date ' + dowCls + '"><b>' + d.getDate() + '</b><span>' + _WD[d.getDay()] + '</span></div>'
+        + '<div class="cw-date ' + dowCls + (HOLIDAYS[key] ? ' hol' : '') + '"><b>' + d.getDate() + '</b><span>' + (HOLIDAYS[key] ? holShort(HOLIDAYS[key]) : _WD[d.getDay()]) + '</span></div>'
         + '<div class="cw-evs">' + (evs.length ? evs.map(ev => calWeekRow(ev, key)).join('') : '<div class="cw-none">일정 없음</div>') + '</div>'
         + '</div>';
     }
