@@ -7795,7 +7795,8 @@
     const useInt = calInterestActive();
     const cf = Object.assign({}, curFilter, { period: [] });   // 캘린더 필터: 대분류·지역만(기간은 달력이 대신)
     const items = [];
-    EVENTS.forEach(ev => {
+    const pool = (PAST_EVENTS && PAST_EVENTS.length) ? EVENTS.concat(PAST_EVENTS) : EVENTS;   // 지난 행사도 함께(로드됐을 때)
+    pool.forEach(ev => {
       if (typeof ONLY_GOING !== 'undefined' && ONLY_GOING && !GOING.has(ev._id)) return;
       if (CAL_SCOPE === 'going' && !GOING.has(ev._id)) return;            // 내 행사(참전) 스코프
       if (useInt && !GOING.has(ev._id) && !matchesInterest(ev)) return;   // 관심사 모드: 관심 + 내가 가는 행사만
@@ -7888,7 +7889,7 @@
     const el = document.getElementById('calCaption'); if (!el) return;
     if (CAL_SCOPE === 'going') el.textContent = '참전 표시한 행사만 모아 봐요 — 행사 상세에서 ‘참전’을 누르면 여기 떠요.';
     else if (CAL_SCOPE === 'interest') el.textContent = (MY_CATS.length || MY_ITEMS.length) ? '관심 분야·작품에 맞는 행사만 보여요.' : '관심 작품을 설정하면 취향 행사만 모아줘요. (지금은 전체 표시)';
-    else el.textContent = '지금 열리는 전체 행사예요. 필터로 더 좁힐 수 있어요.';
+    else el.textContent = '코미아에 등록된 전체 행사를 볼 수 있어요. ‹ 로 지난 달도 둘러봐요.';
   }
   // 캘린더 탭 레드닷: 내 참전 행사가 오늘/내일이면 표시
   function refreshCalendarBadge() {
@@ -8007,6 +8008,11 @@
     return out;
   }
   function renderCalendar() {
+    // 보고 있는 기간이 과거를 포함하면 지난 행사 1회 지연로드 → 캘린더에서도 지난 행사 보임
+    if (LIVE && sb && !PAST_EVENTS && !PAST_LOADING) {
+      const vs = (CAL_MODE === 'week') ? wkStart() : new Date(calYear, calMonth - 1, 1);
+      if (dayStart(vs) < dayStart(new Date())) { loadPastEvents().then(() => { buildCalMap(); renderCalendar(); }); }
+    }
     document.getElementById('calTitle').textContent = calYear + '년 ' + calMonth + '월';
     const scopeEl = document.getElementById('calScope');
     if (scopeEl) {
