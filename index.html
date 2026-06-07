@@ -1570,6 +1570,22 @@
   .cal-mthumb.my { box-shadow: 0 0 0 2px var(--accent); }
   .cal-evt { width: 100%; font-size: 8.5px; line-height: 1.12; font-weight: 600; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
   .cal-cell.iam .cal-evt { color: var(--accent-dim); font-weight: 700; }
+  .ce-dot { display:inline-block; width:5px; height:5px; border-radius:50%; margin-right:3px; vertical-align:middle; }
+  /* 이번 주 내 일정 요약 카드 */
+  .cal-summary { margin: 0 16px 12px; }
+  .cs-title { font-size: 12.5px; font-weight: 800; color: var(--text); margin-bottom: 7px; letter-spacing: -0.2px; }
+  .cs-title span { display:inline-grid; place-items:center; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:var(--accent); color:#fff; font-size:10.5px; margin-left:3px; vertical-align:middle; }
+  .cs-chips { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
+  .cs-chips::-webkit-scrollbar { display:none; }
+  .cs-chip { flex:0 0 auto; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:999px; padding:7px 12px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap; letter-spacing:-0.2px; }
+  .cs-chip:active { transform: scale(0.96); }
+  .cs-chip b { color:var(--accent); font-weight:800; margin-right:4px; }
+  .cs-empty { font-size:12px; color:var(--text-dim); background:var(--card); border:1px solid var(--border); border-radius:12px; padding:11px 13px; line-height:1.45; }
+  .cs-empty b { color:var(--text-sub); }
+  /* 카테고리 색상 범례 */
+  .cal-legend { display:flex; flex-wrap:wrap; gap:7px 12px; justify-content:center; margin: 10px 16px 2px; }
+  .cal-legend span { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; color:var(--text-dim); font-weight:600; }
+  .cal-legend i { width:7px; height:7px; border-radius:50%; }
   /* 연속 막대(다중일 행사) */
   .cal-bars { width: 100%; display: flex; flex-direction: column; gap: 2px; margin-top: 2px; padding: 0; }
   .cal-bar { height: 5px; margin: 0 -1.5px; }      /* 음수 마진으로 셀 간 2px 갭을 메워 연속 */
@@ -2236,9 +2252,11 @@
           </div>
         </div>
         <div class="cal-scope" id="calScope">
+          <div class="sc" data-scope="going" onclick="setCalScope('going')">내 행사</div>
           <div class="sc" data-scope="interest" onclick="setCalScope('interest')">내 관심사</div>
           <div class="sc" data-scope="all" onclick="setCalScope('all')">전체</div>
         </div>
+        <div class="cal-summary" id="calSummary"></div>
         <div class="cal-grid">
           <div class="cal-weekdays">
             <div class="cal-weekday sun">일</div><div class="cal-weekday">월</div><div class="cal-weekday">화</div><div class="cal-weekday">수</div><div class="cal-weekday">목</div><div class="cal-weekday">금</div><div class="cal-weekday sat">토</div>
@@ -2246,6 +2264,13 @@
           <div class="cal-days" id="calDays"></div>
         </div>
         <div class="cal-cap">날짜를 탭하면 그 날 행사 목록이 떠요</div>
+        <div class="cal-legend">
+          <span><i style="background:#5B9BE8"></i>게임</span>
+          <span><i style="background:#A77BE8"></i>음악</span>
+          <span><i style="background:#EC6FA8"></i>아이돌·버튜버</span>
+          <span><i style="background:#3FB6A8"></i>애니·만화</span>
+          <span><i style="background:#E89B4B"></i>동인·창작</span>
+        </div>
       </div>
     </div>
 
@@ -3990,6 +4015,7 @@
       <span class="label">행사</span>
     </div>
     <div class="tab" data-screen="screen-calendar" onclick="goTab(this)">
+      <span class="tab-dot" id="calTabDot"></span>
       <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M3.4 7 Q3.4 5.4 5 5.4 H19 Q20.6 5.4 20.6 7 V19 Q20.6 20.6 19 20.6 H5 Q3.4 20.6 3.4 19 Z M7 2.8 Q8 2.8 8 3.8 V5.4 H6 V3.8 Q6 2.8 7 2.8 Z M17 2.8 Q18 2.8 18 3.8 V5.4 H16 V3.8 Q16 2.8 17 2.8 Z M12 11 C12 12.4 13.4 14 15 14 C13.4 14 12 15.6 12 17 C12 15.6 10.6 14 9 14 C10.6 14 12 12.4 12 11 Z"/></svg>
       <span class="label">캘린더</span>
     </div>
@@ -6256,6 +6282,7 @@
     refreshCompanionBadge();   // 동행 탭 안읽음 레드닷
     renderEvents();   // 참전 정보 로드됨 → 리스트(내 행사 기본/참여중 배지) 반영
     buildCalMap();   // GO_DATES + 범위 반영 → 캘린더 보이면 다시 그림
+    refreshCalendarBadge();   // 캘린더 탭 레드닷(오늘/내일 참전)
     if (calVisible()) renderCalendar();
   }
   // id로 행사 상세 열기 (리스트·홈 공용)
@@ -7567,6 +7594,7 @@
     const items = [];
     EVENTS.forEach(ev => {
       if (typeof ONLY_GOING !== 'undefined' && ONLY_GOING && !GOING.has(ev._id)) return;
+      if (CAL_SCOPE === 'going' && !GOING.has(ev._id)) return;            // 내 행사(참전) 스코프
       if (useInt && !GOING.has(ev._id) && !matchesInterest(ev)) return;   // 관심사 모드: 관심 + 내가 가는 행사만
       const s0 = ev._start || (ev.sort ? dateFromSort(ev.sort) : null);
       if (!s0 || isNaN(s0.getTime())) return;
@@ -7587,13 +7615,75 @@
   function setEventView() {   // 캘린더가 독립 탭으로 승격됨 — 행사 화면은 리스트 전용(캘린더 DOM은 screen-calendar 소유)
     const lv = document.getElementById('eventsListView'); if (lv) lv.style.display = 'block';
   }
+  // 카테고리 색상(캘린더 점·범례) — cats 우선 매칭(KOPIS 변형 라벨도 키워드로 포착)
+  function catColor(ev) {
+    const c = ((ev.cats || []).join(' ') + ' ' + (ev.type || ''));
+    if (/게임|e ?스포츠|esport/i.test(c)) return '#5B9BE8';
+    if (/음악|j-?pop|콘서트|라이브|내한/i.test(c)) return '#A77BE8';
+    if (/버튜버|아이돌|성우|팬미팅/i.test(c)) return '#EC6FA8';
+    if (/애니|만화|콜라보|팝업|전시|생일/i.test(c)) return '#3FB6A8';
+    if (/동인|온리|창작/i.test(c)) return '#E89B4B';
+    return '#9AA3B2';
+  }
+  function calDday(date) {
+    const diff = Math.round((dayStart(date) - dayStart(new Date())) / 86400000);
+    return diff === 0 ? '오늘' : (diff > 0 ? 'D-' + diff : 'D+' + (-diff));
+  }
+  // 다가오는 내 참전 행사 → 상단 요약(이번 주 우선, 없으면 다음 1건, 그것도 없으면 안내)
+  function calUpcomingMine() {
+    const today = dayStart(new Date());
+    const ups = [];
+    GOING.forEach(id => {
+      const ev = EV_BY_ID[id]; if (!ev) return;
+      let dates = [];
+      const gd = GO_DATES[id];
+      if (gd && gd.length) dates = gd.map(keyToDate);
+      else if (ev._start && !isNaN(ev._start)) {
+        const s = dayStart(ev._start), e = (ev._end && !isNaN(ev._end)) ? dayStart(ev._end) : s;
+        dates = [(today >= s && today <= e) ? today : s];
+      }
+      const fut = dates.map(dayStart).filter(d => d >= today).sort((a, b) => a - b);
+      if (fut.length) ups.push({ ev, date: fut[0] });
+    });
+    return ups.sort((a, b) => a.date - b.date);
+  }
+  function renderCalSummary() {
+    const box = document.getElementById('calSummary'); if (!box) return;
+    const ups = calUpcomingMine();
+    const horizon = dayStart(new Date()).getTime() + 7 * 86400000;
+    const week = ups.filter(u => u.date.getTime() <= horizon);
+    const chip = u => '<button class="cs-chip" onclick="openEv(\'' + u.ev._id + '\')"><b>' + calDday(u.date) + '</b>' + htmlesc((u.ev.t || '').slice(0, 18)) + '</button>';
+    if (week.length) {
+      box.innerHTML = '<div class="cs-title">이번 주 내 일정 <span>' + week.length + '</span></div><div class="cs-chips">' + week.slice(0, 6).map(chip).join('') + '</div>';
+    } else if (ups.length) {
+      box.innerHTML = '<div class="cs-title">다가오는 내 행사</div><div class="cs-chips">' + ups.slice(0, 3).map(chip).join('') + '</div>';
+    } else {
+      box.innerHTML = '<div class="cs-empty">참전 표시한 행사가 여기 모여요. 행사 상세에서 <b>참여 표시</b>를 해보세요 ✨</div>';
+    }
+  }
+  // 캘린더 탭 레드닷: 내 참전 행사가 오늘/내일이면 표시
+  function refreshCalendarBadge() {
+    const dot = document.getElementById('calTabDot'); if (!dot) return;
+    const today = dayStart(new Date()).getTime(), tmr = today + 86400000;
+    let hit = false;
+    GOING.forEach(id => {
+      const ev = EV_BY_ID[id]; if (!ev || hit) return;
+      let dates = [];
+      const gd = GO_DATES[id];
+      if (gd && gd.length) dates = gd.map(keyToDate);
+      else if (ev._start && !isNaN(ev._start)) dates = [ev._start];
+      if (dates.some(d => { const x = dayStart(d).getTime(); return x === today || x === tmr; })) hit = true;
+    });
+    dot.classList.toggle('on', hit);
+  }
   function renderCalendar() {
     document.getElementById('calTitle').textContent = calYear + '년 ' + calMonth + '월';
     const scopeEl = document.getElementById('calScope');
     if (scopeEl) {
-      const eff = calInterestActive() ? 'interest' : 'all';
+      const eff = CAL_SCOPE === 'going' ? 'going' : (calInterestActive() ? 'interest' : 'all');
       scopeEl.querySelectorAll('.sc').forEach(b => b.classList.toggle('on', b.dataset.scope === eff));
     }
+    renderCalSummary();
     const startDay = new Date(calYear, calMonth - 1, 1).getDay();
     const daysInMonth = new Date(calYear, calMonth, 0).getDate();
     let html = '';
@@ -7614,7 +7704,7 @@
       if (dayEvs.length) {
         const head = goIdx >= 0 ? dayEvs[goIdx] : dayEvs[0];   // 헤드라인: 내 일정 우선, 없으면 첫 행사
         inner += calMiniThumb(head, goIdx >= 0)
-          + '<div class="cal-evt">' + htmlesc(head.t || '') + '</div>'
+          + '<div class="cal-evt"><i class="ce-dot" style="background:' + catColor(head) + '"></i>' + htmlesc(head.t || '') + '</div>'
           + (dayEvs.length > 1 ? '<span class="cal-more">+' + (dayEvs.length - 1) + '</span>' : '');
       }
       html += '<div class="' + cls.join(' ') + '" onclick="selectCalDay(\'' + key + '\')"><span class="cal-num">' + d + '</span>' + inner + '</div>';
