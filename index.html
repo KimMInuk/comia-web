@@ -284,8 +284,10 @@
   .rail-card:hover { border-color: var(--accent); }
   .rail-card.info, .rail-card.comp { width: 215px; padding: 12px 13px; display: flex; flex-direction: column; gap: 5px; }
   .rc-top { display: flex; align-items: center; gap: 6px; }
-  .rc-ev { font-size: 11px; color: var(--text-sub); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rc-ev2 { font-size: 11.5px; color: var(--accent); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rc-thumb { width: 22px; height: 22px; border-radius: 6px; overflow: hidden; flex: none; position: relative; }
+  .rc-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .rc-ev { flex: 1; min-width: 0; font-size: 11px; color: var(--text-sub); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rc-ev2 { flex: 1; min-width: 0; font-size: 11.5px; color: var(--accent); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rc-title { font-size: 13.5px; font-weight: 700; color: var(--text); line-height: 1.35; letter-spacing: -0.2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 36px; }
   .rc-body { font-size: 12.5px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px; }
   .rc-meta { font-size: 11.5px; color: var(--text-dim); font-weight: 600; margin-top: 1px; }
@@ -6713,11 +6715,17 @@
       box.innerHTML = list.length ? list.map(infoFeedCard).join('') : feedEmpty('아직 올라온 정보글이 없어요');
     } catch (e) { box.innerHTML = feedEmpty('불러오기 실패'); }
   }
+  function feedThumb(dbid) {   // 출처 행사 미니 썸네일(포스터 우선, 없으면 그라데이션)
+    const ev = EV_BY_ID['db' + dbid];
+    const grad = (ev && ev.gradStr) ? ev.gradStr : '#5B9BE8,#3A6FB5';
+    const img = (ev && ev.img && !String(ev.img).startsWith('data:')) ? '<img src="' + ev.img + '" alt="" loading="lazy" onerror="this.remove()">' : '';
+    return '<span class="rc-thumb" style="background:linear-gradient(135deg,' + grad + ')">' + img + '</span>';
+  }
   function infoFeedCard(p) {
     const evName = (p.events && p.events.title) || '행사';
     const cat = INFO_CATS[p.category] || '팁';
     return '<div class="rail-card info" onclick="openMyInfoPost(\'' + p.event_id + '\')">'
-      + '<div class="rc-top"><span class="cat-badge ' + p.category + '">' + cat + '</span><span class="rc-ev">' + htmlesc(evName) + '</span></div>'
+      + '<div class="rc-top">' + feedThumb(p.event_id) + '<span class="cat-badge ' + p.category + '">' + cat + '</span><span class="rc-ev">' + htmlesc(evName) + '</span></div>'
       + '<div class="rc-title">' + htmlesc(p.title) + '</div>'
       + '<div class="rc-meta">추천 ' + (p.up || 0) + ' · 댓글 ' + (p.comments || 0) + ' · ' + timeAgo(p.created_at) + '</div></div>';
   }
@@ -6738,7 +6746,7 @@
     const meet = (r.meet_at && typeof fmtMeet === 'function') ? fmtMeet(r.meet_at) + ' 집합' : '';
     const body = (r.body || '').trim();
     return '<div class="rail-card comp" onclick="openEventGo(\'' + r.event_id + '\')">'
-      + '<div class="rc-ev2">' + htmlesc(evName) + '</div>'
+      + '<div class="rc-top">' + feedThumb(r.event_id) + '<span class="rc-ev2">' + htmlesc(evName) + '</span></div>'
       + '<div class="rc-body">' + (body ? htmlesc(body) : '같이 가요!') + '</div>'
       + '<div class="rc-meta"><span class="rc-cap">' + cap + '</span>' + (meet ? ' · ' + htmlesc(meet) : '') + '</div></div>';
   }
