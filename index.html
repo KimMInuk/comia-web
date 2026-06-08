@@ -2288,7 +2288,7 @@
           <div class="ob-av">🎀</div>
           <div class="ob-av">🟦</div>
         </div>
-        <input class="ob-input" id="obNick" type="text" placeholder="닉네임 입력" value="nyaru0" maxlength="16" />
+        <input class="ob-input" id="obNick" type="text" placeholder="닉네임 입력" maxlength="16" />
         <div class="ob-gender" id="obGender">
           <div class="og-label">성별 <span class="og-note">동행 매칭 참고용 · 비공개 가능</span></div>
           <div class="og-opts">
@@ -2349,6 +2349,9 @@
       <div id="homeCompanions"></div>
 
       <!-- ===== 커뮤니티 피드 ===== -->
+      <div class="section-header" id="feedGuideHdr" style="display:none;margin-top:16px;"><h2>코미아 가이드 <span style="font-size:12px;color:var(--text-sub);font-weight:600;">처음이라면 읽어보세요</span></h2></div>
+      <div class="home-rail" id="feedGuide" style="display:none;"></div>
+
       <div class="section-header" style="margin-top:16px;"><h2>방금 올라온 정보글</h2></div>
       <div class="home-rail" id="feedInfo"></div>
 
@@ -3144,6 +3147,17 @@
       <div class="section-header"><h2>최근 활동</h2></div>
       <div class="duk-hist" id="dukHist"></div>
       <div style="height:24px;"></div>
+    </div>
+
+    <!-- ===================== 코미아 가이드 리더 ===================== -->
+    <div class="screen" id="screen-notice">
+      <div class="nav-header">
+        <div class="back" onclick="back()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div class="title">코미아 가이드</div>
+      </div>
+      <div id="noticeBody" style="padding:4px 18px 32px;"></div>
     </div>
 
     <!-- ===================== GROUP CHAT ===================== -->
@@ -5109,6 +5123,8 @@
     try {
       const u = await currentUser(); if (!u) return;
       await ensureDukTiers([u.id]);
+      // 참가 행사 = 검증된 현장 체크인 수 (실데이터)
+      try { const { count } = await sb.from('checkins').select('id', { count: 'exact', head: true }).eq('user_id', u.id); if (sv[0]) sv[0].innerHTML = (count || 0) + '<span class="unit">회</span>'; } catch (e) {}
       const xp = DUK_TIER[u.id] || 0;
       if (sv[1]) sv[1].textContent = xp >= 200 ? '고인물' : xp >= 50 ? '중수' : '입문';
       if (sv[2]) sv[2].innerHTML = xp + '<span class="unit">XP</span>';
@@ -6602,7 +6618,41 @@
   }
   function loadHomeFeeds() {
     if (!LIVE || !sb) return;
-    loadHomeInfoFeed(); loadHomeCompFeed(); renderHomeNewEvents();
+    loadGuides(); loadHomeInfoFeed(); loadHomeCompFeed(); renderHomeNewEvents();
+  }
+  /* ---------- 코미아 운영팀 공식 가이드/공지 ---------- */
+  let NOTICES = [];
+  async function loadGuides() {
+    const box = document.getElementById('feedGuide'); const hdr = document.getElementById('feedGuideHdr');
+    if (!box || !LIVE || !sb) return;
+    try {
+      const { data } = await sb.from('notices').select('id, icon, tag, title')
+        .eq('published', true).order('ord', { ascending: true });
+      NOTICES = data || [];
+      const has = NOTICES.length > 0;
+      box.innerHTML = has ? NOTICES.map(guideCard).join('') : '';
+      box.style.display = has ? '' : 'none';
+      if (hdr) hdr.style.display = has ? '' : 'none';
+    } catch (e) { box.style.display = 'none'; if (hdr) hdr.style.display = 'none'; }
+  }
+  function guideCard(n) {
+    return '<div class="rail-card info" onclick="openNotice(\'' + n.id + '\')">'
+      + '<div class="rc-top"><span class="cat-badge tip">' + htmlesc((n.icon || '📖') + ' ' + (n.tag || '가이드')) + '</span></div>'
+      + '<div class="rc-title">' + htmlesc(n.title) + '</div>'
+      + '<div class="rc-meta">코미아 운영팀 · 공식</div></div>';
+  }
+  function openNotice(id) {
+    const n = NOTICES.find(x => x.id === id); const box = document.getElementById('noticeBody');
+    if (!box) return;
+    box.innerHTML = '<div style="font-size:20px;font-weight:800;letter-spacing:-0.4px;padding:16px 0 4px;line-height:1.35;">' + (n ? htmlesc((n.icon || '') + ' ' + n.title) : '') + '</div><div style="color:var(--text-dim);font-size:13px;">불러오는 중…</div>';
+    goto('screen-notice');
+    if (!LIVE || !sb) return;
+    sb.from('notices').select('icon, title, body').eq('id', id).maybeSingle().then(({ data }) => {
+      if (!data) { box.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--text-dim);font-size:13px;">내용을 불러올 수 없어요</div>'; return; }
+      box.innerHTML = '<div style="font-size:20px;font-weight:800;letter-spacing:-0.4px;padding:16px 0 4px;line-height:1.35;">' + htmlesc((data.icon || '') + ' ' + data.title) + '</div>'
+        + '<div style="font-size:11.5px;color:var(--text-sub);font-weight:700;margin:2px 0 16px;">코미아 운영팀 · 공식</div>'
+        + '<div style="font-size:14.5px;line-height:1.78;color:var(--text);white-space:pre-wrap;letter-spacing:-0.2px;">' + htmlesc(data.body) + '</div>';
+    });
   }
   async function loadHomeInfoFeed() {
     const box = document.getElementById('feedInfo'); if (!box) return;
