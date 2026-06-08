@@ -85,15 +85,15 @@ body{background:linear-gradient(180deg,#EAF2FD,#DCEAFB);color:var(--ink);font-fa
 </style><style>
 /* === iOS 6.9" (1320x2868) 치수 override === */
 .slide{width:1320px;height:2868px}
-.head{top:150px;padding:0 96px}
-.head .kicker{font-size:31px;margin-bottom:20px}
-.head h2{font-size:94px;letter-spacing:-1.4px}
-.head p{font-size:37px;margin-top:28px}
-.phone{width:790px;height:2080px;bottom:190px;border-radius:98px}
-.phone .scr{inset:18px;border-radius:80px;
- -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='754' height='2044'%3E%3Crect width='754' height='2044' rx='80' fill='%23fff'/%3E%3C/svg%3E") center/100%25 100%25 no-repeat;
- mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='754' height='2044'%3E%3Crect width='754' height='2044' rx='80' fill='%23fff'/%3E%3C/svg%3E") center/100%25 100%25 no-repeat}
-.phone .scr iframe{width:556px;height:1507px;transform:scale(1.3561)}
+.head{top:120px;padding:0 92px}
+.head .kicker{font-size:31px;margin-bottom:18px}
+.head h2{font-size:92px;letter-spacing:-1.4px}
+.head p{font-size:36px;margin-top:24px}
+.phone{width:826px;height:2200px;bottom:130px;border-radius:104px}
+.phone .scr{inset:18px;border-radius:86px;
+ -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='790' height='2164'%3E%3Crect width='790' height='2164' rx='86' fill='%23fff'/%3E%3C/svg%3E") center/100%25 100%25 no-repeat;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='790' height='2164'%3E%3Crect width='790' height='2164' rx='86' fill='%23fff'/%3E%3C/svg%3E") center/100%25 100%25 no-repeat}
+.phone .scr iframe{width:586px;height:1605px;transform:scale(1.3481)}
 .phone .ld{border-radius:80px}
 </style>
 </head>
@@ -184,6 +184,8 @@ body{background:linear-gradient(180deg,#EAF2FD,#DCEAFB);color:var(--ink);font-fa
 <div class="icon"><img src="comia_icon_cat.svg" alt=""></div></div>
 
 <script>
+// iframe 앱과 동일 출처 → 부모가 미리 라이트 테마를 박아두면 모든 폰이 처음부터 라이트로 부팅(다크 깜빡임/레이스 없음)
+try{localStorage.setItem('comia_theme','light')}catch(e){}
 const TEST={email:'test1@comia.app',pw:'test1234'};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,ms=12000,step=150){const t=Date.now();while(Date.now()-t<ms){try{if(fn())return true}catch(e){}await sleep(step)}return false}

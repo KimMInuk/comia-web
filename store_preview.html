@@ -170,6 +170,8 @@ body{background:linear-gradient(180deg,#EAF2FD,#DCEAFB);color:var(--ink);font-fa
 <div class="icon"><img src="comia_icon_cat.svg" alt=""></div></div>
 
 <script>
+// iframe 앱과 동일 출처 → 부모가 미리 라이트 테마를 박아두면 모든 폰이 처음부터 라이트로 부팅(다크 깜빡임/레이스 없음)
+try{localStorage.setItem('comia_theme','light')}catch(e){}
 const TEST={email:'test1@comia.app',pw:'test1234'};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,ms=12000,step=150){const t=Date.now();while(Date.now()-t<ms){try{if(fn())return true}catch(e){}await sleep(step)}return false}
