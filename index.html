@@ -2216,7 +2216,7 @@
         </div>
         <button class="btn-primary auth-primary" id="authPrimaryBtn" onclick="authEmail()">이메일로 로그인</button>
         <div class="auth-divider"><span>또는</span></div>
-        <button class="auth-social apple" onclick="authOAuth('apple')"><span class="as-ico"><svg viewBox="0 0 24 24"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.28-1.33-1.95-3.4-2.21-4.13-2.24-1.76-.18-3.43 1.03-4.32 1.03-.89 0-2.26-1.01-3.71-.98-1.91.03-3.67 1.11-4.65 2.82-1.98 3.44-.51 8.52 1.42 11.31.94 1.37 2.06 2.9 3.53 2.85 1.42-.06 1.96-.92 3.67-.92 1.71 0 2.2.92 3.71.89 1.53-.03 2.5-1.39 3.44-2.76 1.08-1.58 1.53-3.11 1.55-3.19-.03-.01-2.98-1.14-3.01-4.52M14.7 3.71c.79-.96 1.32-2.29 1.18-3.61-1.14.05-2.51.76-3.32 1.72-.73.85-1.37 2.2-1.2 3.5 1.27.1 2.56-.65 3.34-1.61z"/></svg></span> Apple로 시작</button>
+        <button class="auth-social apple" id="btnApple" onclick="authOAuth('apple')"><span class="as-ico"><svg viewBox="0 0 24 24"><path d="M17.05 12.04c-.03-2.85 2.33-4.22 2.44-4.28-1.33-1.95-3.4-2.21-4.13-2.24-1.76-.18-3.43 1.03-4.32 1.03-.89 0-2.26-1.01-3.71-.98-1.91.03-3.67 1.11-4.65 2.82-1.98 3.44-.51 8.52 1.42 11.31.94 1.37 2.06 2.9 3.53 2.85 1.42-.06 1.96-.92 3.67-.92 1.71 0 2.2.92 3.71.89 1.53-.03 2.5-1.39 3.44-2.76 1.08-1.58 1.53-3.11 1.55-3.19-.03-.01-2.98-1.14-3.01-4.52M14.7 3.71c.79-.96 1.32-2.29 1.18-3.61-1.14.05-2.51.76-3.32 1.72-.73.85-1.37 2.2-1.2 3.5 1.27.1 2.56-.65 3.34-1.61z"/></svg></span> Apple로 시작</button>
         <button class="auth-social google" onclick="authOAuth('google')"><span class="as-ico"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.5 29.3 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5c10.8 0 19.5-8.7 19.5-19.5 0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13.5 24 13.5c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.5 29.3 4.5 24 4.5c-7.5 0-14 4.3-17.7 10.2z"/><path fill="#4CAF50" d="M24 43.5c5.2 0 9.9-1.9 13.4-5.1l-6.2-5.2c-2 1.5-4.6 2.5-7.2 2.5-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.9 39.1 16.4 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.4l6.2 5.2C39.9 36.5 43.5 31 43.5 24c0-1.3-.1-2.3-.4-3.5z"/></svg></span> Google로 시작</button>
         <button class="auth-social kakao" onclick="authOAuth('kakao')"><span class="as-ico"><svg viewBox="0 0 24 24" fill="#3C1E1E"><ellipse cx="12" cy="10.5" rx="9" ry="7"/><path d="M8.2 15.5L6.3 20.4l5.2-3.4z"/></svg></span> 카카오로 시작</button>
         <button class="auth-social naver" onclick="authOAuth('naver')"><span class="as-ico naver-n">N</span> 네이버로 시작</button>
@@ -6206,8 +6206,14 @@
     if (SHOW_TEST_ACCOUNTS) return;
     const ta = document.getElementById('testAccounts'); if (ta) ta.remove();
   }
-  document.addEventListener('DOMContentLoaded', () => { applyTestAccountVisibility(); setAuthMode('login'); });
-  applyTestAccountVisibility();
+  // 플랫폼별 소셜로그인: 안드로이드는 Apple 로그인 숨김(애플 ID 거의 미사용). iOS·웹은 노출(가이드라인 4.8).
+  function applyPlatformAuth() {
+    const cap = window.Capacitor;
+    const plat = (cap && cap.getPlatform) ? cap.getPlatform() : 'web';
+    if (plat === 'android') { const a = document.getElementById('btnApple'); if (a) a.remove(); }
+  }
+  document.addEventListener('DOMContentLoaded', () => { applyTestAccountVisibility(); applyPlatformAuth(); setAuthMode('login'); });
+  applyTestAccountVisibility(); applyPlatformAuth();
   // 테스트 계정 빠른 로그인 (개발용; 비번 고정 test1234)
   async function loginTest(email) {
     if (!LIVE || !sb) { toast('데모 모드 — 키 연결 후 사용 가능해요'); return; }
