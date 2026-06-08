@@ -2485,7 +2485,7 @@
             1,243명
           </span>
         </div>
-        <div class="hero-attrib" id="edAttrib">포스터·이미지 © 서울 코믹월드 공식 — <span class="lnk" onclick="toast('공식 출처로 이동')">출처 보기</span></div>
+        <div class="hero-attrib" id="edAttrib" style="display:none"></div>
       </div>
 
       <div class="godates-card" id="edGoDates" style="display:none;"></div>
@@ -6845,7 +6845,7 @@
       hero.style.backgroundSize = ''; hero.style.backgroundPosition = '';
     }
     const at = document.getElementById('edAttrib');
-    if (at) at.innerHTML = '포스터·이미지 © ' + (ev.source || '주최') + ' — <span class="lnk" onclick="openSource()">출처 보기</span>';
+    if (at) at.style.display = 'none';   // 포스터 출처 어트리뷰션 제거(의미 낮음)
     const tk = document.getElementById('edTicket');
     if (tk) tk.style.display = (ev.ticketUrl || ev.sourceUrl) ? 'inline-flex' : 'none';  // 예매·출처 링크 있을 때만
     // 행사 정보 카드 채우기
@@ -6861,7 +6861,6 @@
       h += eir('장소', (ev.venue || ev.region || '미정') + (hasPlace ? ' <span class="map-lnk" onclick="openMap()">지도 ›</span>' : ''));
       if (ev.cats && ev.cats.length) h += eir('분류', ev.cats.join(' · '));
       if (tags.length) h += eir('태그', tags.map(t => '<span class="ev-tag-chip tap" onclick="searchTag(\'' + jsq(t) + '\')">' + htmlesc(t) + '</span>').join(''));
-      h += eir('주최/출처', ev.source || '주최');
       info.innerHTML = h;
     }
   }
