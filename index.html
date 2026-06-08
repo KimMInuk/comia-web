@@ -3106,7 +3106,7 @@
         <h3>1. 수집하는 개인정보</h3>
         <table>
           <tr><th>구분</th><th>항목</th><th>목적</th></tr>
-          <tr><td>필수</td><td>이메일·비밀번호 또는 소셜 로그인 식별자(Google·Kakao), 닉네임</td><td>회원 식별·인증</td></tr>
+          <tr><td>필수</td><td>이메일·비밀번호 또는 소셜 로그인 식별자(Google·Kakao·Naver), 닉네임</td><td>회원 식별·인증</td></tr>
           <tr><td>선택</td><td>관심 작품·분야, 프로필 이미지, 성별(자가신고)</td><td>맞춤 행사 추천·동행 매칭 참고</td></tr>
           <tr><td>선택</td><td>업로드 이미지(굿즈 사진·채팅 첨부)</td><td>거래·동행 소통</td></tr>
           <tr><td>선택</td><td>위치정보(현장 체크인 시)</td><td>현장 참여 인증(덕력)</td></tr>
@@ -3122,7 +3122,7 @@
         <h3>4. 제3자 제공 · 처리위탁</h3>
         <ul>
           <li>이용자 동의 없이 제3자에게 제공하지 않습니다(법령에 따른 경우 제외).</li>
-          <li>소셜 로그인: Google·Kakao — 로그인 인증 목적의 식별정보 처리. (카카오는 닉네임·프로필 이미지만 받으며 이메일은 수집하지 않습니다.)</li>
+          <li>소셜 로그인: Google·Kakao·Naver — 로그인 인증 목적의 식별정보 처리. (카카오는 닉네임·프로필 이미지만 받으며 이메일은 수집하지 않습니다. 네이버는 닉네임·프로필 이미지와, 동의 시 이메일을 받습니다.)</li>
           <li>푸시 알림(도입 시): 기기 토큰을 알림 발송 목적에 한해 처리.</li>
         </ul>
         <h3>5. 개인정보의 국외 이전 (중요)</h3>
@@ -5901,12 +5901,13 @@
      anon key 는 클라이언트 공개용(RLS로 보호)이라 앱에 넣어도 안전하다. */
   const SUPABASE_URL = 'https://jjfhreljqpstietjnbju.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZmhyZWxqcXBzdGlldGpuYmp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NDg0NTIsImV4cCI6MjA5NjMyNDQ1Mn0.93Mu-KC2Do9wXXORmgn1VBYb9tztvDTuO4y2E-XG9UA';
+  const NAVER_CLIENT_ID = '';   // 네이버 개발자센터에서 발급한 Client ID. 채우면 네이버 로그인 활성화(Edge Function naver-auth 배포 필요)
   let sb = null, LIVE = false;
   function initSupabase(done) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { console.log('[comia] 데모 모드 (더미 데이터)'); done(); return; }
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-    s.onload = () => { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage, storageKey: 'comia-auth', flowType: 'pkce' } }); LIVE = true; console.log('[comia] 라이브 모드 (Supabase 연결)'); initDeepLinks(); done(); };
+    s.onload = () => { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage, storageKey: 'comia-auth', flowType: 'pkce' } }); LIVE = true; console.log('[comia] 라이브 모드 (Supabase 연결)'); initDeepLinks(); handleNaverWebReturn(); done(); };
     s.onerror = () => { console.warn('[comia] supabase-js 로드 실패 → 데모 모드'); done(); };
     document.head.appendChild(s);
   }
@@ -6169,11 +6170,23 @@
   }
   async function authOAuth(provider) {
     if (!LIVE || !sb) { toast('데모 모드 — 키 연결 후 사용 가능해요'); return; }
-    if (provider === 'naver') { toast('네이버 로그인은 준비중이에요'); return; }
     if (authMode === 'signup' && !requiredConsentMet()) { toast('필수 약관에 동의해주세요'); return; }
     if (authMode === 'signup') setMarketingPref(marketingConsented());
     const cap = window.Capacitor;
     const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+    if (provider === 'naver') {   // 네이버: Supabase 미지원 → 커스텀 OAuth(Edge Function naver-auth)
+      if (!NAVER_CLIENT_ID) { toast('네이버 로그인은 준비중이에요'); return; }
+      const cb = SUPABASE_URL + '/functions/v1/naver-auth';
+      const state = (native ? 'native_' : 'web_') + Math.random().toString(36).slice(2);
+      const authUrl = 'https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id='
+        + encodeURIComponent(NAVER_CLIENT_ID) + '&redirect_uri=' + encodeURIComponent(cb)
+        + '&state=' + encodeURIComponent(state);
+      try {
+        if (native) { const B = cap.Plugins && cap.Plugins.Browser; if (B) await B.open({ url: authUrl }); else window.open(authUrl, '_blank'); }
+        else { window.location.href = authUrl; }
+      } catch (e) { toast('네이버 로그인 오류: ' + (e.message || e)); }
+      return;
+    }
     // 참고: Supabase가 카카오 scope에 account_email 을 강제 포함 → 카카오 동의항목에 '카카오계정(이메일)'을
     // 선택 동의로 켜둬야 로그인 가능(안 켜면 KOE006). 일반 공개 시 이메일 동의는 비즈앱 검수 필요.
     try {
@@ -6204,8 +6217,18 @@
       if (url.indexOf('login-callback') === -1) return;
       try { if (Browser && Browser.close) await Browser.close(); } catch (e) {}
       try {
-        let code = null;
-        try { code = new URL(url).searchParams.get('code'); } catch (e) {}
+        let u2 = null; try { u2 = new URL(url); } catch (e) {}
+        const nerr = u2 && u2.searchParams.get('naver_error');
+        if (nerr) { toast('네이버 로그인 실패: ' + nerr); return; }
+        const th = u2 && u2.searchParams.get('token_hash');   // 네이버 커스텀 OAuth 복귀
+        if (th) {
+          const { error } = await sb.auth.verifyOtp({ type: 'magiclink', token_hash: th });
+          if (error) throw error;
+          const { data: { user } } = await sb.auth.getUser();
+          if (user) { toast('로그인됐어요'); afterLogin(user); }
+          return;
+        }
+        const code = u2 && u2.searchParams.get('code');
         if (!code) { toast('로그인 정보를 받지 못했어요'); return; }
         const { error } = await sb.auth.exchangeCodeForSession(code);
         if (error) throw error;
@@ -6213,6 +6236,20 @@
         if (user) { toast('로그인됐어요'); afterLogin(user); }
       } catch (e) { toast('로그인 처리 실패: ' + (e.message || e)); }
     });
+  }
+  // 네이버 로그인 웹 복귀: Edge Function이 ?token_hash=...&naver=1 로 되돌려줌 → verifyOtp 로 세션 수립
+  async function handleNaverWebReturn() {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const nerr = sp.get('naver_error'), th = sp.get('token_hash');
+      if (!nerr && !th) return;
+      try { history.replaceState(null, '', window.location.pathname); } catch (e) {}   // URL 정리
+      if (nerr) { toast('네이버 로그인 실패: ' + nerr); return; }
+      const { error } = await sb.auth.verifyOtp({ type: 'magiclink', token_hash: th });
+      if (error) throw error;
+      const { data: { user } } = await sb.auth.getUser();
+      if (user) { toast('로그인됐어요'); afterLogin(user); }
+    } catch (e) { toast('네이버 로그인 처리 실패: ' + (e.message || e)); }
   }
   function guestEnter() { try { localStorage.setItem('comia_seen', '1'); } catch (e) {} obGoStep(0); showScreen('screen-onboarding'); }
   async function afterLogin(user, forceHome) {
