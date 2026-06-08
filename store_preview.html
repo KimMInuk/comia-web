@@ -18,16 +18,18 @@ body{background:linear-gradient(180deg,#EAF2FD,#DCEAFB);color:var(--ink);font-fa
 .cap{color:#6c7891;font-size:13px;font-weight:700;margin:0 0 8px 4px}
 /* ===== 스크린샷 슬라이드(1080×1920) ===== */
 .slide{position:relative;width:1080px;height:1920px;overflow:hidden;border-radius:8px;
-  background:linear-gradient(165deg,#F5FAFF 0%,#E6F0FD 48%,#D6E6FA 100%);}
-/* 배경 분위기 — 옅은 구름(흰 소프트 블롭) */
-.slide::before{content:"";position:absolute;inset:-4%;z-index:0;pointer-events:none;filter:blur(3px);
+  background:linear-gradient(165deg,#DCEAFC 0%,#C6DCF8 48%,#AECBF1 100%);}
+/* 배경 분위기 — 흰 구름(상단 하늘·가장자리에 또렷하게, 소프트) */
+.slide::before{content:"";position:absolute;inset:-4%;z-index:0;pointer-events:none;filter:blur(6px);
   background:
-    radial-gradient(38% 21% at 20% 23%, rgba(255,255,255,.62), rgba(255,255,255,0) 70%),
-    radial-gradient(31% 17% at 83% 63%, rgba(255,255,255,.5), rgba(255,255,255,0) 72%),
-    radial-gradient(25% 15% at 63% 13%, rgba(255,255,255,.46), rgba(255,255,255,0) 75%),
-    radial-gradient(21% 13% at 9% 73%, rgba(255,255,255,.4), rgba(255,255,255,0) 75%);}
+    radial-gradient(44% 16% at 26% 12%, rgba(255,255,255,.96), rgba(255,255,255,0) 70%),
+    radial-gradient(30% 12% at 44% 17%, rgba(255,255,255,.85), rgba(255,255,255,0) 72%),
+    radial-gradient(38% 14% at 80% 9%, rgba(255,255,255,.92), rgba(255,255,255,0) 72%),
+    radial-gradient(22% 10% at 92% 16%, rgba(255,255,255,.7), rgba(255,255,255,0) 74%),
+    radial-gradient(26% 17% at 6% 45%, rgba(255,255,255,.82), rgba(255,255,255,0) 75%),
+    radial-gradient(26% 17% at 96% 53%, rgba(255,255,255,.82), rgba(255,255,255,0) 75%);}
 /* 배경 분위기 — 옅은 별(페일블루 점, 가장자리 위주) */
-.slide::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.55;background-repeat:no-repeat;
+.slide::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.7;background-repeat:no-repeat;
   background:
     radial-gradient(4px 4px at 8% 11%, #8FB6EA 48%, transparent 50%),
     radial-gradient(2.5px 2.5px at 14% 27%, #9CC2EE 48%, transparent 50%),
