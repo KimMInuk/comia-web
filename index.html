@@ -4809,17 +4809,26 @@
       }
     } catch (e) {}
   }
+  // 닉네임 금칙어·사칭·예약어 필터 (서버 트리거 trg_check_nickname 과 동일 정책 — UX용 사전 차단)
+  const NICK_BAN = /(시발|씨발|씌발|병신|븅신|지랄|좆|존나|새끼|개새|개색|썅|쌍놈|쌍년|애미|애비|니애미|느금|엠창|보지|자지|섹스|성행위|자위|야동|딸딸|sex|porn|fuck|shit|bitch|asshole|dick|pussy|닥쳐|꺼져|창년|창놈|걸레|등신|머저리|정신병자|장애인|틀딱|급식충|한남|한녀|김치녀|된장녀|관리자|운영자|운영팀|운영진|코미아운영|comiaofficial|administrator|어드민|operator)/i;
+  function badNick(nick) {
+    const n = (nick || '').trim();
+    if (n.length < 2) return '닉네임은 2자 이상이어야 해요';
+    if (n.length > 16) return '닉네임은 16자 이하로 입력해주세요';
+    if (NICK_BAN.test(n.toLowerCase().replace(/[\s._\-]/g, ''))) return '사용할 수 없는 표현이 포함돼 있어요';
+    return null;
+  }
   async function saveProfileEdit() {
     const u = await requireLogin(); if (!u) return;
     const nick = (document.getElementById('epNick').value || '').trim();
-    if (!nick) { toast('닉네임을 입력해주세요'); return; }
+    const bad = badNick(nick); if (bad) { toast(bad); return; }
     try {
       const { error } = await sb.from('profiles').update({ nickname: nick }).eq('id', u.id);
       if (error) throw error;
       applyNickname(nick);
       toast('프로필을 저장했어요');
       loadMyProfile(); back();
-    } catch (e) { toast('저장 실패: ' + (e.message || e)); }
+    } catch (e) { toast(/nickname_blocked/.test(e.message || '') ? '사용할 수 없는 닉네임이에요' : '저장 실패: ' + (e.message || e)); }
   }
   async function confirmDeleteAccount() {
     if (!confirm('정말 탈퇴하시겠어요?\n계정과 모든 활동(참여·동행·작성글·채팅·덕력·굿즈)이 영구 삭제되며 되돌릴 수 없어요.')) return;
@@ -4866,6 +4875,10 @@
     }
     if (obStep === 2 && !document.querySelector('#obSubGrid .ob-fandom.on')) {
       toast('세부 작품을 하나 이상 골라주세요'); return;
+    }
+    if (obStep === 3) {
+      const bad = badNick((document.getElementById('obNick') || {}).value || '');
+      if (bad) { toast(bad); return; }
     }
     if (obStep >= OB_LAST) { obFinish(); return; }
     obGoStep(obStep + 1);
@@ -6042,7 +6055,7 @@
       const nickEl = document.getElementById('obNick');
       const nick = nickEl ? nickEl.value.trim() : '';
       const upd = { gender: (OB_GENDER && OB_GENDER !== 'none') ? OB_GENDER : null };   // 자가신고 성별(없으면 비공개)
-      if (nick) upd.nickname = nick;
+      if (nick && !badNick(nick)) upd.nickname = nick;   // 금칙어 닉은 저장 안 함(서버 트리거도 차단)
       await sb.from('profiles').update(upd).eq('id', user.id);
       const rows = [];
       document.querySelectorAll('#screen-onboarding .ob-step[data-step="1"] .ob-fandom.on')
@@ -7108,16 +7121,32 @@
   // 참여 멤버 보기 — 익명 핸들 + 덕력뱃지 (실명 비공개). 데이터는 입장 시 buildAnonMap 으로 이미 로드됨.
   async function showRoomMembers() {
     if (!CUR_ROOM) return;
+    const me = await currentUser();
     try { await buildAnonMap(CUR_ROOM); } catch (e) {}   // 최신 멤버 반영
     const mems = ROOM_READ || [];
     const rows = mems.map(m => {
       const nm = ANON_MAP[m.user_id] || funName(CUR_ROOM, m.user_id);
-      return '<div class="member-row">' + funAvatar(nm) + '<span class="member-name">' + htmlesc(nm) + ' ' + dukBadge(m.user_id) + '</span></div>';
+      const act = (me && m.user_id !== me.id)
+        ? '<span style="margin-left:auto;display:flex;gap:12px;flex-shrink:0;align-items:center;">'
+          + '<span style="color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" onclick="reportRoomMember(\'' + m.user_id + '\')">신고</span>'
+          + '<span style="color:#e0556b;font-size:12px;font-weight:700;cursor:pointer;" onclick="blockRoomMember(\'' + m.user_id + '\')">차단</span></span>'
+        : '';
+      return '<div class="member-row">' + funAvatar(nm) + '<span class="member-name">' + htmlesc(nm) + ' ' + dukBadge(m.user_id) + '</span>' + act + '</div>';
     }).join('');
     document.getElementById('asTitle').textContent = '참여 멤버 ' + mems.length + '명';
     document.getElementById('asButtons').innerHTML = rows || '<div style="padding:18px;color:var(--text-dim);font-size:13px;text-align:center;">멤버 정보를 불러올 수 없어요</div>';
     document.getElementById('actionSheetBg').classList.add('on');
     document.getElementById('actionSheet').classList.add('on');
+  }
+  function reportRoomMember(uid) {
+    const nm = ANON_MAP[uid] || '이 사용자';
+    if (!confirm(nm + ' 님을 신고할까요?\n부적절한 메시지·행동을 운영팀이 검토합니다.')) return;
+    reportTarget('user', uid);
+  }
+  function blockRoomMember(uid) {
+    const nm = ANON_MAP[uid] || '이 사용자';
+    if (!confirm(nm + ' 님을 차단할까요?\n차단하면 서로의 글·요청이 보이지 않아요.')) return;
+    blockUser(uid, nm);
   }
   /* ---------- 동행 방 설정 (방장: 일정·정원 변경 / 폭파) ---------- */
   let RS = { room: null, postId: null, filled: 1, eventId: null, meetKey: null, cap: 2 };
