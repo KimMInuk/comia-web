@@ -5242,7 +5242,8 @@
   }
   async function loadDuk() {
     const card = document.getElementById('dukCard'); if (!card || !LIVE || !sb) return;
-    const u = await currentUser(); if (!u) return;
+    const u = await currentUser();
+    if (!u) { card.innerHTML = '<div style="padding:18px 16px;color:var(--text-dim);font-size:13px;text-align:center;">로그인하고 현장에서 체크인하면 덕력이 쌓여요</div>'; return; }   // 게스트/로그아웃: 데모 잔상 제거
     try {
       const { data } = await sb.from('duk_ledger').select('cat,delta_xp').eq('user_id', u.id);
       const agg = {};
@@ -6406,6 +6407,15 @@
       if (editBtn) { editBtn.textContent = '로그인 / 회원가입'; editBtn.setAttribute('onclick', "showScreen('screen-auth')"); }
       if (sub) sub.style.display = 'none';   // 게스트 안내는 pill 하나로 통일(중복 제거)
       if (box) box.innerHTML = '<span class="fandom-tag" style="opacity:.6">로그인하면 관심 작품이 표시돼요</span>';
+      // 하드코딩 데모/이전계정 잔상 제거(닉·아바타·스탯·덕력카드·메뉴카운트)
+      document.querySelectorAll('#screen-my .profile-name').forEach(el => el.textContent = '@게스트');
+      const av = document.getElementById('myAvatar'); if (av) { av.style.backgroundImage = ''; av.textContent = 'G'; av.style.fontSize = ''; }
+      const sv = document.querySelectorAll('#screen-my .stats-row .stat-value');
+      if (sv[0]) sv[0].innerHTML = '0<span class="unit">회</span>';
+      if (sv[1]) sv[1].textContent = '입문';
+      if (sv[2]) sv[2].innerHTML = '0<span class="unit">XP</span>';
+      const duk = document.getElementById('dukCard'); if (duk) duk.innerHTML = '<div style="padding:18px 16px;color:var(--text-dim);font-size:13px;text-align:center;">로그인하고 현장에서 체크인하면 덕력이 쌓여요</div>';
+      ['mcInterests', 'mcFilters', 'mcEvents', 'mcPosts', 'mcInfoPosts'].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = ''; });
     } else if (editBtn) {
       if (sub) sub.style.display = '';
       editBtn.textContent = '프로필 편집'; editBtn.setAttribute('onclick', 'openProfileEdit()');
