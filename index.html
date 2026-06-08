@@ -2934,6 +2934,7 @@
       <div class="menu-list">
         <div class="menu-item" onclick="goto('screen-terms')"><span>이용약관</span><span class="right"><span class="chev">›</span></span></div>
         <div class="menu-item" onclick="goto('screen-privacy')"><span>개인정보처리방침</span><span class="right"><span class="chev">›</span></span></div>
+        <div class="menu-item" onclick="openInquiry()"><span>문의하기 <span style="color:var(--text-dim);font-size:11.5px;">버그·계정·신고 후속</span></span><span class="right"><span class="chev">›</span></span></div>
         <div class="menu-item" onclick="restartOnboarding()"><span>온보딩 다시 보기</span><span class="right"><span class="chev">›</span></span></div>
         <div class="menu-item"><span>앱 버전</span><span class="right" style="color:var(--text-dim);">v0.1.0</span></div>
       </div>
@@ -2944,6 +2945,27 @@
         <div class="menu-item" onclick="confirmDeleteAccount()"><span style="color:var(--danger);">회원 탈퇴</span><span class="right"><span class="chev">›</span></span></div>
       </div>
       <div style="height:24px"></div>
+    </div>
+
+    <!-- ===================== 문의하기 (고객센터) ===================== -->
+    <div class="screen" id="screen-inquiry">
+      <div class="nav-header"><div class="back" onclick="back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div><div class="title">문의하기</div></div>
+      <div class="set-note">무엇이든 물어보세요</div>
+      <div style="padding:0 16px;">
+        <div style="font-size:12.5px;color:var(--text-sub);line-height:1.55;margin-bottom:12px;">버그·계정 문제·신고 후속·행사 정보 오류·제안 등을 보내주세요. 운영팀이 확인 후 답변드려요. (답변은 알림과 아래 내역에서 확인할 수 있어요.)</div>
+        <select id="iqCat" class="form-input" style="margin-bottom:10px;">
+          <option value="버그·오류">버그·오류</option>
+          <option value="계정·로그인">계정·로그인</option>
+          <option value="신고 후속">신고 후속</option>
+          <option value="행사 정보 오류">행사 정보 오류</option>
+          <option value="제안·기타">제안·기타</option>
+        </select>
+        <textarea id="iqBody" class="form-input" rows="5" placeholder="문의 내용을 적어주세요" style="width:100%;resize:vertical;margin-bottom:10px;"></textarea>
+        <input id="iqContact" class="form-input" type="text" placeholder="회신받을 이메일 (선택)" style="margin-bottom:14px;" />
+        <button class="btn-primary" style="width:100%;" onclick="submitInquiry()">문의 보내기</button>
+      </div>
+      <div class="set-note" style="margin-top:24px;">내 문의 내역</div>
+      <div id="iqList" style="padding:0 16px 28px;"></div>
     </div>
 
     <!-- ===================== 동행 방 설정 (방장) ===================== -->
@@ -3071,7 +3093,7 @@
         </ul>
         <h3>제8조 (약관의 변경)</h3>
         <p>회사는 관련 법령을 위반하지 않는 범위에서 약관을 변경할 수 있으며, 변경 시 시행일 7일 전(이용자 불리·중대한 변경은 30일 전) 공지합니다.</p>
-        <p style="margin-top:14px;color:var(--text-dim)">문의: support@comia.app (예시)</p>
+        <p style="margin-top:14px;color:var(--text-dim)">문의: 앱 내 <b>[설정 &gt; 문의하기]</b>로 접수해주세요. 운영팀이 확인 후 답변드립니다.</p>
       </div>
     </div>
 
@@ -7668,6 +7690,51 @@
       ['rpTitle', 'rpWhen', 'rpVenue', 'rpUrl', 'rpNote'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       setTimeout(back, 550);
     } catch (e) { toast('제보 실패: ' + (e.message || e)); }
+  }
+
+  /* ===================== 문의하기 (고객센터) ===================== */
+  async function openInquiry() {
+    const u = await requireLogin(); if (!u) return;
+    goto('screen-inquiry');
+    loadMyInquiries();
+  }
+  async function submitInquiry() {
+    const u = await requireLogin(); if (!u) return;
+    const body = (document.getElementById('iqBody').value || '').trim();
+    if (body.length < 5) { toast('문의 내용을 조금 더 자세히 적어주세요'); return; }
+    try {
+      const { error } = await sb.rpc('submit_inquiry', {
+        p_category: document.getElementById('iqCat').value,
+        p_body: body,
+        p_contact: (document.getElementById('iqContact').value || '').trim()
+      });
+      if (error) throw error;
+      toast('문의가 접수됐어요. 확인 후 답변드릴게요');
+      document.getElementById('iqBody').value = '';
+      loadMyInquiries();
+    } catch (e) { toast('접수 실패: ' + (e.message || e)); }
+  }
+  async function loadMyInquiries() {
+    const box = document.getElementById('iqList'); if (!box || !LIVE || !sb) return;
+    try {
+      const { data } = await sb.from('inquiries').select('category, body, status, reply, created_at, answered_at').order('created_at', { ascending: false }).limit(20);
+      const list = data || [];
+      box.innerHTML = list.length ? list.map(inquiryRow).join('')
+        : '<div style="padding:18px 0;color:var(--text-dim);font-size:13px;text-align:center;">아직 보낸 문의가 없어요</div>';
+    } catch (e) { box.innerHTML = ''; }
+  }
+  function inquiryRow(q) {
+    const ST = { open: ['접수됨', 'var(--text-sub)'], answered: ['답변완료', 'var(--success)'], closed: ['종료', 'var(--text-dim)'] };
+    const st = ST[q.status] || ST.open;
+    const d = new Date(q.created_at);
+    const ds = d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0');
+    return '<div style="border:1px solid var(--border);border-radius:12px;padding:12px 13px;margin-bottom:9px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+      + '<span style="font-size:12px;font-weight:700;color:var(--accent);">' + htmlesc(q.category || '문의') + '</span>'
+      + '<span style="font-size:11.5px;font-weight:700;color:' + st[1] + ';">' + st[0] + ' · ' + ds + '</span></div>'
+      + '<div style="font-size:13.5px;color:var(--text);line-height:1.5;white-space:pre-wrap;">' + htmlesc(q.body) + '</div>'
+      + (q.reply ? '<div style="margin-top:9px;padding:9px 11px;background:var(--accent-bg);border-radius:9px;font-size:13px;line-height:1.55;color:var(--text);"><b style="color:var(--accent);">코미아 운영팀</b><br>' + htmlesc(q.reply) + '</div>' : '')
+      + '</div>';
   }
 
   /* ===================== 신고 · 차단 (액션 시트) ===================== */
