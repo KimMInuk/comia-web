@@ -2373,7 +2373,7 @@
       <div id="homeCompanions"></div>
 
       <!-- ===== 커뮤니티 피드 ===== -->
-      <div class="section-header" id="feedNewsHdr" style="display:none;margin-top:16px;"><h2>📰 서브컬쳐 소식</h2><span class="more" onclick="openHub('news')">전체 ›</span></div>
+      <div class="section-header" id="feedNewsHdr" style="display:none;margin-top:16px;"><h2>서브컬쳐 소식</h2><span class="more" onclick="openHub('news')">전체 ›</span></div>
       <div class="home-rail" id="feedNews" style="display:none;"></div>
 
       <div class="section-header" id="feedGuideHdr" style="display:none;margin-top:16px;"><h2>코미아 가이드</h2><span class="more" onclick="openHub('guide')">전체 ›</span></div>
@@ -4074,10 +4074,6 @@
     <div class="sheet-header">
       <h3 id="hubTitle">서브컬쳐 소식</h3>
       <span class="reset" onclick="closeHub()">닫기</span>
-    </div>
-    <div style="display:flex;gap:8px;padding:0 20px 10px;">
-      <button class="hub-seg on" id="hubSegNews" onclick="hubTab('news')">📰 소식</button>
-      <button class="hub-seg" id="hubSegGuide" onclick="hubTab('guide')">📖 가이드</button>
     </div>
     <div class="sheet-body" id="hubList"></div>
   </div>
@@ -6818,8 +6814,6 @@
   function renderHub() {
     const isNews = HUB_TAB === 'news';
     document.getElementById('hubTitle').textContent = isNews ? '서브컬쳐 소식' : '코미아 가이드';
-    document.getElementById('hubSegNews').classList.toggle('on', isNews);
-    document.getElementById('hubSegGuide').classList.toggle('on', !isNews);
     const box = document.getElementById('hubList');
     if (isNews) {
       box.innerHTML = HUB_NEWS.length ? HUB_NEWS.map(n => {
