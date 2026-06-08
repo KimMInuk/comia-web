@@ -4049,8 +4049,8 @@
           <div class="opt">유료</div>
         </div>
       </div>
-      <!-- 주최 -->
-      <div class="filter-group">
+      <!-- 주최(공식/동인) — 정확도·유저가치 낮아 숨김. DOM은 유지(필터 GROUP_KEYS 인덱스 정렬), host 필터 무력화 -->
+      <div class="filter-group" style="display:none">
         <div class="label">주최</div>
         <div class="opt-grid" data-single>
           <div class="opt on">전체</div>
@@ -4228,17 +4228,7 @@
   /* ---------- 공식/비공식 자동 태깅 ---------- */
   // 게임사·IP 권리자 주최 = 공식. 그 외(코믹월드·일러스타페스 등 동인행사)는 비공식.
   const OFFICIAL_KW = ['블루아카이브', '블아', '호요페스타', '니케', '명조', '스타레일'];
-  function applyOfficialBadges(root) {
-    (root || document).querySelectorAll('.event-card .tags').forEach(tags => {
-      if (tags.querySelector('.tag.official')) return;
-      const titleEl = tags.closest('.event-card').querySelector('.title');
-      const txt = titleEl ? titleEl.textContent : '';
-      if (OFFICIAL_KW.some(k => txt.includes(k))) {
-        tags.insertAdjacentHTML('afterbegin', '<span class="tag official"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>공식</span>');
-      }
-    });
-  }
-  applyOfficialBadges();
+  function applyOfficialBadges(root) { /* 공식/동인 배지 제거 — 부정확(제목 키워드 휴리스틱)하고 유저가치 낮아 no-op */ }
 
   /* ---------- 네비게이션 ---------- */
   const history = ['screen-home'];
@@ -6865,8 +6855,7 @@
       const hasPlace = (ev.lat && ev.lng) || (ev.address && ev.address.trim()) || !isVagueVenue(ev.venue || ev.region || '');
       const intro = ev.description ? htmlesc(ev.description)
         : (ev.t + '은(는) ' + (ev.region ? ev.region + ' ' : '') + (ev.venue || '') +
-          (ev.dateStr ? ' · ' + ev.dateStr : '') + ' 에 열리는 ' + (ev.type || '행사') + '예요.' +
-          (ev.official ? ' 공식 주최 행사입니다.' : ' 동인·비공식 행사예요.'));
+          (ev.dateStr ? ' · ' + ev.dateStr : '') + ' 에 열리는 ' + (ev.type || '행사') + '예요.');
       let h = '<div class="ev-info-intro">' + intro + '</div>';
       h += eir('일시', ev.dateStr || ev.meta || '미정');
       h += eir('장소', (ev.venue || ev.region || '미정') + (hasPlace ? ' <span class="map-lnk" onclick="openMap()">지도 ›</span>' : ''));
