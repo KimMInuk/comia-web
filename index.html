@@ -760,6 +760,16 @@
   body.guest-mode #evTabCompanion > #evChatBtn,
   body.guest-mode #evTabCompanion > #companionList,
   body.guest-mode #evTabCompanion > .post-card { display: none !important; }
+  /* 게스트: 홈 '같이 갈 사람 구해요' 레일 블러+딤드 + 로그인 오버레이 */
+  .rail-lock-wrap { position: relative; }
+  .rail-guest-lock { display: none; }
+  body.guest-mode .rail-lock-wrap > #feedComp { filter: blur(6px); opacity: .6; pointer-events: none; user-select: none; }
+  body.guest-mode .rail-lock-wrap > .rail-guest-lock { display: flex; position: absolute; inset: 0; z-index: 5; flex-direction: column; align-items: center; justify-content: center; gap: 9px; text-align: center; padding: 12px; }
+  .rail-guest-lock .rgl-ic { width: 38px; height: 38px; border-radius: 12px; background: var(--accent-bg); color: var(--accent); display: grid; place-items: center; }
+  .rail-guest-lock .rgl-ic svg { width: 19px; height: 19px; }
+  .rail-guest-lock .rgl-t { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+  .rail-guest-lock .rgl-btn { padding: 8px 18px; border-radius: 999px; border: 0; font-family: inherit; font-size: 12.5px; font-weight: 800; color: #fff; background: var(--accent); cursor: pointer; letter-spacing: -0.2px; }
+  .rail-guest-lock .rgl-btn:active { background: var(--accent-dim); }
   .theme-seg { display: inline-flex; background: var(--chip-bg); border-radius: 999px; padding: 3px; gap: 2px; }
   .theme-seg .seg-btn { font-family: inherit; border: none; background: transparent; color: var(--text-sub); font-size: 12px; font-weight: 700; padding: 6px 13px; border-radius: 999px; cursor: pointer; letter-spacing: -0.2px; transition: background .13s, color .13s; }
   .theme-seg .seg-btn.on { background: var(--accent); color: #fff; }
@@ -2420,7 +2430,14 @@
       <div class="home-rail" id="feedInfo"></div>
 
       <div class="section-header"><h2>같이 갈 사람 구해요</h2><span class="more" onclick="goTab2('screen-companions')">전체 ›</span></div>
-      <div class="home-rail" id="feedComp"></div>
+      <div class="rail-lock-wrap">
+        <div class="home-rail" id="feedComp"></div>
+        <div class="rail-guest-lock">
+          <div class="rgl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="rgl-t">로그인하면 모집글을 볼 수 있어요</div>
+          <button class="rgl-btn" onclick="showScreen('screen-auth')">로그인 / 회원가입</button>
+        </div>
+      </div>
 
       <div class="section-header"><h2>신규 행사 모아보기</h2><span class="more" onclick="goNewEvents()">전체 ›</span></div>
       <div class="home-rail" id="feedNew"></div>
@@ -7016,23 +7033,10 @@
   }
 
   // 내 동행: 현재 참여 중인 동행 방 + 안읽음 배지
-  function guestLockInlineHtml(sub) {
-    return '<div class="guest-lock-inline" style="display:flex">'
-      + '<div class="gli-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'
-      + '<div class="gli-t">동행은 회원만 이용할 수 있어요</div>'
-      + '<div class="gli-s">' + sub + '</div>'
-      + '<button class="gli-btn" onclick="showScreen(\'screen-auth\')">로그인 / 회원가입</button>'
-      + '</div>';
-  }
   function renderMyCompanions() {
     const box = document.getElementById('homeCompanions'), sec = document.getElementById('secCompanion');
     if (!box) return;
-    if (IS_GUEST) {   // 게스트: '내 동행' 자리에 잠금 티저
-      box.innerHTML = guestLockInlineHtml('로그인하면 같이 갈 사람을 찾고<br>동행 방을 만들 수 있어요');
-      if (sec) sec.style.display = '';
-      const c = document.getElementById('homeCompCount'); if (c) c.textContent = '';
-      return;
-    }
+    if (IS_GUEST) { box.innerHTML = ''; if (sec) sec.style.display = 'none'; return; }   // 게스트는 내 방 없음 → 숨김('같이 갈 사람' 블러로 안내)
     if (MY_ROOMS.length) {
       box.innerHTML = MY_ROOMS.map(companionRoomCardHtml).join('');
       if (sec) sec.style.display = '';
