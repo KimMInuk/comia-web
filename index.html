@@ -2299,18 +2299,31 @@
         </div>
       </div>
 
-      <!-- 4. 본인인증 -->
+      <!-- 4. 알림·위치 안내 -->
       <div class="ob-step" data-step="4">
         <div class="ob-verify">
           <div class="ob-shield">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
           </div>
           <div class="ob-head" style="padding-top:0;">
-            <div class="t">신뢰와 안전</div>
-            <div class="s">코미아는 <b style="color:var(--text);">GPS 현장 체크인·덕력</b>으로 신뢰를 쌓아요.<br>휴대폰 본인인증은 <b style="color:var(--text);">출시 후 제공</b>될 예정이에요.</div>
+            <div class="t">알림과 위치, 잠깐만요</div>
+            <div class="s">꼭 필요한 순간에만 써요.<br>거부해도 대부분 기능은 그대로 이용할 수 있어요.</div>
           </div>
-          <div style="height:20px"></div>
-          <div style="text-align:center;font-size:13px;color:var(--text-dim);font-weight:600;padding:13px;border:1px dashed var(--border);border-radius:12px;">🔒 본인인증 · 출시 후 제공 예정</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--border-soft);border-radius:14px;padding:13px 14px;margin-top:16px;">
+            <div style="display:flex;align-items:center;gap:11px;min-width:0;text-align:left;">
+              <span style="font-size:22px;flex-shrink:0;">🔔</span>
+              <div style="min-width:0;"><div style="font-size:14px;font-weight:700;color:var(--text);">알림</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4;">행사 D-1 리마인더 · 동행 신청·채팅 알림</div></div>
+            </div>
+            <button type="button" id="obNotifBtn" onclick="obEnableNotif()" style="flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:8px 15px;font-size:13px;font-weight:700;cursor:pointer;">켜기</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--border-soft);border-radius:14px;padding:13px 14px;margin-top:10px;">
+            <div style="display:flex;align-items:center;gap:11px;min-width:0;text-align:left;">
+              <span style="font-size:22px;flex-shrink:0;">📍</span>
+              <div style="min-width:0;"><div style="font-size:14px;font-weight:700;color:var(--text);">위치</div><div style="font-size:12px;color:var(--text-sub);line-height:1.4;">현장 체크인할 때만 · 좌표는 저장 안 해요</div></div>
+            </div>
+            <span style="flex-shrink:0;font-size:12px;color:var(--text-dim);font-weight:600;">첫 체크인 때</span>
+          </div>
+          <div style="text-align:center;font-size:12px;color:var(--text-dim);font-weight:600;margin-top:16px;padding:11px;border:1px dashed var(--border);border-radius:12px;">🔒 휴대폰 본인인증은 출시 후 제공돼요</div>
         </div>
       </div>
 
@@ -4921,9 +4934,19 @@
     if (nick) applyNickname(nick.value);
     saveOnboardingTaste();
     saveInterests();   // 라이브 모드면 DB에 관심사 저장(아니면 무시)
+    registerPush();    // 알림 안내(4단계)를 본 뒤 권한 요청 — '켜기'로 이미 켰으면 no-op
     try { localStorage.setItem('comia_seen', '1'); } catch (e) {}
     goTab2('screen-home');
     toast('환영해요! 코미아를 시작합니다');
+  }
+  // 온보딩 4단계: 알림 권한 안내 후 요청
+  async function obEnableNotif() {
+    const btn = document.getElementById('obNotifBtn');
+    const cap = window.Capacitor;
+    const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+    if (!native) { if (btn) { btn.textContent = '앱에서'; btn.disabled = true; btn.style.opacity = '.55'; } toast('알림은 앱 설치 후 사용할 수 있어요'); return; }
+    try { await registerPush(); if (btn) { btn.textContent = '켜짐 ✓'; btn.disabled = true; btn.style.background = 'var(--success)'; } }
+    catch (e) { toast('알림 설정에 실패했어요'); }
   }
   // 온보딩에서 고른 대분류 → 행사 탭 '내 취향' 프리셋으로 반영
   function saveOnboardingTaste() {
@@ -6267,13 +6290,12 @@
       if (prof && prof.avatar_url) setProfilePhoto(prof.avatar_url);   // 없으면 닉 이니셜(applyNickname) 유지
       refreshNotifBadge();
       subscribeNotifications();
-      registerPush();   // 네이티브: FCM 토큰 등록(앱 밖 푸시용)
       try { localStorage.setItem('comia_seen', '1'); } catch (e) {}
       loadEvents();   // 계정 전환 시 개인화 데이터(참여·동행·관심사) 다시 로드
-      if (forceHome) { goTab2('screen-home'); return; }
+      if (forceHome) { registerPush(); goTab2('screen-home'); return; }
       const { data: ints } = await sb.from('profile_interests').select('big_cat').eq('user_id', user.id).limit(1);
-      if (ints && ints.length) { goTab2('screen-home'); }
-      else { obGoStep(1); showScreen('screen-onboarding'); }   // 처음이면 취향부터
+      if (ints && ints.length) { registerPush(); goTab2('screen-home'); }   // 기존 유저: 바로 푸시 등록
+      else { obGoStep(1); showScreen('screen-onboarding'); }   // 신규: 온보딩 4단계에서 안내 후 요청
     } catch (e) { goTab2('screen-home'); }
   }
   async function doSignOut() {
