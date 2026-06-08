@@ -2377,9 +2377,6 @@
       </div>
 
       <div id="eventsListView">
-      <!-- 저장된 필터 프리셋 (DB에서 동적 주입) -->
-      <div class="preset-row" id="presetRow" style="display:none;"></div>
-
       <div class="ev-count" id="evCount"></div>
       <div id="evList"></div>
       <div class="report-hint">찾는 행사가 없나요? <span class="lnk" onclick="openReport()">빠진 행사 알려주기 ›</span></div>
@@ -4005,6 +4002,8 @@
     </div>
     <div class="filter-summary" id="filterSummary"></div>
     <div class="sheet-body" id="sheetBody">
+      <!-- 저장한 필터 (DB 주입) — 시트 상단에만 노출(헤더 칩 제거) -->
+      <div class="preset-row" id="presetRow" style="display:none;margin-bottom:14px;"></div>
       <!-- 기간 -->
       <div class="filter-group">
         <div class="label">기간</div>
@@ -7970,6 +7969,8 @@
   function applySavedFilter(sf) {
     ONLY_GOING = false;
     curFilter = Object.assign(emptyFilter(), JSON.parse(JSON.stringify(sf.filter || {})));
+    syncSheetToFilter(curFilter);
+    if (typeof closeFilter === 'function') closeFilter();   // 시트에서 탭했으면 닫기
     goTab2('screen-events'); renderEvents();
     toast('필터 적용: ' + sf.name);
   }
