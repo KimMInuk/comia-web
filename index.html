@@ -7147,8 +7147,18 @@
     const r = (ev.region || '').split(/[·,\s]/)[0];
     return (r && r.length <= 3) ? r : '';
   }
-  // 지도·길찾기: 카카오맵/네이버지도 앱으로 딥링크(공식 link URL, API키 불필요).
-  // 정확도: 좌표(핀) > 도로명주소(검색) > 장소명(검색). 행정구역뿐이면 열지 않음.
+  // 장소명에서 '건물명'만 추출: 층·구역(1층/B2/아트리움 등)을 떼야 네이버·카카오 장소검색이 맞는다.
+  function mapBaseName(venue) {
+    let v = (venue || '').trim();
+    v = v.replace(/\s*(?:지하\s?|B)?\d+\s*층.*$/i, '')        // 'N층/B1층 …' 이후 제거
+         .replace(/\s+B\d+\b.*$/i, '')                          // ' B2 …' 이후 제거
+         .replace(/\s+\d+\s*F\b.*$/i, '')                       // ' 2F …' 이후 제거
+         .replace(/\s+(아트리움|로비|특설무대|이벤트홀|광장|코너)\S*.*$/, '')  // 내부 구역어 이후 제거
+         .trim();
+    return v || (venue || '').trim();
+  }
+  // 지도·길찾기: 카카오맵/네이버지도로 딥링크(공식 link URL, API키 불필요).
+  // 정확도: 좌표(핀) > 건물명 검색. 행정구역뿐이면 열지 않음.
   function openMap() {
     const ev = CUR_EVENT;
     if (!ev) { toast('행사 정보가 없어요'); return; }
@@ -7156,17 +7166,22 @@
     const addr = (ev.address || '').trim();
     const hasGeo = ev.lat != null && ev.lng != null && !isNaN(ev.lat) && !isNaN(ev.lng);
     if (!hasGeo && !addr && isVagueVenue(venue)) { toast('장소가 정확하지 않아 지도를 열 수 없어요'); return; }
-    const label = venue || ev.t || '행사장';
-    // 장소'명'으로 검색해야 결과에 건물 이름이 떠서 식별이 쉬움(주소 검색은 무명 핀). 모호하면 주소로 폴백.
+    const base = mapBaseName(venue);
+    const label = base || ev.t || '행사장';
+    // 검색어(좌표 없을 때): 건물명만. 모호하면 주소 폴백. 짧은 체인명이면 지역힌트 보강.
     const hint = mapLocality(ev);
     const query = isVagueVenue(venue)
       ? (addr || venue)
-      : (venue + (hint && venue.indexOf(hint) < 0 ? ' ' + hint : ''));
+      : (base + (hint && base.indexOf(hint) < 0 && base.length <= 5 ? ' ' + hint : ''));
     const encQ = encodeURIComponent(query);
+    const encL = encodeURIComponent(label);
     const kakao = hasGeo
-      ? 'https://map.kakao.com/link/map/' + encodeURIComponent(label) + ',' + ev.lat + ',' + ev.lng
+      ? 'https://map.kakao.com/link/map/' + encL + ',' + ev.lat + ',' + ev.lng
       : 'https://map.kakao.com/link/search/' + encQ;
-    const naver = 'https://map.naver.com/p/search/' + encQ;
+    // 좌표 있으면 네이버도 좌표 URL(공식: lng/lat/title — PC·모바일웹 동작). 없으면 건물명 검색.
+    const naver = hasGeo
+      ? 'https://map.naver.com/?lng=' + ev.lng + '&lat=' + ev.lat + '&title=' + encL
+      : 'https://map.naver.com/p/search/' + encQ;
     showActions(label + ' 지도에서 보기', [
       { label: '카카오맵', fn: () => openExternal(kakao) },
       { label: '네이버 지도', fn: () => openExternal(naver) },
