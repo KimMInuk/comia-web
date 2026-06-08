@@ -85,15 +85,16 @@ body{background:linear-gradient(180deg,#EAF2FD,#DCEAFB);color:var(--ink);font-fa
 </style><style>
 /* === iOS 6.9" (1320x2868) 치수 override === */
 .slide{width:1320px;height:2868px}
-.head{top:120px;padding:0 92px}
-.head .kicker{font-size:31px;margin-bottom:18px}
+.head{top:160px;padding:0 92px}
+.head .kicker{font-size:32px;margin-bottom:18px}
 .head h2{font-size:92px;letter-spacing:-1.4px}
-.head p{font-size:36px;margin-top:24px}
-.phone{width:826px;height:2200px;bottom:130px;border-radius:104px}
-.phone .scr{inset:18px;border-radius:86px;
- -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='790' height='2164'%3E%3Crect width='790' height='2164' rx='86' fill='%23fff'/%3E%3C/svg%3E") center/100%25 100%25 no-repeat;
- mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='790' height='2164'%3E%3Crect width='790' height='2164' rx='86' fill='%23fff'/%3E%3C/svg%3E") center/100%25 100%25 no-repeat}
-.phone .scr iframe{width:586px;height:1605px;transform:scale(1.3481)}
+.head p{font-size:37px;margin-top:24px}
+/* 실제 아이폰 비율(폰 0.47 / 화면 0.46 ≈ 9:19.5). 캔버스가 길어도 폰은 늘이지 않음 */
+.phone{width:900px;height:1914px;bottom:230px;border-radius:108px}
+.phone .scr{inset:18px;border-radius:90px;
+ -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='864' height='1878'%3E%3Crect width='864' height='1878' rx='90' fill='%23fff'/%3E%3C/svg%3E") center/100%25 100%25 no-repeat;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='864' height='1878'%3E%3Crect width='864' height='1878' rx='90' fill='%23fff'/%3E%3C/svg%3E") center/100%25 100%25 no-repeat}
+.phone .scr iframe{width:556px;height:1209px;transform:scale(1.554)}
 .phone .ld{border-radius:80px}
 </style>
 </head>
