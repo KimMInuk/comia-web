@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>코미아 — Play 스토어 에셋 (실제 앱 화면)</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+@font-face { font-family:'GyeonggiTitle'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-3@1.0/Title_Light.woff') format('woff'); font-weight:300; font-display:swap; }
+@font-face { font-family:'GyeonggiTitle'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-3@1.0/Title_Medium.woff') format('woff'); font-weight:500; font-display:swap; }
+@font-face { font-family:'GyeonggiTitle'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-3@1.0/Title_Bold.woff') format('woff'); font-weight:700; font-display:swap; }
+:root{--bg:#0E1422;--ink:#2B3A59;--ink2:#5E6E8C;--line:#cdddf2;--acc:#2F6FD6;--accSoft:#5B9BE8;
+  --grad:linear-gradient(135deg,#7FB1F0 0%,#4F86DA 55%,#3A6FB5 100%);}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(180deg,#EAF2FD,#DCEAFB);color:var(--ink);font-family:Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:40px 0 120px}
+.guide{max-width:1080px;margin:0 auto 30px;padding:18px 22px;background:#fff;border:1px solid var(--line);border-radius:14px;color:#52617f;font-size:14px;line-height:1.7;box-shadow:0 6px 20px rgba(40,80,150,.08)}
+.guide b{color:var(--ink)} .guide code{background:#e9f1fc;padding:2px 6px;border-radius:5px;color:#2F6FD6}
+.asset{max-width:1080px;margin:0 auto 46px}
+.cap{color:#6c7891;font-size:13px;font-weight:700;margin:0 0 8px 4px}
+/* ===== 스크린샷 슬라이드(1080×1920) ===== */
+.slide{position:relative;width:1080px;height:1920px;overflow:hidden;border-radius:8px;
+  background:linear-gradient(165deg,#F5FAFF 0%,#E6F0FD 48%,#D6E6FA 100%);}
+/* 배경 분위기 — 옅은 구름(흰 소프트 블롭) */
+.slide::before{content:"";position:absolute;inset:-4%;z-index:0;pointer-events:none;filter:blur(3px);
+  background:
+    radial-gradient(38% 21% at 20% 23%, rgba(255,255,255,.62), rgba(255,255,255,0) 70%),
+    radial-gradient(31% 17% at 83% 63%, rgba(255,255,255,.5), rgba(255,255,255,0) 72%),
+    radial-gradient(25% 15% at 63% 13%, rgba(255,255,255,.46), rgba(255,255,255,0) 75%),
+    radial-gradient(21% 13% at 9% 73%, rgba(255,255,255,.4), rgba(255,255,255,0) 75%);}
+/* 배경 분위기 — 옅은 별(페일블루 점, 가장자리 위주) */
+.slide::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.55;background-repeat:no-repeat;
+  background:
+    radial-gradient(4px 4px at 8% 11%, #8FB6EA 48%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 14% 27%, #9CC2EE 48%, transparent 50%),
+    radial-gradient(3px 3px at 6% 41%, #8FB6EA 48%, transparent 50%),
+    radial-gradient(2px 2px at 12% 57%, #A6C9F2 48%, transparent 50%),
+    radial-gradient(3.5px 3.5px at 7% 72%, #8FB6EA 48%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 15% 87%, #9CC2EE 48%, transparent 50%),
+    radial-gradient(4px 4px at 92% 9%, #8FB6EA 48%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 88% 24%, #9CC2EE 48%, transparent 50%),
+    radial-gradient(3px 3px at 95% 39%, #8FB6EA 48%, transparent 50%),
+    radial-gradient(2px 2px at 90% 55%, #A6C9F2 48%, transparent 50%),
+    radial-gradient(3.5px 3.5px at 94% 71%, #8FB6EA 48%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 86% 85%, #9CC2EE 48%, transparent 50%),
+    radial-gradient(3px 3px at 50% 5%, #9CC2EE 48%, transparent 50%),
+    radial-gradient(2px 2px at 71% 8%, #A6C9F2 48%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 30% 7%, #9CC2EE 48%, transparent 50%);}
+.slide .glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.7}
+.slide .g1{width:640px;height:640px;background:#B7D2F6;top:-190px;left:-150px}
+.slide .g2{width:560px;height:560px;background:#CCD6FA;bottom:-170px;right:-150px;opacity:.6}
+.head{position:absolute;top:90px;left:0;right:0;text-align:center;padding:0 64px;z-index:3}
+.head .kicker{font-size:25px;font-weight:700;color:var(--acc);letter-spacing:.5px;margin-bottom:18px}
+.head h2{font-family:'GyeonggiTitle','Pretendard',sans-serif;font-size:76px;font-weight:500;line-height:1.3;letter-spacing:-1px;color:var(--ink)}
+.head h2 .lead{display:block;font-size:.62em;font-weight:500;letter-spacing:-.6px;margin-bottom:4px;color:var(--ink)}
+.head h2 .hl{color:var(--acc)}
+.head p{margin-top:22px;font-size:30px;color:var(--ink2);font-weight:500;line-height:1.5}
+/* 폰 목업 — 실제 앱 iframe */
+.phone{position:absolute;left:50%;transform:translateX(-50%);bottom:40px;width:772px;height:1450px;
+  background:linear-gradient(150deg,#31353f 0%,#1c1f27 52%,#101218 100%);border-radius:92px;
+  box-shadow:0 38px 90px rgba(28,42,78,.30),inset 0 3px 4px rgba(255,255,255,.17),inset 0 -6px 11px rgba(0,0,0,.5);overflow:hidden}
+/* .scr 전체를 둥근사각 SVG 마스크로 강제 클립 → iframe 내부 리퀴드글래스(backdrop-filter)까지 크롭됨 */
+.phone .scr{position:absolute;inset:17px;border-radius:75px;overflow:hidden;background:var(--bg);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='738' height='1416'%3E%3Crect width='738' height='1416' rx='75' fill='%23fff'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='738' height='1416'%3E%3Crect width='738' height='1416' rx='75' fill='%23fff'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+.phone .scr iframe{position:absolute;top:0;left:0;width:556px;height:1067px;border:0;background:var(--bg);
+  transform:scale(1.3273);transform-origin:top left}
+.phone .ld{position:absolute;inset:17px;display:grid;place-items:center;border-radius:75px;color:#7d93b5;font-size:25px;font-weight:700;background:#f1f6fe;transition:opacity .4s;z-index:2}
+.ready .ld{opacity:0;pointer-events:none}
+/* 피처 그래픽 1024×500 */
+.fg{position:relative;width:1024px;height:500px;overflow:hidden;border-radius:8px;
+  background:linear-gradient(105deg,#EFF6FF 0%,#DEECFC 58%,#CFE1F8 100%);
+  display:flex;align-items:center;padding:0 88px;gap:56px}
+.fg .glow{position:absolute;width:520px;height:520px;border-radius:50%;background:#B7D2F6;filter:blur(100px);opacity:.7;left:-130px;top:-90px}
+.fg .ic{width:224px;height:224px;flex:none;z-index:2;border-radius:52px;background:#fff;display:grid;place-items:center;box-shadow:0 22px 50px rgba(63,123,214,.22)}
+.fg .ic img{height:158px;width:auto}
+.fg .tx{z-index:2}
+.fg .tx .wm{height:54px;width:auto;display:block;margin-bottom:18px}
+.fg .tx h1{font-family:'GyeonggiTitle','Pretendard',sans-serif;font-size:64px;font-weight:500;letter-spacing:-1px;line-height:1.14;color:var(--ink)}
+.fg .tx p{font-size:28px;color:#4a5e80;font-weight:600;margin-top:18px}
+/* 아이콘 512 — 실제 브랜드 고양이 아이콘(comia_icon_cat.svg, 밝은 블루) */
+.icon{position:relative;width:512px;height:512px;border-radius:8px;overflow:hidden;background:linear-gradient(160deg,#FFFFFF,#E9F2FD);display:grid;place-items:center}
+.icon img{height:360px;width:auto;filter:drop-shadow(0 14px 34px rgba(63,123,214,.28))}
+</style></head>
+<body>
+
+<div class="guide">
+  <b>📦 코미아 Play 스토어 에셋 — 실제 앱 구동 화면</b><br>
+  · 각 폰 안에는 <b>실서버에 연결된 진짜 코미아 앱</b>이 떠서 해당 화면으로 자동 이동합니다(로고도 실제 SVG).<br>
+  · 화면이 다 뜨면(폰 “불러오는 중…” 사라짐) 캡처: F12 → 요소선택 → <code>.slide</code>/<code>.fg</code>/<code>.icon</code> 우클릭 → <b>노드 스크린샷 캡처</b>.<br>
+  · 동행·덕력은 테스트계정(test1)으로 자동 로그인됩니다. 데이터가 비면 계정에 시드 후 재캡처.<br>
+  · 캡처한 PNG를 나노바나나/GPT Image 2로 폴리싱 → Play Console 업로드. (프롬프트: STORE_ASSETS_GUIDE.md)
+</div>
+
+<!-- 1 홈 -->
+<div class="asset"><div class="cap">스크린샷 1 · 홈 · 1080×1920</div>
+<div class="slide"><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="head"><div class="kicker">코미아 · 같이 가는 취향의 시작</div>
+    <h2><span class="lead">흩어진 서브컬쳐 행사,</span><span class="hl">한곳에</span> 모았어요</h2>
+    <p>콜라보 카페 · 팝업 · 온리전 · 내한공연 · 전시</p></div>
+  <div class="phone"><div class="scr"><iframe class="af" data-act="home" data-src="index.html"></iframe></div><div class="ld">불러오는 중…</div></div>
+</div></div>
+
+<!-- 2 행사 목록 -->
+<div class="asset"><div class="cap">스크린샷 2 · 행사 모아보기 · 1080×1920</div>
+<div class="slide"><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="head"><h2><span class="lead"><span class="hl">관심 작품</span>만</span>골라보기</h2>
+    <p>게임·애니·웹툰·아이돌·버튜버·코스어 분야별로</p></div>
+  <div class="phone"><div class="scr"><iframe class="af" data-act="events" data-src="index.html"></iframe></div><div class="ld">불러오는 중…</div></div>
+</div></div>
+
+<!-- 3 행사 상세 -->
+<div class="asset"><div class="cap">스크린샷 3 · 행사 상세 + 갈래요 · 1080×1920</div>
+<div class="slide"><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="head"><h2><span class="lead"><span class="hl">「갈래요」</span>로 챙기고</span>D-1 알림까지</h2>
+    <p>일정·장소·공식 굿즈·예매 링크를 한 화면에</p></div>
+  <div class="phone"><div class="scr"><iframe class="af" data-act="detail" data-src="index.html"></iframe></div><div class="ld">불러오는 중…</div></div>
+</div></div>
+
+<!-- 4 소식 -->
+<div class="asset"><div class="cap">스크린샷 4 · 서브컬쳐 소식 · 1080×1920</div>
+<div class="slide"><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="head"><h2><span class="lead">서브컬쳐 소식을</span><span class="hl">분야별</span>로 한눈에</h2>
+    <p>신작·업데이트·콜라보 소식 큐레이션</p></div>
+  <div class="phone"><div class="scr"><iframe class="af" data-act="news" data-src="index.html"></iframe></div><div class="ld">불러오는 중…</div></div>
+</div></div>
+
+<!-- 5 가이드 -->
+<div class="asset"><div class="cap">스크린샷 5 · 코미아 가이드 · 1080×1920</div>
+<div class="slide"><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="head"><h2><span class="lead">처음이라도</span><span class="hl">괜찮아요</span></h2>
+    <p>콜라보 카페·온리전 에티켓부터 이용법까지</p></div>
+  <div class="phone"><div class="scr"><iframe class="af" data-act="guide" data-src="index.html"></iframe></div><div class="ld">불러오는 중…</div></div>
+</div></div>
+
+<!-- 6 동행 -->
+<div class="asset"><div class="cap">스크린샷 6 · 익명 동행 · 1080×1920</div>
+<div class="slide"><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="head"><h2><span class="lead">같이 갈 동행을</span><span class="hl">익명</span>으로 찾아요</h2>
+    <p>닉네임 대신 덕력 등급만 · 끝나면 대화 자동 삭제</p></div>
+  <div class="phone"><div class="scr"><iframe class="af" data-act="companions" data-login="1" data-src="index.html"></iframe></div><div class="ld">불러오는 중…</div></div>
+</div></div>
+
+<!-- 7 덕력 -->
+<div class="asset"><div class="cap">스크린샷 7 · 덕력(GPS 체크인) · 1080×1920</div>
+<div class="slide"><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="head"><h2><span class="lead"><span class="hl">발걸음</span>으로</span>증명하는 덕심</h2>
+    <p>현장 GPS 체크인으로 작품별 덕력(XP) 적립</p></div>
+  <div class="phone"><div class="scr"><iframe class="af" data-act="duk" data-login="1" data-src="index.html"></iframe></div><div class="ld">불러오는 중…</div></div>
+</div></div>
+
+<!-- 8 캘린더 -->
+<div class="asset"><div class="cap">스크린샷 8 · 일정 캘린더 · 1080×1920</div>
+<div class="slide"><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="head"><h2><span class="lead">내 덕질 일정을</span><span class="hl">한눈에</span></h2>
+    <p>「갈래요」한 행사를 달력으로 · 캘린더 앱 연동</p></div>
+  <div class="phone"><div class="scr"><iframe class="af" data-act="calendar" data-src="index.html"></iframe></div><div class="ld">불러오는 중…</div></div>
+</div></div>
+
+<!-- 피처 그래픽 -->
+<div class="asset"><div class="cap">피처 그래픽 · 1024×500</div>
+<div class="fg"><div class="glow"></div>
+  <div class="ic"><img src="comia_icon_cat.svg" alt=""></div>
+  <div class="tx"><img class="wm" src="comia_wordmark.svg" alt="comia"><h1>같이 가는<br>취향의 시작</h1><p>서브컬쳐 행사 · 동행 · 덕력</p></div>
+</div></div>
+
+<!-- 앱 아이콘 512 -->
+<div class="asset"><div class="cap">앱 아이콘 · 512×512 (브랜드 고양이 comia_icon_cat.svg)</div>
+<div class="icon"><img src="comia_icon_cat.svg" alt=""></div></div>
+
+<script>
+const TEST={email:'test1@comia.app',pw:'test1234'};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(fn,ms=12000,step=150){const t=Date.now();while(Date.now()-t<ms){try{if(fn())return true}catch(e){}await sleep(step)}return false}
+async function drive(ifr){
+  const act=ifr.dataset.act, login=ifr.dataset.login==='1';
+  let win;
+  await until(()=>{win=ifr.contentWindow;return win&&win.showScreen&&win.document&&win.document.readyState==='complete'});
+  try{win.localStorage.setItem('comia_seen','1');win.localStorage.setItem('comia_theme','light')}catch(e){}
+  try{win.setTheme&&win.setTheme('light')}catch(e){}    // 라이트 테마 강제(브라우저가 시스템 다크여도)
+  await sleep(5500);                         // Supabase 연결·초기 데이터 로드 대기(LIVE/sb는 let이라 외부서 못 읽음)
+  if(login){ try{win.loginTest&&win.loginTest(TEST.email)}catch(e){} await sleep(3200); }
+  const run=async()=>{try{
+    try{win.setTheme&&win.setTheme('light')}catch(e){}
+    if(['home','events','calendar','detail'].includes(act)&&win.loadEvents){try{await win.loadEvents()}catch(e){}}
+    if(act==='home') win.showScreen('screen-home');
+    else if(act==='events') win.showScreen('screen-events');
+    else if(act==='calendar') win.showScreen('screen-calendar');
+    else if(act==='detail'){ win.showScreen('screen-events'); await sleep(1400);
+      const c=[...win.document.querySelectorAll('#screen-events .event-card')].find(e=>e.offsetParent)||win.document.querySelector('.event-card'); if(c)c.click(); }
+    else if(act==='news'){ win.showScreen('screen-home'); await sleep(400); win.openHub&&win.openHub('news'); }
+    else if(act==='guide'){ win.showScreen('screen-home'); await sleep(400); win.openHub&&win.openHub('notices'); }
+    else if(act==='companions'){ win.showScreen('screen-companions'); await sleep(800); win.setCompView&&win.setCompView('browse'); }
+    else if(act==='duk'){ win.goto?win.goto('screen-duk-detail'):win.showScreen('screen-duk-detail'); }
+  }catch(e){}};
+  await run(); await sleep(1800); await run(); await sleep(1500); await run();
+  ifr.closest('.phone').classList.add('ready');
+}
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){const f=en.target;
+  if(!f.src&&f.dataset.src){f.src=f.dataset.src; f.addEventListener('load',()=>drive(f),{once:true});} io.unobserve(f);}}),{rootMargin:'500px'});
+document.querySelectorAll('iframe.af').forEach(f=>io.observe(f));
+</script>
+</body></html>
