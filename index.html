@@ -2256,6 +2256,7 @@
           <div class="ob-fandom ob-bigcat" data-cat="웹툰·웹소설"><span class="dot" style="background:#F08A3C"></span>📚 웹툰·웹소설<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
           <div class="ob-fandom ob-bigcat" data-cat="음악"><span class="dot" style="background:#4F6FC8"></span>🎵 음악<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
           <div class="ob-fandom ob-bigcat" data-cat="아이돌·버튜버"><span class="dot" style="background:#E04F8A"></span>🎤 아이돌·버튜버<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+          <div class="ob-fandom ob-bigcat" data-cat="코스어·인물"><span class="dot" style="background:#E0705A"></span>🎭 코스어·인물<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
           <div class="ob-fandom ob-bigcat" data-cat="동인·창작"><span class="dot" style="background:#4FB89A"></span>🎨 동인·창작<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
         </div>
       </div>
@@ -5961,8 +5962,8 @@
   const CAT_META = {
     '게임': { c:'#3088E0', e:'🎮' }, '애니·만화': { c:'#9B5BC4', e:'📺' },
     '웹툰·웹소설': { c:'#F08A3C', e:'📚' }, '음악': { c:'#4F6FC8', e:'🎵' },
-    '아이돌·버튜버': { c:'#E04F8A', e:'🎤' }, 'e스포츠': { c:'#5E6AD2', e:'🏆' },
-    '동인·창작': { c:'#4FB89A', e:'🎨' }
+    '아이돌·버튜버': { c:'#E04F8A', e:'🎤' }, '코스어·인물': { c:'#E0705A', e:'🎭' },
+    'e스포츠': { c:'#5E6AD2', e:'🏆' }, '동인·창작': { c:'#4FB89A', e:'🎨' }
   };
   // 대분류 → 세부 장르(소분류). 애니/J-POP은 마이너 장르까지 세분화.
   const SUBGENRES = {
@@ -5973,6 +5974,7 @@
     '동인·창작': ['동인지','2차창작','코스프레','일러스트','굿즈·핸드메이드','온리전','부스 참가','성우·작가 사인'],
     '웹툰·웹소설': ['로맨스 판타지','BL','GL','현대 판타지','무협·사극','액션·배틀','일상·개그','스릴러·미스터리','드라마·감성','라노벨·이세계'],
     'e스포츠': ['LoL·LCK','발로란트','배틀그라운드','오버워치','스타크래프트','격투게임','FC·축구게임','TFT·기타 종목'],
+    '코스어·인물': ['코스플레이어','스트리머·BJ','유튜버·크리에이터','성우·배우','인플루언서·모델'],
   };
   // IP → 세부 장르 (행사 자동 태깅용; 값은 SUBGENRES 내에서)
   const IP_SUBGENRE = {
