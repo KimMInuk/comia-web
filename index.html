@@ -7184,8 +7184,29 @@
       : 'https://map.naver.com/p/search/' + encQ;
     showActions(label + ' 지도에서 보기', [
       { label: '카카오맵', fn: () => openExternal(kakao) },
-      { label: '네이버 지도', fn: () => openExternal(naver) },
+      { label: '네이버 지도', fn: () => openNaver(naver, hasGeo, ev.lat, ev.lng, label) },
     ]);
+  }
+  // 네이버: 네이티브 앱+좌표면 nmap://place(앱이 핀 표시)로 열고, 앱 미설치면 웹 URL로 폴백.
+  // 웹 브라우저거나 좌표가 없으면 바로 웹 URL. (앱 전환 감지: visibilitychange)
+  function openNaver(webUrl, hasGeo, lat, lng, name) {
+    const cap = window.Capacitor;
+    const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
+    if (!native || !hasGeo) { openExternal(webUrl); return; }
+    const scheme = 'nmap://place?lat=' + lat + '&lng=' + lng
+      + '&name=' + encodeURIComponent(name || '행사장') + '&appname=com.comia.app';
+    let switched = false;
+    const onVis = () => { if (document.hidden) switched = true; };
+    document.addEventListener('visibilitychange', onVis);
+    const ifr = document.createElement('iframe');
+    ifr.style.cssText = 'display:none;width:0;height:0;border:0';
+    ifr.src = scheme;                              // 숨김 iframe → 실패해도 본 화면 안 깨짐
+    document.body.appendChild(ifr);
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onVis);
+      try { ifr.remove(); } catch (e) {}
+      if (!switched && !document.hidden) openExternal(webUrl);   // 앱 안 열림 → 웹 폴백
+    }, 1400);
   }
 
   /* ===================== 동행 + 실시간 채팅 (실연결) ===================== */
