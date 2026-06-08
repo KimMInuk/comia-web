@@ -999,6 +999,14 @@
   .sheet-header .reset { font-size: 12.5px; color: var(--text-sub); cursor: pointer; font-weight: 600; }
   .sheet-body { overflow-y: auto; padding: 0 20px 8px; scrollbar-width: none; }
   .sheet-body::-webkit-scrollbar { display: none; }
+  .hub-seg { flex: 1; padding: 9px; font-size: 13.5px; font-weight: 700; border-radius: 9px; border: 1px solid var(--border); background: var(--card); color: var(--text-sub); cursor: pointer; }
+  .hub-seg.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .hub-row { display: flex; gap: 11px; align-items: center; padding: 11px 2px; border-bottom: 1px solid var(--border-soft); cursor: pointer; text-align: left; }
+  .hub-row .hr-thumb { width: 46px; height: 46px; flex-shrink: 0; border-radius: 9px; overflow: hidden; background: #0c1322; }
+  .hub-row .hr-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .hub-row .hr-main { flex: 1; min-width: 0; }
+  .hub-row .hr-t { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
+  .hub-row .hr-s { font-size: 12px; color: var(--text-sub); margin-top: 3px; }
   .filter-group { margin-bottom: 20px; }
   .filter-group .label {
     font-size: 13px;
@@ -2365,10 +2373,10 @@
       <div id="homeCompanions"></div>
 
       <!-- ===== 커뮤니티 피드 ===== -->
-      <div class="section-header" id="feedNewsHdr" style="display:none;margin-top:16px;"><h2>📰 코미아 소식 <span style="font-size:12px;color:var(--text-sub);font-weight:600;">업데이트·신작·발표</span></h2></div>
+      <div class="section-header" id="feedNewsHdr" style="display:none;margin-top:16px;"><h2>📰 서브컬쳐 소식</h2><span class="more" onclick="openHub('news')">전체 ›</span></div>
       <div class="home-rail" id="feedNews" style="display:none;"></div>
 
-      <div class="section-header" id="feedGuideHdr" style="display:none;margin-top:16px;"><h2>코미아 가이드 <span style="font-size:12px;color:var(--text-sub);font-weight:600;">처음이라면 읽어보세요</span></h2></div>
+      <div class="section-header" id="feedGuideHdr" style="display:none;margin-top:16px;"><h2>코미아 가이드</h2><span class="more" onclick="openHub('guide')">전체 ›</span></div>
       <div class="home-rail" id="feedGuide" style="display:none;"></div>
 
       <div class="section-header" style="margin-top:16px;"><h2>방금 올라온 정보글</h2></div>
@@ -4059,6 +4067,21 @@
   <div class="toast" id="toast">알림</div>
 
   <!-- ========= 필터 바텀시트 ========= -->
+  <!-- 소식·가이드 전체보기 팝업 -->
+  <div class="sheet-overlay" id="hubOverlay" onclick="closeHub()"></div>
+  <div class="filter-sheet" id="hubSheet">
+    <div class="sheet-grip"></div>
+    <div class="sheet-header">
+      <h3 id="hubTitle">서브컬쳐 소식</h3>
+      <span class="reset" onclick="closeHub()">닫기</span>
+    </div>
+    <div style="display:flex;gap:8px;padding:0 20px 10px;">
+      <button class="hub-seg on" id="hubSegNews" onclick="hubTab('news')">📰 소식</button>
+      <button class="hub-seg" id="hubSegGuide" onclick="hubTab('guide')">📖 가이드</button>
+    </div>
+    <div class="sheet-body" id="hubList"></div>
+  </div>
+
   <div class="sheet-overlay" id="sheetOverlay" onclick="closeFilter()"></div>
   <div class="filter-sheet" id="filterSheet">
     <div class="sheet-grip"></div>
@@ -6772,6 +6795,42 @@
         + '<div style="font-size:14.5px;line-height:1.78;color:var(--text);white-space:pre-wrap;letter-spacing:-0.2px;margin-top:10px;">' + htmlesc(data.summary) + '</div>'
         + src;
     });
+  }
+  /* ---------- 소식·가이드 전체보기 팝업 ---------- */
+  let HUB_TAB = 'news', HUB_NEWS = [], HUB_NOTICES = [];
+  async function openHub(tab) {
+    HUB_TAB = tab || 'news';
+    document.getElementById('hubOverlay').classList.add('show');
+    document.getElementById('hubSheet').classList.add('show');
+    if (LIVE && sb) {
+      try {
+        const [nr, gr] = await Promise.all([
+          sb.from('news').select('id,title,category,image_url,source_name,created_at').eq('published', true).order('ord', { ascending: true }).order('created_at', { ascending: false }).limit(60),
+          sb.from('notices').select('id,icon,tag,title').eq('published', true).order('ord', { ascending: true }).limit(60),
+        ]);
+        HUB_NEWS = nr.data || []; HUB_NOTICES = gr.data || [];
+      } catch (e) {}
+    }
+    renderHub();
+  }
+  function closeHub() { document.getElementById('hubOverlay').classList.remove('show'); document.getElementById('hubSheet').classList.remove('show'); }
+  function hubTab(t) { HUB_TAB = t; renderHub(); }
+  function renderHub() {
+    const isNews = HUB_TAB === 'news';
+    document.getElementById('hubTitle').textContent = isNews ? '서브컬쳐 소식' : '코미아 가이드';
+    document.getElementById('hubSegNews').classList.toggle('on', isNews);
+    document.getElementById('hubSegGuide').classList.toggle('on', !isNews);
+    const box = document.getElementById('hubList');
+    if (isNews) {
+      box.innerHTML = HUB_NEWS.length ? HUB_NEWS.map(n => {
+        const img = (n.image_url && /^https?:/.test(n.image_url)) ? '<span class="hr-thumb"><img src="' + htmlesc(n.image_url) + '" loading="lazy" onerror="this.remove()"></span>' : '<span class="hr-thumb" style="background:linear-gradient(135deg,#5B9BE8,#3A6FB5)"></span>';
+        return '<div class="hub-row" onclick="closeHub();openNews(\'' + n.id + '\')">' + img + '<div class="hr-main"><div class="hr-t">' + htmlesc(n.title) + '</div><div class="hr-s">' + htmlesc(n.category || '소식') + ' · ' + htmlesc(n.source_name || '코미아 소식') + '</div></div></div>';
+      }).join('') : '<div style="padding:34px;text-align:center;color:var(--text-dim);font-size:13px;">아직 소식이 없어요</div>';
+    } else {
+      box.innerHTML = HUB_NOTICES.length ? HUB_NOTICES.map(n =>
+        '<div class="hub-row" onclick="closeHub();openNotice(\'' + n.id + '\')"><span class="hr-thumb" style="display:grid;place-items:center;font-size:22px;background:var(--accent-bg);">' + (n.icon || '📖') + '</span><div class="hr-main"><div class="hr-t">' + htmlesc(n.title) + '</div><div class="hr-s">' + htmlesc(n.tag || '가이드') + ' · 코미아 운영팀</div></div></div>'
+      ).join('') : '<div style="padding:34px;text-align:center;color:var(--text-dim);font-size:13px;">아직 가이드가 없어요</div>';
+    }
   }
   /* ---------- 코미아 운영팀 공식 가이드/공지 ---------- */
   let NOTICES = [];
