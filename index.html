@@ -5901,7 +5901,7 @@
      anon key 는 클라이언트 공개용(RLS로 보호)이라 앱에 넣어도 안전하다. */
   const SUPABASE_URL = 'https://jjfhreljqpstietjnbju.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZmhyZWxqcXBzdGlldGpuYmp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NDg0NTIsImV4cCI6MjA5NjMyNDQ1Mn0.93Mu-KC2Do9wXXORmgn1VBYb9tztvDTuO4y2E-XG9UA';
-  const NAVER_CLIENT_ID = '';   // 네이버 개발자센터에서 발급한 Client ID. 채우면 네이버 로그인 활성화(Edge Function naver-auth 배포 필요)
+  const NAVER_CLIENT_ID = '45sf_DgGNyhYEqjo7esi';   // 네이버 개발자센터 Client ID(공개값). Secret은 Supabase 시크릿에만.
   let sb = null, LIVE = false;
   function initSupabase(done) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { console.log('[comia] 데모 모드 (더미 데이터)'); done(); return; }
