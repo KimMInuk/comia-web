@@ -730,6 +730,36 @@
   .profile-sub { font-size: 12.5px; color: var(--text-sub); margin-top: 5px; font-weight: 500; }
   .edit-profile-btn { display: block; margin: 14px auto 0; padding: 8px 18px; border-radius: 999px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; background: var(--card); color: var(--text-sub); border: 1px solid var(--border); letter-spacing: -0.2px; transition: background .13s; }
   .edit-profile-btn:active { background: var(--card-active); }
+  /* 게스트: My 프로필 게스트 표기 pill */
+  .guest-pill { display: none; margin: 9px auto 0; padding: 5px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700; background: var(--accent-bg); color: var(--accent-dim); border: 1px solid var(--accent); align-items: center; gap: 5px; width: fit-content; letter-spacing: -0.2px; }
+  .guest-pill svg { width: 13px; height: 13px; }
+  body.guest-mode .guest-pill { display: inline-flex; }
+  /* 게스트: 동행 탭 잠금 오버레이 (.frame 기준 absolute, 탭 비활성 시 자동 숨김) */
+  .guest-lock { display: none; position: absolute; left: 0; right: 0; top: 0; bottom: calc(78px + env(safe-area-inset-bottom, 0px)); z-index: 15; flex-direction: column; align-items: center; justify-content: center; padding: 28px; text-align: center; background: linear-gradient(180deg, rgba(244,248,253,0.55), rgba(244,248,253,0.84)); -webkit-backdrop-filter: blur(5px) saturate(120%); backdrop-filter: blur(5px) saturate(120%); }
+  html[data-theme="dark"] .guest-lock { background: linear-gradient(180deg, rgba(16,22,34,0.62), rgba(16,22,34,0.88)); }
+  body.guest-mode #screen-companions .guest-lock { display: flex; }
+  .guest-lock .gl-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 26px 22px 22px; max-width: 300px; width: 100%; box-shadow: 0 18px 40px rgba(40,70,120,0.16); }
+  .guest-lock .gl-ic { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 18px; background: var(--accent-bg); color: var(--accent); display: grid; place-items: center; }
+  .guest-lock .gl-ic svg { width: 28px; height: 28px; }
+  .guest-lock .gl-t { font-size: 16.5px; font-weight: 800; color: var(--text); letter-spacing: -0.4px; }
+  .guest-lock .gl-s { font-size: 13px; color: var(--text-sub); margin-top: 8px; line-height: 1.55; font-weight: 500; }
+  .guest-lock .gl-btn { margin-top: 18px; width: 100%; padding: 13px; border-radius: 14px; border: 0; font-family: inherit; font-size: 14.5px; font-weight: 800; color: #fff; background: var(--accent); cursor: pointer; letter-spacing: -0.3px; }
+  .guest-lock .gl-btn:active { background: var(--accent-dim); }
+  /* 게스트: 인라인 잠금 카드(홈 '내 동행' · 행사 상세 동행 탭) */
+  .guest-lock-inline { display: none; flex-direction: column; align-items: center; text-align: center; margin: 8px 16px 16px; padding: 26px 20px; border-radius: 20px; background: var(--card); border: 1px dashed var(--border); }
+  .guest-lock-inline .gli-ic { width: 50px; height: 50px; border-radius: 16px; background: var(--accent-bg); color: var(--accent); display: grid; place-items: center; margin-bottom: 12px; }
+  .guest-lock-inline .gli-ic svg { width: 25px; height: 25px; }
+  .guest-lock-inline .gli-t { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
+  .guest-lock-inline .gli-s { font-size: 12.5px; color: var(--text-sub); margin-top: 6px; font-weight: 500; line-height: 1.5; }
+  .guest-lock-inline .gli-btn { margin-top: 15px; padding: 11px 24px; border-radius: 12px; border: 0; font-family: inherit; font-size: 13.5px; font-weight: 800; color: #fff; background: var(--accent); cursor: pointer; letter-spacing: -0.3px; }
+  .guest-lock-inline .gli-btn:active { background: var(--accent-dim); }
+  /* 행사 상세 동행 탭: 게스트면 잠금카드만 보이고 모집글·방만들기·배너 숨김 */
+  body.guest-mode #evTabCompanion #evGuestLock { display: flex; }
+  body.guest-mode #evTabCompanion > .section-header,
+  body.guest-mode #evTabCompanion > .info-banner,
+  body.guest-mode #evTabCompanion > #evChatBtn,
+  body.guest-mode #evTabCompanion > #companionList,
+  body.guest-mode #evTabCompanion > .post-card { display: none !important; }
   .theme-seg { display: inline-flex; background: var(--chip-bg); border-radius: 999px; padding: 3px; gap: 2px; }
   .theme-seg .seg-btn { font-family: inherit; border: none; background: transparent; color: var(--text-sub); font-size: 12px; font-weight: 700; padding: 6px 13px; border-radius: 999px; cursor: pointer; letter-spacing: -0.2px; transition: background .13s, color .13s; }
   .theme-seg .seg-btn.on { background: var(--accent); color: #fff; }
@@ -2199,7 +2229,7 @@
         <div class="auth-hero">
           <div class="auth-icon"><img src="comia_icon_cat.svg" alt="comia" /></div>
           <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgMTcxMy43MyA1MzEuMTUiPjxkZWZzPjxzdHlsZT4uY2xzLTEsLmNscy0ye3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2Utd2lkdGg6MTBweDt9LmNscy0xe2ZpbGw6dXJsKCNsaW5lYXItZ3JhZGllbnQpO3N0cm9rZTp1cmwoI2xpbmVhci1ncmFkaWVudC0yKTt9LmNscy0ye2ZpbGw6dXJsKCNsaW5lYXItZ3JhZGllbnQtMyk7c3Ryb2tlOnVybCgjbGluZWFyLWdyYWRpZW50LTQpO308L3N0eWxlPjxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50IiB4MT0iLTY5Ny4zNiIgeTE9Ii0xODYxLjQ0IiB4Mj0iLTY5Ny4zNiIgeTI9Ii0xODU3Ljk2IiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDM0MzA1MS43NyAxNjYyNDYuMTMpIHNjYWxlKDQ5MC43IDg5LjIpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjODNiYWY4Ii8+PHN0b3Agb2Zmc2V0PSIwLjYiIHN0b3AtY29sb3I9IiM2M2E2ZjIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM0ZTkzZTgiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50LTIiIHgxPSItNjk3LjM2IiB5MT0iLTE4NjAuMjQiIHgyPSItNjk3LjM2IiB5Mj0iLTE4NTkuMDEiIHhsaW5rOmhyZWY9IiNsaW5lYXItZ3JhZGllbnQiLz48bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudC0zIiB4MT0iMTIwMS45MiIgeTE9Ijg4LjMzIiB4Mj0iMTM2Ni45OCIgeTI9Ijg4LjMzIiBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KDEsIDAsIDAsIDEsIDAsIDApIiB4bGluazpocmVmPSIjbGluZWFyLWdyYWRpZW50Ii8+PGxpbmVhckdyYWRpZW50IGlkPSJsaW5lYXItZ3JhZGllbnQtNCIgeDE9IjExOTYuOTIiIHkxPSI4OC4zMyIgeDI9IjEzNzEuOTgiIHkyPSI4OC4zMyIgZ3JhZGllbnRUcmFuc2Zvcm09Im1hdHJpeCgxLCAwLCAwLCAxLCAwLCAwKSIgeGxpbms6aHJlZj0iI2xpbmVhci1ncmFkaWVudCIvPjwvZGVmcz48ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIj48ZyBpZD0iTGF5ZXJfMS0yIiBkYXRhLW5hbWU9IkxheWVyIDEiPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE1OC40Niw1MjYuMTVjLTI5LjE2LDAtNTUuNTUtNi41OS03OC44MS0yMC4xM2ExNDYuOTEsMTQ2LjkxLDAsMCwxLTU0Ljg2LTU1LjIxQzExLjYsNDI3LjIsNSw0MDEuMTYsNSwzNzJzNi4yNS01Ni4yNSwxOS4xLTc5Ljg2LDMwLjU1LTQyLDUzLjgxLTU0Ljg2YzIyLjkyLTEzLjE5LDQ5LTE5Ljc5LDc3Ljc4LTE5Ljc5LDQzLjc0LDAsNzkuODUsMTYuNjcsMTA5LDUwYTIwLjcsMjAuNywwLDAsMSw1LjU1LDE0LjU4YzAsOC4zMy00LjE2LDE0LjkzLTEyLjE1LDIwLjQ4YTIwLjc1LDIwLjc1LDAsMCwxLTEyLjg0LDMuODJjLTguNjgsMC0xNS42My0zLjQ3LTIxLjUzLTEwLjA3cS0xNC4wNy0xNS4wOS0zMC4yMS0yMS44N2E5OC45Miw5OC45MiwwLDAsMC0zNy41LTYuOTRjLTI4LjQ3LDAtNTEuNzMsOS4zNy02OS40NCwyOC40N1M1OS44NiwzNDAuNCw1OS44NiwzNzEuNjVzNC4xNiwzNy44NCwxMi41LDUzLjQ3YTk1LjA2LDk1LjA2LDAsMCwwLDM1LjA3LDM3LjE1YzE0LjkzLDksMzEuOTQsMTMuMTksNTEuMzgsMTMuMTlzNDUuNDktNi41OSw2MS4xMS0xOS40NGM2Ljk0LTUuMjEsMTMuODktNy42NCwyMC40OC03LjY0czEwLjA3LDEuNzQsMTQuMjQsNC44NmM2Ljk0LDUuOSwxMC43NiwxMi41LDEwLjc2LDIwLjE0cy0yLjA4LDEwLjQyLTYuNTksMTQuOTNjLTI2Ljc0LDI1LTYwLjA3LDM3LjE1LTEwMCwzNy4xNXYuNjlabTMzMy42NywwYy0yOS41MSwwLTU2LjI1LTYuNTktNzkuNTEtMTkuNzlhMTQyLjY0LDE0Mi42NCwwLDAsMS01NC41MS01NC44NWMtMTIuODUtMjMuMjctMTkuNDUtNDkuNjYtMTkuNDUtNzkuNTFzNi42LTU2LjYsMTkuNDUtODAuMjFhMTQwLjM4LDE0MC4zOCwwLDAsMSw1NC41MS01NC44NmMyMy4yNi0xMy4xOSw0OS42NS0xOS43OSw3OS41MS0xOS43OXM1NS41NSw2LjYsNzguODEsMTkuNzlhMTQwLjMyLDE0MC4zMiwwLDAsMSw1NC41MSw1NC44NnExOS44LDM0Ljg5LDE5LjgsODAuMjFjMCwzMC4yLTYuNiw1Ni4yNC0xOS40NSw3OS41MWExMzkuNDEsMTM5LjQxLDAsMCwxLTU0LjE2LDU0Ljg1cS0zNC44OSwxOS44LTc5LjE2LDE5Ljc5aC0uMzVabTAtNTBhMTAwLjcyLDEwMC43MiwwLDAsMCw1MS0xMy4yLDkyLjY3LDkyLjY3LDAsMCwwLDM1LjA2LTM3LjE1YzguMzQtMTUuNjIsMTIuNS0zMy42OCwxMi41LTUzLjQ3cy00LjE2LTM3Ljg0LTEyLjUtNTMuODFhOTAuNTEsOTAuNTEsMCwwLDAtMzUuMDYtMzcuMTZxLTIyLjM5LTEzLjUzLTUxLTEzLjU0Yy0xOS4xLDAtMzUuNzYsNC41Mi01MC42OSwxMy41NC0xNC45Myw4LjY4LTI2Ljc0LDIxLjE4LTM1LjQyLDM3LjE2YTExNS4xMSwxMTUuMTEsMCwwLDAtMTIuODUsNTMuODFjMCwxOS43OSw0LjE3LDM3Ljg1LDEyLjg1LDUzLjQ3czIwLjE0LDI4LjEzLDM1LjQyLDM3LjE1QzQ1Ni4zNyw0NzIsNDczLjM4LDQ3Ni4xNiw0OTIuMTMsNDc2LjE2Wm01NTYuNTctMjU5YzMyLjI5LDAsNTguMzMsMTAuNDIsNzguMTIsMzEuNnMyOS44Niw1MC42OSwyOS44Niw4OC4xOVY0OTZhMjkuODQsMjkuODQsMCwwLDEtNy42NCwyMC40OGMtNS4yMSw1LjIxLTEyLjE1LDgtMjAuNDksOEEyNy4zNiwyNy4zNiwwLDAsMSwxMTAwLjA4LDQ5NnYtMTU5YzAtMjIuNTctNS41NS0zOS41OC0xNy01MS4zOS0xMS4xMS0xMS44LTI2LjM5LTE3LjcxLTQ1LjE0LTE3Ljcxcy0zNS4wNiw2LjYtNDcuNTYsMjAuMTRjLTEyLjUsMTMuMi0xOC40MSwzMC4yMS0xOC40MSw1MVY0OTUuNmEyOS44NywyOS44NywwLDAsMS03LjYzLDIwLjQ5Yy01LjIxLDUuMi0xMi4xNiw4LTIwLjQ5LDhzLTE0LjkzLTIuNzgtMjAuMTQtOGEyOC42MywyOC42MywwLDAsMS04LTIwLjQ5di0xNTljMC0yMi41Ny01LjU2LTM5LjU4LTE3LTUxLjM5LTExLjExLTExLjgtMjYuMzgtMTcuNy00NS4xMy0xNy43cy0zNS43Niw2LjU5LTQ4LjI2LDIwLjEzYy0xMi41LDEzLjItMTguNDEsMzAuMjEtMTguNDEsNTFWNDk1LjI1YTI5Ljg1LDI5Ljg1LDAsMCwxLTcuNjMsMjAuNDljLTUuMjEsNS4yMS0xMi4xNiw4LTIwLjQ5LDhzLTE0LjkzLTIuNzctMjAuMTQtOC04LTEyLjE1LTgtMjAuNDlWMjQ4YzAtOC42OCwyLjc4LTE1LjI3LDgtMjAuNDgsNS41Ni01LjIxLDEyLjE2LTcuNjQsMjAuMTQtNy42NHMxNC45MywyLjQzLDIwLjE0LDcuNjRxNy44Miw3LjI5LDguMzMsMTkuNzljOS43Mi05LjcyLDIxLjE4LTE3LDM0LjM4LTIyLjU3YTExOSwxMTksMCwwLDEsNDMuNC04YzE1LjYyLDAsMzUuNzYsMy44Miw1MC42OSwxMS40NmExMDAuOCwxMDAuOCwwLDAsMSwzNy4xNSwzMi4yOSwxMjAuMzcsMTIwLjM3LDAsMCwxLDQxLjY2LTMyLjI5LDEzMS41MywxMzEuNTMsMCwwLDEsNTUuNTYtMTEuOGwtMS4zOS42OVptMjM1Ljc1LDMwNi41OGEyNy4yOSwyNy4yOSwwLDAsMS0yOC4xMi0yOC4xMlYyNDguMzljMC04LjY4LDIuNzctMTUuMjgsOC0yMC40OCw1LjU2LTUuMjEsMTIuMTUtNy42NCwyMC4xNC03LjY0YTI5Ljc5LDI5Ljc5LDAsMCwxLDIwLjQ4LDcuNjRjNS4yMSw1LjIsNy42NCwxMi4xNSw3LjY0LDIwLjQ4VjQ5NS42YTI5LDI5LDAsMCwxLTcuNjQsMjAuMTRDMTI5OS43Myw1MjEuMjksMTI5Mi43OCw1MjMuNzIsMTI4NC40NSw1MjMuNzJaTTE1NTYsMjE3Ljg0YzI4LjQ3LDAsNTQuNTEsNi41OSw3Ny40MywyMC4xMywyMy4yNiwxMy41NSw0MS4zMiwzMiw1NC44Niw1NS41NnMyMC40OCw0OS42NSwyMC40OCw3OC40N1Y0OTZhMjguNTUsMjguNTUsMCwwLDEtOCwyMC40OCwyNy43NiwyNy43NiwwLDAsMS0yMC4xNCw4LDI5LjE4LDI5LjE4LDAsMCwxLTIwLjQ5LTgsMjguNTksMjguNTksMCwwLDEtOC0yMC40OFY0NzUuNDZhMTMzLjA2LDEzMy4wNiwwLDAsMS00Ny4yMiwzNy4xNSwxMzQuODQsMTM0Ljg0LDAsMCwxLTYwLjA3LDEzLjU0Yy0yMS41MiwwLTUwLjY5LTYuNTktNzIuNTYtMjAuMTNxLTMyLjMtMjAuMzEtNTEtNTUuMjFjLTEyLjUtMjMuNjEtMTguNzUtNDkuNjUtMTguNzUtNzguODFzNi42LTU1LjIxLDIwLjE0LTc4LjQ3YTE0OC44MiwxNDguODIsMCwwLDEsNTUuMi01NS41NmMyMy42MS0xMy41NCw0OS42NS0yMC4xMyw3OC4xMi0yMC4xM1ptMCwyNTguMzJjMTguNCwwLDM1LjQyLTQuNTIsNTAuMzUtMTMuNTRhOTguNDUsOTguNDUsMCwwLDAsMzUuNDEtMzcuMTZjOC4zNC0xNS42MiwxMi44NS0zMy4zMywxMi44NS01My4xMnMtNC4xNy0zNy41LTEyLjg1LTUzLjEyYTkyLjIyLDkyLjIyLDAsMCwwLTM1LjQxLTM3LjVjLTE0LjkzLTktMzEuNi0xMy41NC01MC4zNS0xMy41NHMtMzUuNDEsNC41MS01MC4zNCwxMy41NGE5Nyw5NywwLDAsMC0zNS40MiwzNy41QTEwOS41NCwxMDkuNTQsMCwwLDAsMTQ1NywzNzIuMzRjMCwxOS40NSw0LjE3LDM3LjE1LDEzLjE5LDUzLjEyYTk4LjQ3LDk4LjQ3LDAsMCwwLDM1LjQyLDM3LjE2QzE1MjAuNTUsNDcxLjY0LDE1MzcuMjEsNDc2LjE2LDE1NTYsNDc2LjE2WiIvPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTEyMDIsODkuNjRhNSw1LDAsMCwwLDAsLjU3djBjLjUxLDMuNywzLjM1LDUuMzcsNi42Niw2LjY2LDcuMjYsMi44NSwxNC40NCw1Ljk0LDIxLjc3LDguNiwxNy45LDYuNSwzMC42MywxOCwzNi43OCwzNi40NCwyLjU0LDcuNjEsNS45LDE1LDguNzUsMjIuNDYsMS4wNywyLjgyLDIuNSw1LjA4LDUuMzMsNi4yOS4zNi4zNS43LjY3LDEsMWExNy4yOCwxNy4yOCwwLDAsMSw0LjM5LDBjLjI3LS4yOS42LS42MSwxLTEsMi44My0xLjIxLDQuMjYtMy40Nyw1LjMzLTYuMjksMi44NS03LjUxLDYuMi0xNC44NSw4Ljc1LTIyLjQ2LDYuMTUtMTguNDMsMTguODctMjkuOTQsMzYuNzctMzYuNDQsNy4zNC0yLjY2LDE0LjUxLTUuNzUsMjEuNzgtOC42LDMuMzEtMS4yOSw2LjE1LTMsNi42NS02LjY2djBjMC0uMTgsMC0uMzcsMC0uNTdzMC0uMjEsMC0uMzIsMC0uMDgsMC0uMTIsMC0uMjgsMC0uNDF2LS4yMWEuMTEuMTEsMCwwLDAsMCwwYy0uMTgtNC4xNy0yLjgtNi41My02LjU1LTgtOC4xMi0zLjE5LTE2LjI1LTYuMzUtMjQuMzYtOS41NS0xMy43Ni01LjQ0LTI0Ljc0LTEzLjktMzAuNjEtMjgtNC4xNC0xMC04LjM4LTE5Ljg5LTEyLjU3LTI5LjgzLS40NC0xLjA2LS41NC0yLjQ3LTEuMy0zLjE1bC0uNzUtLjY5Yy0xLjM1LTIuNzQtMy40Ni00LjY5LTYuMzctNC4yNS0yLjkxLS40NC01LDEuNTEtNi4zNyw0LjI1bC0uNzUuNjljLS43Ny42OC0uODYsMi4wOS0xLjMsMy4xNS00LjE5LDkuOTQtOC40MywxOS44Ny0xMi41NywyOS44My01Ljg3LDE0LjA5LTE2Ljg1LDIyLjU1LTMwLjYxLDI4LTguMTEsMy4yLTE2LjI0LDYuMzYtMjQuMzYsOS41NS0zLjc1LDEuNDgtNi4zNywzLjg0LTYuNTYsOHYuMjVjMCwuMTQsMCwuMjcsMCwuNDJzMCwuMDgsMCwuMTJTMTIwMS45NCw4OS41NCwxMjAyLDg5LjY0WiIvPjwvZz48L2c+PC9zdmc+" class="auth-wm" alt="comia" />
-          <div class="auth-tag">함께 가는 덕질의 길</div>
+          <div class="auth-tag">같이 가는 <span style="color:var(--accent);font-weight:700">취향</span>의 시작</div>
         </div>
         <div class="auth-tabs">
           <div class="auth-tab" data-mode="signup" onclick="setAuthMode('signup')">회원가입</div>
@@ -2252,8 +2282,8 @@
             <img src="comia_icon_cat.svg" alt="comia" />
           </div>
           <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgMTcxMy43MyA1MzEuMTUiPjxkZWZzPjxzdHlsZT4uY2xzLTEsLmNscy0ye3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2Utd2lkdGg6MTBweDt9LmNscy0xe2ZpbGw6dXJsKCNsaW5lYXItZ3JhZGllbnQpO3N0cm9rZTp1cmwoI2xpbmVhci1ncmFkaWVudC0yKTt9LmNscy0ye2ZpbGw6dXJsKCNsaW5lYXItZ3JhZGllbnQtMyk7c3Ryb2tlOnVybCgjbGluZWFyLWdyYWRpZW50LTQpO308L3N0eWxlPjxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50IiB4MT0iLTY5Ny4zNiIgeTE9Ii0xODYxLjQ0IiB4Mj0iLTY5Ny4zNiIgeTI9Ii0xODU3Ljk2IiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDM0MzA1MS43NyAxNjYyNDYuMTMpIHNjYWxlKDQ5MC43IDg5LjIpIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjODNiYWY4Ii8+PHN0b3Agb2Zmc2V0PSIwLjYiIHN0b3AtY29sb3I9IiM2M2E2ZjIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM0ZTkzZTgiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0ibGluZWFyLWdyYWRpZW50LTIiIHgxPSItNjk3LjM2IiB5MT0iLTE4NjAuMjQiIHgyPSItNjk3LjM2IiB5Mj0iLTE4NTkuMDEiIHhsaW5rOmhyZWY9IiNsaW5lYXItZ3JhZGllbnQiLz48bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudC0zIiB4MT0iMTIwMS45MiIgeTE9Ijg4LjMzIiB4Mj0iMTM2Ni45OCIgeTI9Ijg4LjMzIiBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KDEsIDAsIDAsIDEsIDAsIDApIiB4bGluazpocmVmPSIjbGluZWFyLWdyYWRpZW50Ii8+PGxpbmVhckdyYWRpZW50IGlkPSJsaW5lYXItZ3JhZGllbnQtNCIgeDE9IjExOTYuOTIiIHkxPSI4OC4zMyIgeDI9IjEzNzEuOTgiIHkyPSI4OC4zMyIgZ3JhZGllbnRUcmFuc2Zvcm09Im1hdHJpeCgxLCAwLCAwLCAxLCAwLCAwKSIgeGxpbms6aHJlZj0iI2xpbmVhci1ncmFkaWVudCIvPjwvZGVmcz48ZyBpZD0iTGF5ZXJfMiIgZGF0YS1uYW1lPSJMYXllciAyIj48ZyBpZD0iTGF5ZXJfMS0yIiBkYXRhLW5hbWU9IkxheWVyIDEiPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTE1OC40Niw1MjYuMTVjLTI5LjE2LDAtNTUuNTUtNi41OS03OC44MS0yMC4xM2ExNDYuOTEsMTQ2LjkxLDAsMCwxLTU0Ljg2LTU1LjIxQzExLjYsNDI3LjIsNSw0MDEuMTYsNSwzNzJzNi4yNS01Ni4yNSwxOS4xLTc5Ljg2LDMwLjU1LTQyLDUzLjgxLTU0Ljg2YzIyLjkyLTEzLjE5LDQ5LTE5Ljc5LDc3Ljc4LTE5Ljc5LDQzLjc0LDAsNzkuODUsMTYuNjcsMTA5LDUwYTIwLjcsMjAuNywwLDAsMSw1LjU1LDE0LjU4YzAsOC4zMy00LjE2LDE0LjkzLTEyLjE1LDIwLjQ4YTIwLjc1LDIwLjc1LDAsMCwxLTEyLjg0LDMuODJjLTguNjgsMC0xNS42My0zLjQ3LTIxLjUzLTEwLjA3cS0xNC4wNy0xNS4wOS0zMC4yMS0yMS44N2E5OC45Miw5OC45MiwwLDAsMC0zNy41LTYuOTRjLTI4LjQ3LDAtNTEuNzMsOS4zNy02OS40NCwyOC40N1M1OS44NiwzNDAuNCw1OS44NiwzNzEuNjVzNC4xNiwzNy44NCwxMi41LDUzLjQ3YTk1LjA2LDk1LjA2LDAsMCwwLDM1LjA3LDM3LjE1YzE0LjkzLDksMzEuOTQsMTMuMTksNTEuMzgsMTMuMTlzNDUuNDktNi41OSw2MS4xMS0xOS40NGM2Ljk0LTUuMjEsMTMuODktNy42NCwyMC40OC03LjY0czEwLjA3LDEuNzQsMTQuMjQsNC44NmM2Ljk0LDUuOSwxMC43NiwxMi41LDEwLjc2LDIwLjE0cy0yLjA4LDEwLjQyLTYuNTksMTQuOTNjLTI2Ljc0LDI1LTYwLjA3LDM3LjE1LTEwMCwzNy4xNXYuNjlabTMzMy42NywwYy0yOS41MSwwLTU2LjI1LTYuNTktNzkuNTEtMTkuNzlhMTQyLjY0LDE0Mi42NCwwLDAsMS01NC41MS01NC44NWMtMTIuODUtMjMuMjctMTkuNDUtNDkuNjYtMTkuNDUtNzkuNTFzNi42LTU2LjYsMTkuNDUtODAuMjFhMTQwLjM4LDE0MC4zOCwwLDAsMSw1NC41MS01NC44NmMyMy4yNi0xMy4xOSw0OS42NS0xOS43OSw3OS41MS0xOS43OXM1NS41NSw2LjYsNzguODEsMTkuNzlhMTQwLjMyLDE0MC4zMiwwLDAsMSw1NC41MSw1NC44NnExOS44LDM0Ljg5LDE5LjgsODAuMjFjMCwzMC4yLTYuNiw1Ni4yNC0xOS40NSw3OS41MWExMzkuNDEsMTM5LjQxLDAsMCwxLTU0LjE2LDU0Ljg1cS0zNC44OSwxOS44LTc5LjE2LDE5Ljc5aC0uMzVabTAtNTBhMTAwLjcyLDEwMC43MiwwLDAsMCw1MS0xMy4yLDkyLjY3LDkyLjY3LDAsMCwwLDM1LjA2LTM3LjE1YzguMzQtMTUuNjIsMTIuNS0zMy42OCwxMi41LTUzLjQ3cy00LjE2LTM3Ljg0LTEyLjUtNTMuODFhOTAuNTEsOTAuNTEsMCwwLDAtMzUuMDYtMzcuMTZxLTIyLjM5LTEzLjUzLTUxLTEzLjU0Yy0xOS4xLDAtMzUuNzYsNC41Mi01MC42OSwxMy41NC0xNC45Myw4LjY4LTI2Ljc0LDIxLjE4LTM1LjQyLDM3LjE2YTExNS4xMSwxMTUuMTEsMCwwLDAtMTIuODUsNTMuODFjMCwxOS43OSw0LjE3LDM3Ljg1LDEyLjg1LDUzLjQ3czIwLjE0LDI4LjEzLDM1LjQyLDM3LjE1QzQ1Ni4zNyw0NzIsNDczLjM4LDQ3Ni4xNiw0OTIuMTMsNDc2LjE2Wm01NTYuNTctMjU5YzMyLjI5LDAsNTguMzMsMTAuNDIsNzguMTIsMzEuNnMyOS44Niw1MC42OSwyOS44Niw4OC4xOVY0OTZhMjkuODQsMjkuODQsMCwwLDEtNy42NCwyMC40OGMtNS4yMSw1LjIxLTEyLjE1LDgtMjAuNDksOEEyNy4zNiwyNy4zNiwwLDAsMSwxMTAwLjA4LDQ5NnYtMTU5YzAtMjIuNTctNS41NS0zOS41OC0xNy01MS4zOS0xMS4xMS0xMS44LTI2LjM5LTE3LjcxLTQ1LjE0LTE3Ljcxcy0zNS4wNiw2LjYtNDcuNTYsMjAuMTRjLTEyLjUsMTMuMi0xOC40MSwzMC4yMS0xOC40MSw1MVY0OTUuNmEyOS44NywyOS44NywwLDAsMS03LjYzLDIwLjQ5Yy01LjIxLDUuMi0xMi4xNiw4LTIwLjQ5LDhzLTE0LjkzLTIuNzgtMjAuMTQtOGEyOC42MywyOC42MywwLDAsMS04LTIwLjQ5di0xNTljMC0yMi41Ny01LjU2LTM5LjU4LTE3LTUxLjM5LTExLjExLTExLjgtMjYuMzgtMTcuNy00NS4xMy0xNy43cy0zNS43Niw2LjU5LTQ4LjI2LDIwLjEzYy0xMi41LDEzLjItMTguNDEsMzAuMjEtMTguNDEsNTFWNDk1LjI1YTI5Ljg1LDI5Ljg1LDAsMCwxLTcuNjMsMjAuNDljLTUuMjEsNS4yMS0xMi4xNiw4LTIwLjQ5LDhzLTE0LjkzLTIuNzctMjAuMTQtOC04LTEyLjE1LTgtMjAuNDlWMjQ4YzAtOC42OCwyLjc4LTE1LjI3LDgtMjAuNDgsNS41Ni01LjIxLDEyLjE2LTcuNjQsMjAuMTQtNy42NHMxNC45MywyLjQzLDIwLjE0LDcuNjRxNy44Miw3LjI5LDguMzMsMTkuNzljOS43Mi05LjcyLDIxLjE4LTE3LDM0LjM4LTIyLjU3YTExOSwxMTksMCwwLDEsNDMuNC04YzE1LjYyLDAsMzUuNzYsMy44Miw1MC42OSwxMS40NmExMDAuOCwxMDAuOCwwLDAsMSwzNy4xNSwzMi4yOSwxMjAuMzcsMTIwLjM3LDAsMCwxLDQxLjY2LTMyLjI5LDEzMS41MywxMzEuNTMsMCwwLDEsNTUuNTYtMTEuOGwtMS4zOS42OVptMjM1Ljc1LDMwNi41OGEyNy4yOSwyNy4yOSwwLDAsMS0yOC4xMi0yOC4xMlYyNDguMzljMC04LjY4LDIuNzctMTUuMjgsOC0yMC40OCw1LjU2LTUuMjEsMTIuMTUtNy42NCwyMC4xNC03LjY0YTI5Ljc5LDI5Ljc5LDAsMCwxLDIwLjQ4LDcuNjRjNS4yMSw1LjIsNy42NCwxMi4xNSw3LjY0LDIwLjQ4VjQ5NS42YTI5LDI5LDAsMCwxLTcuNjQsMjAuMTRDMTI5OS43Myw1MjEuMjksMTI5Mi43OCw1MjMuNzIsMTI4NC40NSw1MjMuNzJaTTE1NTYsMjE3Ljg0YzI4LjQ3LDAsNTQuNTEsNi41OSw3Ny40MywyMC4xMywyMy4yNiwxMy41NSw0MS4zMiwzMiw1NC44Niw1NS41NnMyMC40OCw0OS42NSwyMC40OCw3OC40N1Y0OTZhMjguNTUsMjguNTUsMCwwLDEtOCwyMC40OCwyNy43NiwyNy43NiwwLDAsMS0yMC4xNCw4LDI5LjE4LDI5LjE4LDAsMCwxLTIwLjQ5LTgsMjguNTksMjguNTksMCwwLDEtOC0yMC40OFY0NzUuNDZhMTMzLjA2LDEzMy4wNiwwLDAsMS00Ny4yMiwzNy4xNSwxMzQuODQsMTM0Ljg0LDAsMCwxLTYwLjA3LDEzLjU0Yy0yMS41MiwwLTUwLjY5LTYuNTktNzIuNTYtMjAuMTNxLTMyLjMtMjAuMzEtNTEtNTUuMjFjLTEyLjUtMjMuNjEtMTguNzUtNDkuNjUtMTguNzUtNzguODFzNi42LTU1LjIxLDIwLjE0LTc4LjQ3YTE0OC44MiwxNDguODIsMCwwLDEsNTUuMi01NS41NmMyMy42MS0xMy41NCw0OS42NS0yMC4xMyw3OC4xMi0yMC4xM1ptMCwyNTguMzJjMTguNCwwLDM1LjQyLTQuNTIsNTAuMzUtMTMuNTRhOTguNDUsOTguNDUsMCwwLDAsMzUuNDEtMzcuMTZjOC4zNC0xNS42MiwxMi44NS0zMy4zMywxMi44NS01My4xMnMtNC4xNy0zNy41LTEyLjg1LTUzLjEyYTkyLjIyLDkyLjIyLDAsMCwwLTM1LjQxLTM3LjVjLTE0LjkzLTktMzEuNi0xMy41NC01MC4zNS0xMy41NHMtMzUuNDEsNC41MS01MC4zNCwxMy41NGE5Nyw5NywwLDAsMC0zNS40MiwzNy41QTEwOS41NCwxMDkuNTQsMCwwLDAsMTQ1NywzNzIuMzRjMCwxOS40NSw0LjE3LDM3LjE1LDEzLjE5LDUzLjEyYTk4LjQ3LDk4LjQ3LDAsMCwwLDM1LjQyLDM3LjE2QzE1MjAuNTUsNDcxLjY0LDE1MzcuMjEsNDc2LjE2LDE1NTYsNDc2LjE2WiIvPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTEyMDIsODkuNjRhNSw1LDAsMCwwLDAsLjU3djBjLjUxLDMuNywzLjM1LDUuMzcsNi42Niw2LjY2LDcuMjYsMi44NSwxNC40NCw1Ljk0LDIxLjc3LDguNiwxNy45LDYuNSwzMC42MywxOCwzNi43OCwzNi40NCwyLjU0LDcuNjEsNS45LDE1LDguNzUsMjIuNDYsMS4wNywyLjgyLDIuNSw1LjA4LDUuMzMsNi4yOS4zNi4zNS43LjY3LDEsMWExNy4yOCwxNy4yOCwwLDAsMSw0LjM5LDBjLjI3LS4yOS42LS42MSwxLTEsMi44My0xLjIxLDQuMjYtMy40Nyw1LjMzLTYuMjksMi44NS03LjUxLDYuMi0xNC44NSw4Ljc1LTIyLjQ2LDYuMTUtMTguNDMsMTguODctMjkuOTQsMzYuNzctMzYuNDQsNy4zNC0yLjY2LDE0LjUxLTUuNzUsMjEuNzgtOC42LDMuMzEtMS4yOSw2LjE1LTMsNi42NS02LjY2djBjMC0uMTgsMC0uMzcsMC0uNTdzMC0uMjEsMC0uMzIsMC0uMDgsMC0uMTIsMC0uMjgsMC0uNDF2LS4yMWEuMTEuMTEsMCwwLDAsMCwwYy0uMTgtNC4xNy0yLjgtNi41My02LjU1LTgtOC4xMi0zLjE5LTE2LjI1LTYuMzUtMjQuMzYtOS41NS0xMy43Ni01LjQ0LTI0Ljc0LTEzLjktMzAuNjEtMjgtNC4xNC0xMC04LjM4LTE5Ljg5LTEyLjU3LTI5LjgzLS40NC0xLjA2LS41NC0yLjQ3LTEuMy0zLjE1bC0uNzUtLjY5Yy0xLjM1LTIuNzQtMy40Ni00LjY5LTYuMzctNC4yNS0yLjkxLS40NC01LDEuNTEtNi4zNyw0LjI1bC0uNzUuNjljLS43Ny42OC0uODYsMi4wOS0xLjMsMy4xNS00LjE5LDkuOTQtOC40MywxOS44Ny0xMi41NywyOS44My01Ljg3LDE0LjA5LTE2Ljg1LDIyLjU1LTMwLjYxLDI4LTguMTEsMy4yLTE2LjI0LDYuMzYtMjQuMzYsOS41NS0zLjc1LDEuNDgtNi4zNywzLjg0LTYuNTYsOHYuMjVjMCwuMTQsMCwuMjcsMCwuNDJzMCwuMDgsMCwuMTJTMTIwMS45NCw4OS41NCwxMjAyLDg5LjY0WiIvPjwvZz48L2c+PC9zdmc+" class="ob-wordmark" alt="comia" />
-          <div class="ob-slogan">함께 가는 덕질의 길</div>
-          <div class="ob-tag">서브컬쳐 행사, 같이 갈 사람,<br>안전한 굿즈 거래 — 한 곳에서</div>
+          <div class="ob-slogan">같이 가는 <span style="color:var(--accent);font-weight:700">취향</span>의 시작</div>
+          <div class="ob-tag">서브컬쳐 행사, 같이 갈 사람,<br>굿즈 거래까지 — 한 곳에서</div>
           <div class="ob-tag-s">행사 정보를 모아보고, 동행을 찾고,<br>덕력으로 진심을 증명하세요.</div>
         </div>
       </div>
@@ -2563,6 +2593,13 @@
 
       <!-- 동행 탭 -->
       <div id="evTabCompanion">
+      <!-- 게스트: 동행 탭 잠금 카드 -->
+      <div class="guest-lock-inline" id="evGuestLock">
+        <div class="gli-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div class="gli-t">동행은 회원만 이용할 수 있어요</div>
+        <div class="gli-s">이 행사에 같이 갈 사람을 찾거나<br>방을 만들려면 로그인이 필요해요</div>
+        <button class="gli-btn" onclick="showScreen('screen-auth')">로그인 / 회원가입</button>
+      </div>
       <div class="section-header" style="padding-top:0;">
         <span style="font-size:12.5px;color:var(--text-sub);font-weight:500;">조건이 맞는 방을 골라 방장에게 1:1로 문의하세요</span>
         <span class="more" id="edCreateMore" onclick="openCreate()">+ 방 만들기</span>
@@ -2765,6 +2802,16 @@
 
       <div id="companionFeed"></div>
 
+      <!-- 게스트: 동행 탭 잠금(딤드) 오버레이 -->
+      <div class="guest-lock" id="compGuestLock">
+        <div class="gl-card">
+          <div class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="gl-t">동행은 회원만 이용할 수 있어요</div>
+          <div class="gl-s">같이 갈 사람을 찾고 신청하려면<br>로그인이 필요해요</div>
+          <button class="gl-btn" onclick="showScreen('screen-auth')">로그인 / 회원가입</button>
+        </div>
+      </div>
+
       <div class="post-card" onclick="goto('screen-post-detail')">
         <div class="post-head">
           <div class="author">
@@ -2843,6 +2890,7 @@
           <div class="profile-badge" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
         </div>
         <div class="profile-name">@나</div>
+        <div class="guest-pill" id="guestPill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20 a6.5 6.5 0 0 1 13 0"/></svg>게스트 계정 · 로그인하면 모든 기능 사용</div>
         <div class="profile-sub">실명·연락처 비공개</div>
         <div class="fandom-tags">
           <span class="fandom-tag">#블루아카이브</span>
@@ -4368,6 +4416,7 @@
   }
   let PC_MEET_KEY = null;   // 동행 방 '만나는 날' 선택값
   function openCreate(eventName) {
+    if (IS_GUEST) { toast('동행 모집은 로그인 후 이용할 수 있어요'); showScreen('screen-auth'); return; }
     if (CUR_EVENT && isEnded(CUR_EVENT)) { toast('종료된 행사예요 — 동행 모집은 마감됐어요'); return; }
     const name = eventName || (CUR_EVENT && CUR_EVENT.t) || '';
     if (name) document.getElementById('selEventTitle').textContent = name;
@@ -5213,7 +5262,7 @@
     return '<div class="dh-row"><div class="dh-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div class="dh-main"><div class="dh-t">#' + htmlesc(r.cat || '덕력') + ' 현장 인증</div><div class="dh-s">' + ds + '</div></div><span class="dh-xp">+' + (r.delta_xp || 0) + '</span></div>';
   }
   async function loadMyProfile() {
-    if (!LIVE || !sb) return;
+    if (!LIVE || !sb || IS_GUEST) return;   // 게스트는 setGuestMode가 표기 처리
     const sv = document.querySelectorAll('#screen-my .stats-row .stat-value');
     if (sv[0]) sv[0].innerHTML = '0<span class="unit">회</span>';
     document.querySelectorAll('.duk-hero-sub').forEach(e => e.textContent = '현장 체크인으로 덕력을 쌓아보세요');
@@ -6219,7 +6268,7 @@
     if (!LIVE || !sb) { toast('데모 모드 — 키 연결 후 사용 가능해요'); return; }
     try {
       if (sb.auth.getSession) { const { data } = await sb.auth.getSession(); if (data && data.session) await sb.auth.signOut(); }
-      const r = await sb.auth.signInWithPassword({ email: email, password: 'test1234' });
+      const r = await sb.auth.signInWithPassword({ email: email, password: '1111' });
       if (r.error) { toast('로그인 실패: ' + r.error.message); return; }
       toast(email.replace('@comia.app', '') + '(으)로 로그인');
       await afterLogin(r.data.user, true);
@@ -6227,9 +6276,12 @@
   }
   async function authEmail() {
     if (!LIVE || !sb) { toast('데모 모드 — 아래 "둘러보기"로 진행하세요'); return; }
-    const email = document.getElementById('authEmail').value.trim();
+    let email = document.getElementById('authEmail').value.trim();
     const pw = document.getElementById('authPw').value;
-    if (!email || pw.length < 6) { toast('이메일과 6자 이상 비밀번호를 입력해주세요'); return; }
+    // 테스트 계정 단축 입력: 로그인 시 'test1' 처럼 입력하면 @comia.app 자동 보정 + 짧은 비번 허용(실사용자 이메일엔 @ 있어 무관)
+    const testShort = authMode === 'login' && /^test\d+$/i.test(email);
+    if (testShort) email = email.toLowerCase() + '@comia.app';
+    if (!email || pw.length < (testShort ? 1 : 6)) { toast('이메일과 6자 이상 비밀번호를 입력해주세요'); return; }
     if (authMode === 'signup' && !requiredConsentMet()) { toast('필수 약관에 동의해주세요'); return; }
     if (authMode === 'signup') setMarketingPref(marketingConsented());
     try {
@@ -6325,10 +6377,28 @@
       if (user) { toast('로그인됐어요'); afterLogin(user); }
     } catch (e) { toast('네이버 로그인 처리 실패: ' + (e.message || e)); }
   }
-  function guestEnter() { try { localStorage.setItem('comia_seen', '1'); } catch (e) {} obGoStep(0); showScreen('screen-onboarding'); }
+  // 게스트(미로그인) 모드 토글 — My 프로필 게스트 표기 + 동행 탭 잠금 오버레이(body.guest-mode CSS)
+  let IS_GUEST = false;
+  function setGuestMode(on) {
+    IS_GUEST = !!on;
+    document.body.classList.toggle('guest-mode', IS_GUEST);
+    const editBtn = document.querySelector('#screen-my .edit-profile-btn');
+    const sub = document.querySelector('#screen-my .profile-sub');
+    const box = document.querySelector('#screen-my .fandom-tags');
+    if (IS_GUEST) {
+      if (editBtn) { editBtn.textContent = '로그인 / 회원가입'; editBtn.setAttribute('onclick', "showScreen('screen-auth')"); }
+      if (sub) sub.style.display = 'none';   // 게스트 안내는 pill 하나로 통일(중복 제거)
+      if (box) box.innerHTML = '<span class="fandom-tag" style="opacity:.6">로그인하면 관심 작품이 표시돼요</span>';
+    } else if (editBtn) {
+      if (sub) sub.style.display = '';
+      editBtn.textContent = '프로필 편집'; editBtn.setAttribute('onclick', 'openProfileEdit()');
+    }
+  }
+  function guestEnter() { setGuestMode(true); try { localStorage.setItem('comia_seen', '1'); } catch (e) {} obGoStep(0); showScreen('screen-onboarding'); }
   async function afterLogin(user, forceHome) {
     try {
       resetProfileUI();   // 이전 계정 프사·닉 잔상 제거 후 이 계정 값으로만 채움
+      setGuestMode(false);   // 로그인됨 → 게스트 표기/잠금 해제
       const { data: prof } = await sb.from('profiles').select('nickname,avatar_url,banned,ban_reason').eq('id', user.id).maybeSingle();
       if (prof && prof.banned) {   // 제재(정지)된 계정 차단
         try { await sb.auth.signOut(); } catch (e) {}
@@ -6355,6 +6425,7 @@
     resetProfileUI();   // 프사·닉 잔상 제거
     GOING = new Set(); GO_DATES = {}; MY_ROOMS = []; MY_CATS = []; MY_ITEMS = [];   // 개인 데이터 비우기
     if (LIVE && sb) { try { await sb.auth.signOut(); } catch (e) {} }
+    setGuestMode(false);   // 로그인 화면으로 — 게스트 표기/잠금 해제
     try { localStorage.removeItem('comia_seen'); } catch (e) {}
     toast('로그아웃되었어요');
     showScreen(LIVE ? 'screen-auth' : 'screen-onboarding');
@@ -6365,9 +6436,9 @@
     try {
       const { data: { session } } = await sb.auth.getSession();
       if (session) { await afterLogin(session.user); }       // 로그인 유지됨
-      else if (seenBefore()) { goTab2('screen-home'); }      // 게스트로 본 적 있음 → 홈
+      else if (seenBefore()) { setGuestMode(true); goTab2('screen-home'); }   // 게스트로 본 적 있음 → 홈
       else { showScreen('screen-auth'); }
-    } catch (e) { showScreen(seenBefore() ? 'screen-home' : 'screen-auth'); }
+    } catch (e) { if (seenBefore()) { setGuestMode(true); showScreen('screen-home'); } else showScreen('screen-auth'); }
   }
 
   function emptyFilter() { return { period:[], regions:[], cats:[], price:[], host:[], types:[], ips:[], genres:[] }; }
@@ -6945,9 +7016,23 @@
   }
 
   // 내 동행: 현재 참여 중인 동행 방 + 안읽음 배지
+  function guestLockInlineHtml(sub) {
+    return '<div class="guest-lock-inline" style="display:flex">'
+      + '<div class="gli-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>'
+      + '<div class="gli-t">동행은 회원만 이용할 수 있어요</div>'
+      + '<div class="gli-s">' + sub + '</div>'
+      + '<button class="gli-btn" onclick="showScreen(\'screen-auth\')">로그인 / 회원가입</button>'
+      + '</div>';
+  }
   function renderMyCompanions() {
     const box = document.getElementById('homeCompanions'), sec = document.getElementById('secCompanion');
     if (!box) return;
+    if (IS_GUEST) {   // 게스트: '내 동행' 자리에 잠금 티저
+      box.innerHTML = guestLockInlineHtml('로그인하면 같이 갈 사람을 찾고<br>동행 방을 만들 수 있어요');
+      if (sec) sec.style.display = '';
+      const c = document.getElementById('homeCompCount'); if (c) c.textContent = '';
+      return;
+    }
     if (MY_ROOMS.length) {
       box.innerHTML = MY_ROOMS.map(companionRoomCardHtml).join('');
       if (sec) sec.style.display = '';
