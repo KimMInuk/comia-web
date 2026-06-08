@@ -2251,7 +2251,9 @@
         </div>
         <div class="ob-fandom-grid ob-bigcat-grid">
           <div class="ob-fandom ob-bigcat" data-cat="게임"><span class="dot" style="background:#3088E0"></span>🎮 게임<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+          <div class="ob-fandom ob-bigcat" data-cat="e스포츠"><span class="dot" style="background:#5E6AD2"></span>🏆 e스포츠<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
           <div class="ob-fandom ob-bigcat" data-cat="애니·만화"><span class="dot" style="background:#9B5BC4"></span>📺 애니·만화<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+          <div class="ob-fandom ob-bigcat" data-cat="웹툰·웹소설"><span class="dot" style="background:#F08A3C"></span>📚 웹툰·웹소설<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
           <div class="ob-fandom ob-bigcat" data-cat="음악"><span class="dot" style="background:#4F6FC8"></span>🎵 음악<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
           <div class="ob-fandom ob-bigcat" data-cat="아이돌·버튜버"><span class="dot" style="background:#E04F8A"></span>🎤 아이돌·버튜버<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
           <div class="ob-fandom ob-bigcat" data-cat="동인·창작"><span class="dot" style="background:#4FB89A"></span>🎨 동인·창작<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
@@ -2261,8 +2263,8 @@
       <!-- 2. 세부 작품 -->
       <div class="ob-step" data-step="2">
         <div class="ob-head">
-          <div class="t">세부 작품을 골라주세요</div>
-          <div class="s">고른 분야에 맞춰 추천해드려요. (복수 선택)</div>
+          <div class="t">어떤 걸 좋아하세요?</div>
+          <div class="s">관심 장르를 골라주세요. 딱 맞는 게 없으면 「그 외」도 괜찮아요. (복수 선택·건너뛰기 가능)</div>
         </div>
         <div id="obSubGrid"></div>
       </div>
@@ -4889,16 +4891,15 @@
     const grid = document.getElementById('obSubGrid');
     if (!grid) return;
     if (!cats.length) { grid.innerHTML = '<div class="ob-sub-empty">앞 단계에서 분야를 먼저 골라주세요</div>'; return; }
-    const seen = new Set();
     let html = '';
     cats.forEach(cat => {
-      const items = (BIG_CATS[cat] || []).filter(it => !seen.has(it));
-      items.forEach(it => seen.add(it));
-      if (!items.length) return;
+      const items = (SUBGENRES[cat] || []);
       const meta = CAT_META[cat] || {};
       const col = meta.c || '#9A9AA0';
       html += '<div class="ob-sub-cat">' + (meta.e || '') + ' ' + cat + '</div><div class="ob-fandom-grid">';
-      items.forEach(it => { html += '<div class="ob-fandom" data-item="' + it + '"><span class="dot" style="background:' + col + '"></span>' + it + '<span class="chk">' + OB_CHK + '</span></div>'; });
+      items.forEach(it => { html += '<div class="ob-fandom" data-item="' + it + '" data-cat="' + cat + '"><span class="dot" style="background:' + col + '"></span>' + it + '<span class="chk">' + OB_CHK + '</span></div>'; });
+      // 내 취향이 목록에 없어도 이탈하지 않게 — 그 외 칩
+      html += '<div class="ob-fandom" data-item="그 외" data-cat="' + cat + '"><span class="dot" style="background:#9AA0AA"></span>그 외 / 딱히 없어요<span class="chk">' + OB_CHK + '</span></div>';
       html += '</div>';
     });
     grid.innerHTML = html;
@@ -4908,9 +4909,7 @@
       if (!selectedBigCats().length) { toast('관심 분야를 하나 이상 골라주세요'); return; }
       buildSubInterests();
     }
-    if (obStep === 2 && !document.querySelector('#obSubGrid .ob-fandom.on')) {
-      toast('세부 작품을 하나 이상 골라주세요'); return;
-    }
+    // step 2(장르)는 선택 사항 — 안 골라도 진행 가능(이탈 방지)
     if (obStep === 3) {
       const bad = badNick((document.getElementById('obNick') || {}).value || '');
       if (bad) { toast(bad); return; }
@@ -5259,7 +5258,7 @@
   function renderIntSugg() {
     const box = document.getElementById('intSugg'); if (!box) return;
     let pool = [];
-    (INT_CATS.size ? [...INT_CATS] : Object.keys(BIG_CATS)).forEach(c => (BIG_CATS[c] || []).forEach(x => pool.push(x)));
+    (INT_CATS.size ? [...INT_CATS] : Object.keys(CAT_META)).forEach(c => { (SUBGENRES[c] || []).forEach(x => pool.push(x)); (BIG_CATS[c] || []).forEach(x => pool.push(x)); });
     pool = [...new Set(pool)].filter(x => !INT_TAGS.has(x)).slice(0, 12);
     box.innerHTML = pool.length ? '<span class="cp-empty" style="width:100%;">추천</span>' + pool.map(x => '<span class="sg" onclick="addSuggTag(\'' + jsq(x) + '\')">+ ' + htmlesc(x) + '</span>').join('') : '';
   }
@@ -5270,7 +5269,7 @@
       await sb.from('profile_interests').delete().eq('user_id', u.id);
       const rows = [];
       INT_CATS.forEach(c => rows.push({ user_id: u.id, big_cat: c, sub_item: '' }));
-      INT_TAGS.forEach(t => { const cat = Object.keys(BIG_CATS).find(k => BIG_CATS[k].includes(t)) || ''; rows.push({ user_id: u.id, big_cat: cat, sub_item: t }); });
+      INT_TAGS.forEach(t => { const cat = Object.keys(SUBGENRES).find(k => SUBGENRES[k].includes(t)) || Object.keys(BIG_CATS).find(k => BIG_CATS[k].includes(t)) || ''; rows.push({ user_id: u.id, big_cat: cat, sub_item: t }); });
       if (rows.length) await sb.from('profile_interests').upsert(rows);
       MY_CATS = [...INT_CATS]; MY_ITEMS = [...INT_TAGS];
       renderReco(); loadMyProfile();
@@ -5961,7 +5960,8 @@
   };
   const CAT_META = {
     '게임': { c:'#3088E0', e:'🎮' }, '애니·만화': { c:'#9B5BC4', e:'📺' },
-    '음악': { c:'#4F6FC8', e:'🎵' }, '아이돌·버튜버': { c:'#E04F8A', e:'🎤' },
+    '웹툰·웹소설': { c:'#F08A3C', e:'📚' }, '음악': { c:'#4F6FC8', e:'🎵' },
+    '아이돌·버튜버': { c:'#E04F8A', e:'🎤' }, 'e스포츠': { c:'#5E6AD2', e:'🏆' },
     '동인·창작': { c:'#4FB89A', e:'🎨' }
   };
   // 대분류 → 세부 장르(소분류). 애니/J-POP은 마이너 장르까지 세분화.
@@ -5971,6 +5971,8 @@
     '음악': ['J-POP','J-ROCK·밴드','보컬로이드','애니송','우타이테','아이돌','시티팝','비주얼계(V계)','게임 OST','동인음악','어반·R&B','일렉트로니카','포크·어쿠스틱','메탈·라우드','시부야계','덴파·전파송'],
     '아이돌·버튜버': ['메이저 아이돌','성우 라이브','V튜버','버추얼 라이브','아이마스계','러브라이브계','우타이테 라이브'],
     '동인·창작': ['동인지','2차창작','코스프레','일러스트','굿즈·핸드메이드','온리전','부스 참가','성우·작가 사인'],
+    '웹툰·웹소설': ['로맨스 판타지','BL','GL','현대 판타지','무협·사극','액션·배틀','일상·개그','스릴러·미스터리','드라마·감성','라노벨·이세계'],
+    'e스포츠': ['LoL·LCK','발로란트','배틀그라운드','오버워치','스타크래프트','격투게임','FC·축구게임','TFT·기타 종목'],
   };
   // IP → 세부 장르 (행사 자동 태깅용; 값은 SUBGENRES 내에서)
   const IP_SUBGENRE = {
@@ -6108,8 +6110,8 @@
         .forEach(c => rows.push({ user_id: user.id, big_cat: c.dataset.cat, sub_item: '' }));
       document.querySelectorAll('#obSubGrid .ob-fandom.on').forEach(c => {
         const item = c.dataset.item;
-        const cat = Object.keys(BIG_CATS).find(k => BIG_CATS[k].includes(item)) || '';
-        rows.push({ user_id: user.id, big_cat: cat, sub_item: item });
+        if (!item || item === '그 외') return;   // '그 외'는 관심사로 저장하지 않음
+        rows.push({ user_id: user.id, big_cat: c.dataset.cat || '', sub_item: item });
       });
       if (rows.length) await sb.from('profile_interests').upsert(rows);
     } catch (err) { console.warn('[comia] 관심사 저장 실패', err); }
