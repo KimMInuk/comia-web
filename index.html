@@ -1669,9 +1669,9 @@
   .cal-weekday { text-align: center; font-size: 11px; font-weight: 700; color: var(--text-dim); padding: 6px 0; }
   .cal-weekday.sun { color: #FF6B6B; }
   .cal-weekday.sat { color: #5AA6EC; }
-  .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 64px; gap: 2px; }
   .cal-cell {
-    aspect-ratio: 1 / 1.42;
+    min-height: 0;   /* 고정 행 높이(grid-auto-rows) 안에서 콘텐츠 넘쳐도 행을 늘리지 않음 → 레이아웃 안 깨짐 */
     border-radius: 12px;
     padding: 6px 2px 4px;
     display: flex;
@@ -1690,15 +1690,14 @@
   .cal-num { font-size: 12.5px; font-weight: 600; color: var(--text); width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; }
   .cal-cell.sun .cal-num { color: #FF6B6B; }
   .cal-cell.sat .cal-num { color: #5AA6EC; }
-  .cal-cell.holiday .cal-num { color: #FF6B6B; }   /* 공휴일 */
-  .cal-hol { position:absolute; left:1px; right:1px; top:24px; text-align:center; font-size:6.5px; font-weight:700; color:#FF6B6B; line-height:1; pointer-events:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cal-cell.holiday .cal-num { color: #FF6B6B; }   /* 공휴일(빨간날) */
+  .cal-hol { width:100%; text-align:center; font-size:7.5px; font-weight:700; color:#FF6B6B; line-height:1.1; margin-top:1px; pointer-events:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
   .cw-date.hol span { color:#FF6B6B; font-weight:700; }
   .cal-cell.today .cal-num { background: var(--text); color: var(--bg); font-weight: 800; }
-  .cal-cell.iam .cal-num { background: var(--accent); color: #fff; font-weight: 800; }   /* 내가 가는 날 */
+  /* 내가 가는 날 = 숫자 대신 막대(작대기)에 초록 아웃라인(.cal-bar.mine)으로 표시 → 숫자 오해 방지 */
   .cal-cell.selected { background: var(--accent-bg-strong); }
   .cal-cell.selected .cal-num { color: var(--accent); font-weight: 800; }
   .cal-cell.today.selected .cal-num { background: var(--accent); color: #fff; }
-  .cal-cell.iam.selected .cal-num { background: var(--accent); color: #fff; }
   .cal-mthumb { width: 26px; height: 26px; border-radius: 7px; overflow: hidden; position: relative; display: grid; place-items: center; flex-shrink: 0; }
   .cal-mthumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .cal-mthumb span { font-size: 8.5px; font-weight: 800; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,0.3); letter-spacing: -0.3px; }
@@ -1751,7 +1750,7 @@
   .cw-date.sun b { color:#FF6B6B; } .cw-date.sat b { color:#5AA6EC; }
   .cw-evs { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; justify-content:center; }
   .cw-row { display:flex; align-items:center; gap:7px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:8px 11px; cursor:pointer; }
-  .cw-row.mine { border-color:var(--accent); box-shadow: inset 2px 0 0 var(--accent); }
+  .cw-row.mine { border-color:#16C060; box-shadow: inset 3px 0 0 #16C060; }   /* 내가 가는 날: 초록 */
   .cw-row:active { transform: scale(0.99); }
   .cw-time { font-size:11.5px; font-weight:800; color:var(--accent); flex:0 0 auto; font-variant-numeric:tabular-nums; }
   .cw-t { font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -1763,10 +1762,10 @@
   .cal-bar.empty { background: transparent !important; }
   .cal-bar.s { border-top-left-radius: 3px; border-bottom-left-radius: 3px; margin-left: 3px; }
   .cal-bar.e { border-top-right-radius: 3px; border-bottom-right-radius: 3px; margin-right: 3px; }
-  .cal-bar.mine { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.92); height: 6px; }
+  .cal-bar.mine { box-shadow: inset 0 0 0 1.6px #16C060; height: 7px; }   /* 내가 가는 날: 막대 초록 아웃라인 */
   /* 긴 행사(콜라보카페·팝업): 오픈일/내가 가는 날만 점(둥근 알약) */
   .cal-bar.pt { margin: 0 auto; width: 7px; height: 6px; border-radius: 999px; opacity: 0.55; }
-  .cal-bar.pt.mine { opacity: 1; width: 9px; height: 9px; box-shadow: 0 0 0 2px rgba(255,255,255,0.92), 0 0 0 3px currentColor; }
+  .cal-bar.pt.mine { opacity: 1; width: 9px; height: 9px; box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3px #16C060; }   /* 내가 가는 날: 초록 링 */
   .cal-more { font-size: 9px; font-weight: 700; color: var(--text-dim); line-height: 1; margin-top: 1px; }
   .cal-cap { text-align: center; font-size: 11.5px; color: var(--text-dim); font-weight: 500; padding: 16px 16px 4px; }
   /* 캘린더 범위 토글(관심사/전체) */
@@ -2521,6 +2520,8 @@
           <span><i style="background:#EC6FA8"></i>아이돌·버튜버</span>
           <span><i style="background:#3FB6A8"></i>애니·만화</span>
           <span><i style="background:#E89B4B"></i>동인·창작</span>
+          <span><i style="background:transparent;box-shadow:inset 0 0 0 1.6px #16C060"></i>내가 가는 날</span>
+          <span style="color:#FF6B6B"><i style="background:#FF6B6B"></i>빨간날</span>
         </div>
         <div class="cal-list" id="calList"></div>
       </div>
