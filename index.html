@@ -1696,7 +1696,7 @@
   .cal-cell.today .cal-num { background: var(--text); color: var(--bg); font-weight: 800; }
   /* 내가 가는 날 = 숫자 대신 막대(작대기)에 초록 아웃라인(.cal-bar.mine)으로 표시 → 숫자 오해 방지 */
   .cal-cell.selected { background: var(--accent-bg-strong); }
-  .cal-cell.selected .cal-num { color: var(--accent); font-weight: 800; }
+  .cal-cell.selected .cal-num { font-weight: 800; }   /* 선택=배경 하이라이트로만. 숫자 색 유지(빨간날=빨강) */
   .cal-cell.today.selected .cal-num { background: var(--accent); color: #fff; }
   .cal-mthumb { width: 26px; height: 26px; border-radius: 7px; overflow: hidden; position: relative; display: grid; place-items: center; flex-shrink: 0; }
   .cal-mthumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -1765,7 +1765,7 @@
   .cal-bar.mine { box-shadow: inset 0 0 0 1.6px #16C060; height: 7px; }   /* 내가 가는 날: 막대 초록 아웃라인 */
   /* 긴 행사(콜라보카페·팝업): 오픈일/내가 가는 날만 점(둥근 알약) */
   .cal-bar.pt { margin: 0 auto; width: 7px; height: 6px; border-radius: 999px; opacity: 0.55; }
-  .cal-bar.pt.mine { opacity: 1; width: 9px; height: 9px; box-shadow: 0 0 0 1.5px var(--card), 0 0 0 3px #16C060; }   /* 내가 가는 날: 초록 링 */
+  .cal-bar.pt.mine { opacity: 1; width: auto; height: 7px; border-radius: 3px; margin: 0 3px; box-shadow: inset 0 0 0 1.6px #16C060; }   /* 내가 가는 날: 점→막대기+초록 아웃라인(원 안 씀) */
   .cal-more { font-size: 9px; font-weight: 700; color: var(--text-dim); line-height: 1; margin-top: 1px; }
   .cal-cap { text-align: center; font-size: 11.5px; color: var(--text-dim); font-weight: 500; padding: 16px 16px 4px; }
   /* 캘린더 범위 토글(관심사/전체) */
