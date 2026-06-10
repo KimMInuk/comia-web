@@ -6870,8 +6870,8 @@
     const box = document.getElementById('feedNews'); const hdr = document.getElementById('feedNewsHdr');
     if (!box || !LIVE || !sb) return;
     try {
-      const { data } = await sb.from('news').select('id, title, category, image_url, source_name, created_at')
-        .eq('published', true).order('ord', { ascending: true }).order('created_at', { ascending: false }).limit(12);
+      const { data } = await sb.from('news').select('id, title, category, image_url, source_name, created_at, news_date')
+        .eq('published', true).order('ord', { ascending: true }).order('news_date', { ascending: false, nullsFirst: false }).limit(12);
       NEWS = data || [];
       const has = NEWS.length > 0;
       box.innerHTML = has ? NEWS.map(newsCard).join('') : '';
@@ -6886,20 +6886,20 @@
     return '<div class="rail-card info" onclick="openNews(\'' + n.id + '\')">'
       + '<div class="rc-top">' + img + '<span class="cat-badge tip">' + htmlesc(n.category || '소식') + '</span></div>'
       + '<div class="rc-title">' + htmlesc(n.title) + '</div>'
-      + '<div class="rc-meta">' + htmlesc(n.source_name || '코미아 소식') + ' · ' + timeAgo(n.created_at) + '</div></div>';
+      + '<div class="rc-meta">' + htmlesc(n.source_name || '코미아 소식') + ' · ' + timeAgo(n.news_date || n.created_at) + '</div></div>';
   }
   function openNews(id) {
     const box = document.getElementById('newsBody'); if (!box) return;
     box.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:20px 0;">불러오는 중…</div>';
     goto('screen-news');
     if (!LIVE || !sb) return;
-    sb.from('news').select('title, summary, category, image_url, source_url, source_name, created_at').eq('id', id).maybeSingle().then(({ data }) => {
+    sb.from('news').select('title, summary, category, image_url, source_url, source_name, created_at, news_date').eq('id', id).maybeSingle().then(({ data }) => {
       if (!data) { box.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--text-dim);font-size:13px;">내용을 불러올 수 없어요</div>'; return; }
       const im = (data.image_url && /^https?:/.test(data.image_url)) ? '<img src="' + htmlesc(data.image_url) + '" style="width:100%;border-radius:14px;margin:14px 0 4px;display:block;" onerror="this.remove()">' : '';
       const src = data.source_url ? '<div style="margin-top:16px;"><a href="javascript:void(0)" onclick="openExternal(\'' + htmlesc(data.source_url) + '\')" style="color:var(--accent);font-size:13px;font-weight:700;">원문 보기 ↗</a></div>' : '';
       box.innerHTML = '<div style="font-size:11.5px;color:var(--accent);font-weight:700;padding:16px 0 2px;">' + htmlesc(data.category || '소식') + '</div>'
         + '<div style="font-size:20px;font-weight:800;letter-spacing:-0.4px;line-height:1.35;">' + htmlesc(data.title) + '</div>'
-        + '<div style="font-size:11.5px;color:var(--text-sub);font-weight:600;margin-top:4px;">' + htmlesc(data.source_name || '코미아 소식') + '</div>'
+        + '<div style="font-size:11.5px;color:var(--text-sub);font-weight:600;margin-top:4px;">' + htmlesc(data.source_name || '코미아 소식') + ' · ' + timeAgo(data.news_date || data.created_at) + '</div>'
         + im
         + '<div style="font-size:14.5px;line-height:1.78;color:var(--text);white-space:pre-wrap;letter-spacing:-0.2px;margin-top:10px;">' + htmlesc(data.summary) + '</div>'
         + src;
@@ -6915,7 +6915,7 @@
     if (LIVE && sb) {
       try {
         const [nr, gr] = await Promise.all([
-          sb.from('news').select('id,title,category,field,image_url,source_name,created_at').eq('published', true).order('ord', { ascending: true }).order('created_at', { ascending: false }).limit(60),
+          sb.from('news').select('id,title,category,field,image_url,source_name,created_at,news_date').eq('published', true).order('ord', { ascending: true }).order('news_date', { ascending: false, nullsFirst: false }).limit(60),
           sb.from('notices').select('id,icon,tag,title').eq('published', true).order('ord', { ascending: true }).limit(60),
         ]);
         HUB_NEWS = nr.data || []; HUB_NOTICES = gr.data || [];
@@ -6939,7 +6939,7 @@
       const list = HUB_NEWS.filter(n => sel === '전체' || n.field === sel);
       const rows = list.length ? list.map(n => {
         const img = (n.image_url && /^https?:/.test(n.image_url)) ? '<span class="hr-thumb"><img src="' + htmlesc(n.image_url) + '" loading="lazy" onerror="this.remove()"></span>' : '<span class="hr-thumb" style="background:linear-gradient(135deg,#5B9BE8,#3A6FB5)"></span>';
-        return '<div class="hub-row" onclick="closeHub();openNews(\'' + n.id + '\')">' + img + '<div class="hr-main"><div class="hr-t">' + htmlesc(n.title) + '</div><div class="hr-s">' + htmlesc(n.field || n.category || '소식') + ' · ' + htmlesc(n.source_name || '코미아 소식') + '</div></div></div>';
+        return '<div class="hub-row" onclick="closeHub();openNews(\'' + n.id + '\')">' + img + '<div class="hr-main"><div class="hr-t">' + htmlesc(n.title) + '</div><div class="hr-s">' + htmlesc(n.field || n.category || '소식') + ' · ' + htmlesc(n.source_name || '코미아 소식') + ' · ' + timeAgo(n.news_date || n.created_at) + '</div></div></div>';
       }).join('') : '<div style="padding:34px;text-align:center;color:var(--text-dim);font-size:13px;">이 분야 소식이 아직 없어요</div>';
       box.innerHTML = (HUB_NEWS.length ? chips + rows : '<div style="padding:34px;text-align:center;color:var(--text-dim);font-size:13px;">아직 소식이 없어요</div>');
     } else {
