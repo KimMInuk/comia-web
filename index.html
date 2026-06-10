@@ -6280,7 +6280,7 @@
     const plat = (cap && cap.getPlatform) ? cap.getPlatform() : 'web';
     if (plat === 'android') { const a = document.getElementById('btnApple'); if (a) a.remove(); }
   }
-  document.addEventListener('DOMContentLoaded', () => { applyTestAccountVisibility(); applyPlatformAuth(); setAuthMode('login'); });
+  document.addEventListener('DOMContentLoaded', () => { applyTestAccountVisibility(); applyPlatformAuth(); setAuthMode('login'); applyTheme(THEME_PREF); });
   applyTestAccountVisibility(); applyPlatformAuth();
   // 테스트 계정 빠른 로그인 (개발용; 비번 고정 test1234)
   async function loginTest(email) {
@@ -6625,6 +6625,16 @@
   function applyTheme(pref) {
     const dark = pref === 'dark' || (pref === 'system' && _sysDark());
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    syncStatusBar(dark);
+  }
+  // 상태바 아이콘 색을 테마에 맞춤: 라이트=어두운 아이콘(흰 헤더 가독), 다크=밝은 아이콘. 흰 배경에서 안 보이던 문제 해결.
+  function syncStatusBar(dark) {
+    try {
+      const SB = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
+      if (!SB) return;
+      SB.setStyle({ style: dark ? 'DARK' : 'LIGHT' });          // Light=어두운아이콘, Dark=밝은아이콘
+      if (SB.setOverlaysWebView) SB.setOverlaysWebView({ overlay: true });   // 헤더가 상태바 밑까지 차도록(엣지투엣지 유지)
+    } catch (e) {}
   }
   let THEME_PREF = (function () { try { return localStorage.getItem('comia_theme') || 'system'; } catch (e) { return 'system'; } })();
   function renderThemeSeg() {
