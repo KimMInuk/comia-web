@@ -8222,12 +8222,13 @@
   /* ---------- 필터 시트 ---------- */
   const GROUP_KEYS = ['period', 'regions', 'cats', 'price', 'host', 'types', 'genres', 'ips'];
   function sheetGroups() { return document.querySelectorAll('#sheetBody .filter-group'); }
+  const optName = o => o.textContent.replace('★', '').trim();   // IP 관심작품 ★ 제거 → 실제 IP명만(collect/sync 대칭)
   function collectFilterFromSheet() {
     const f = emptyFilter();
     const groups = sheetGroups();
     GROUP_KEYS.forEach((key, i) => {
       const g = groups[i]; if (!g) return;
-      f[key] = [...g.querySelectorAll('.opt.on')].map(o => o.textContent.trim()).filter(Boolean);
+      f[key] = [...g.querySelectorAll('.opt.on')].map(optName).filter(Boolean);
     });
     if (f.host.includes('전체')) f.host = [];
     return f;
@@ -8237,7 +8238,7 @@
     GROUP_KEYS.forEach((key, i) => {
       const g = groups[i]; if (!g) return;
       const want = f[key] || [];
-      g.querySelectorAll('.opt').forEach(o => o.classList.toggle('on', want.includes(o.textContent.trim())));
+      g.querySelectorAll('.opt').forEach(o => o.classList.toggle('on', want.includes(optName(o))));
     });
     const host = groups[GROUP_KEYS.indexOf('host')];
     if (host && !host.querySelector('.opt.on')) {
@@ -8329,6 +8330,7 @@
     syncSheetToFilter(curFilter);
     rebuildGenreFilter(new Set(curFilter.genres || []));
     refreshSheetUI();
+    renderFilterSummary(curFilter);   // 적용된 필터를 진실원본(curFilter)에서 직접 표시 — 재진입 시 요약 빈칸 방지
     document.getElementById('sheetOverlay').classList.add('show');
     document.getElementById('filterSheet').classList.add('show');
   }
