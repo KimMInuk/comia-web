@@ -1570,6 +1570,9 @@
   .test-accounts .ta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .ta-btn { padding: 11px 8px; border-radius: 11px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; background: var(--accent-bg); color: var(--accent-dim); border: 1px solid rgba(91,155,232,0.28); letter-spacing: -0.2px; transition: transform .12s, background .12s; }
   .ta-btn:active { transform: scale(0.96); background: var(--accent-bg-strong); }
+  .ta-create { width: 100%; padding: 12px; margin-bottom: 9px; border-radius: 11px; font-size: 13.5px; font-weight: 800; font-family: inherit; cursor: pointer; background: var(--accent); color: #fff; border: none; letter-spacing: -0.2px; transition: transform .12s; }
+  .ta-create:active { transform: scale(0.98); }
+  .auth-vnote { font-size: 11.5px; font-weight: 600; color: var(--text-dim); margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 11px; line-height: 1.45; }
   .segment {
     display: flex;
     margin: 0 16px 16px;
@@ -2293,6 +2296,7 @@
           <div class="consent-row" data-req="1" onclick="toggleConsent(this)"><span class="cbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">[필수]</span> 이용약관 동의</span><span class="seemore" onclick="event.stopPropagation();goto('screen-terms')">보기</span></div>
           <div class="consent-row" data-req="1" onclick="toggleConsent(this)"><span class="cbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="req">[필수]</span> 개인정보 수집·이용 및 국외이전 동의</span><span class="seemore" onclick="event.stopPropagation();goto('screen-privacy')">보기</span></div>
           <div class="consent-row" data-mkt="1" onclick="toggleConsent(this)"><span class="cbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span><span class="optl">[선택]</span> 마케팅·이벤트 알림 수신</span></div>
+          <div class="auth-vnote">✉️ 이메일 인증 기능은 차후 제공될 예정이에요. 지금은 가입 즉시 이용할 수 있어요.</div>
         </div>
         <button class="btn-primary auth-primary" id="authPrimaryBtn" onclick="authEmail()">이메일로 로그인</button>
         <div class="auth-divider"><span>또는</span></div>
@@ -2304,7 +2308,8 @@
         <div class="auth-note">실명·연락처는 공개되지 않아요. 닉네임·인장만 보입니다.</div>
 
         <div class="test-accounts" id="testAccounts">
-          <div class="ta-label">🧪 테스트 계정 (개발용 · 비번 test1234)</div>
+          <div class="ta-label">🧪 비공개 테스트 · 이메일 인증 없이 바로 시작</div>
+          <button class="ta-create" onclick="createTestAccount()">＋ 새 테스트 계정 만들기</button>
           <div class="ta-grid">
             <button class="ta-btn" onclick="loginTest('test1@comia.app')">테스트1호</button>
             <button class="ta-btn" onclick="loginTest('test2@comia.app')">테스트2호</button>
@@ -6406,8 +6411,8 @@
     const c = document.getElementById('signupConsent');
     if (c) c.style.display = m === 'signup' ? 'block' : 'none';
   }
-  // 테스트 계정 빠른 로그인 블록 노출 여부 — 출시(스토어 제출) 전 false 로 변경하면 DOM에서 제거됨
-  const SHOW_TEST_ACCOUNTS = false;   // 출시(스토어 제출) 빌드 — 테스트 계정 패널 숨김
+  // 테스트 계정 블록 노출 여부 — 프로덕션(공개) 제출 전 false 로 변경하면 DOM에서 제거됨
+  const SHOW_TEST_ACCOUNTS = true;   // 비공개 테스트 빌드 — 테스트 계정 패널 노출
   function applyTestAccountVisibility() {
     if (SHOW_TEST_ACCOUNTS) return;
     const ta = document.getElementById('testAccounts'); if (ta) ta.remove();
@@ -6431,6 +6436,20 @@
       await afterLogin(r.data.user, true);
     } catch (e) { toast('오류: ' + (e.message || e)); }
   }
+  // 비공개 테스트: 인증 없이 고유 테스트 계정 즉시 생성·입장 (autoconfirm 켜져 있어 메일 확인 불필요)
+  async function createTestAccount() {
+    if (!LIVE || !sb) { toast('데모 모드 — 키 연결 후 사용 가능해요'); return; }
+    const rid = Math.random().toString(36).slice(2, 8);
+    const email = 'tester_' + rid + '@comia.app', pw = 'test' + rid;
+    try {
+      const { data } = await sb.auth.getSession(); if (data && data.session) await sb.auth.signOut();
+      const res = await sb.auth.signUp({ email, password: pw });
+      if (res.error) { toast('생성 실패: ' + res.error.message); return; }
+      if (!res.data.session) { toast('생성됨 — 잠시 후 다시 시도해주세요'); return; }
+      toast('테스트 계정으로 입장했어요 · 이메일 인증 불필요');
+      await afterLogin(res.data.user, true);
+    } catch (e) { toast('오류: ' + (e.message || e)); }
+  }
   async function authEmail() {
     if (!LIVE || !sb) { toast('데모 모드 — 아래 "둘러보기"로 진행하세요'); return; }
     let email = document.getElementById('authEmail').value.trim();
@@ -6447,7 +6466,7 @@
         : await sb.auth.signInWithPassword({ email, password: pw });
       if (res.error) { toast(res.error.message); return; }
       if (!res.data.session) { toast('가입 확인 메일을 보냈어요. 메일의 링크를 눌러주세요'); return; }
-      toast(authMode === 'signup' ? '환영해요!' : '로그인됐어요');
+      toast(authMode === 'signup' ? '환영해요! 이메일 인증 기능은 곧 제공될 예정이에요' : '로그인됐어요');
       await afterLogin(res.data.user);
     } catch (e) { toast('오류: ' + (e.message || e)); }
   }
