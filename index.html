@@ -1812,22 +1812,21 @@
   .gp-calwd span { text-align: center; font-size: 10.5px; font-weight: 700; color: var(--text-dim); padding: 3px 0; }
   .gp-calwd .sun { color: #FF6B6B; } .gp-calwd .sat { color: #5AA6EC; }
   .gp-calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-  .gpd { aspect-ratio: 1 / 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border-radius: 9px; cursor: pointer; position: relative; }
+  .gpd { aspect-ratio: 1 / 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; position: relative; z-index: 0; }
   .gpd.empty { cursor: default; }
-  .gpd.dim { opacity: .32; pointer-events: none; }              /* 행사 기간 밖: 흐림·비활성 */
-  .gpd.rng { background: var(--accent-bg); }                     /* 행사 기간: 옅은 배경 블록 */
+  .gpd.dim { opacity: .3; pointer-events: none; }                 /* 행사 기간 밖: 흐림·비활성 */
   .gpd-n { font-size: 12.5px; font-weight: 600; color: var(--text); position: relative; z-index: 1; }
   .gpd.sun .gpd-n { color: #FF6B6B; } .gpd.sat .gpd-n { color: #5AA6EC; }
-  .gpd.sel { background: #16C060; }
   .gpd.sel .gpd-n { color: #fff; font-weight: 800; }
   .gpd-h { font-size: 6.5px; font-weight: 700; color: #FF6B6B; line-height: 1; position: relative; z-index: 1; }
   .gpd.sel .gpd-h { color: rgba(255,255,255,.92); }
-  /* 행사 기간 연결 띠(작대기) — 연속된 기간 날짜를 가로로 잇는다(기간 밖과 확 구별) */
-  .gpd-bar { position: absolute; left: -2px; right: -2px; bottom: 3px; height: 5px; background: var(--accent); }
-  .gpd-bar.s { left: 4px; border-radius: 3px 0 0 3px; }
-  .gpd-bar.e { right: 4px; border-radius: 0 3px 3px 0; }
-  .gpd-bar.s.e { border-radius: 3px; }
-  .gpd.sel .gpd-bar { background: rgba(255,255,255,.92); }       /* 선택일 위에선 흰 띠로 대비 */
+  /* 행사 기간: 연결된 배경 밴드(범위 밖과 확 구별) — 주 단위로 양끝만 둥글게 */
+  .gpd.rng::before { content: ''; position: absolute; top: 3px; bottom: 3px; left: -1px; right: -1px; background: var(--accent-bg); z-index: -1; }
+  .gpd.rng.rs::before { left: 4px; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+  .gpd.rng.re::before { right: 4px; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+  .gpd.rng.rs.re::before { left: 4px; right: 4px; border-radius: 12px; }
+  /* 선택일: 밴드 위 초록 알약 */
+  .gpd.sel::after { content: ''; position: absolute; top: 2px; bottom: 2px; left: 3px; right: 3px; background: #16C060; border-radius: 12px; z-index: -1; }
   /* 가는 시간: 커스텀 선택기(네이티브 시계 X) */
   .gp-trow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; margin-top: 7px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
   .gp-trow .gp-d { font-size: 13px; font-weight: 700; color: var(--text); }
@@ -3121,11 +3120,11 @@
       <div class="set-note"><b id="rsEvent">—</b> · 방장만 변경 가능</div>
       <div class="form-field" id="rsMeetDayField" style="padding:0 16px;">
         <div class="form-label">만나는 날</div>
-        <div class="gd-chips" id="rsMeetChips"></div>
+        <div id="rsMeetChips"></div>
       </div>
       <div class="form-field" style="padding:0 16px;">
         <div class="form-label">집합 시간</div>
-        <input class="form-input" id="rsMeetTime" type="time" value="10:00" style="max-width:160px;" />
+        <div id="rsTimeWrap"></div>
       </div>
       <div class="form-field" style="padding:0 16px;">
         <div class="form-label">모집 인원 <span class="hint" id="rsCapHint"></span></div>
@@ -3595,13 +3594,13 @@
       <!-- 만나는 날 -->
       <div class="form-field" id="pcMeetField">
         <div class="form-label">만나는 날 <span class="req">*</span> <span class="hint">같은 날 가는 사람과 매칭</span></div>
-        <div class="gd-chips" id="pcMeetChips"></div>
+        <div id="pcMeetChips"></div>
       </div>
 
       <!-- 집합 시간 -->
       <div class="form-field">
         <div class="form-label">집합 시간 <span class="req">*</span> <span class="hint">방 목록에 함께 노출돼요</span></div>
-        <input class="form-input" id="pcMeetTime" type="time" value="10:00" style="max-width:160px;" />
+        <div id="pcTimeWrap"></div>
       </div>
 
       <!-- 집합 장소 -->
@@ -4479,7 +4478,7 @@
     if (id === 'screen-duk-detail') loadDukDetail();
     if (id === 'screen-set-filters') renderSavedFiltersScreen();
   }
-  let PC_MEET_KEY = null;   // 동행 방 '만나는 날' 선택값
+  let PC_MEET_KEY = null, PC_MEET_MONTH = null, PC_MEET_TIME = '10:00', PC_TP_OPEN = false;   // 동행 모집글 만나는 날·집합 시간
   function openCreate(eventName) {
     if (IS_GUEST) { toast('동행 모집은 로그인 후 이용할 수 있어요'); showScreen('screen-auth'); return; }
     if (CUR_EVENT && isEnded(CUR_EVENT)) { toast('종료된 행사예요 — 동행 모집은 마감됐어요'); return; }
@@ -4493,40 +4492,44 @@
       if (CUR_EVENT.img && !CUR_EVENT.img.startsWith('data:')) { thumb.style.background = "center/cover no-repeat url('" + CUR_EVENT.img + "')"; thumb.textContent = ''; }
       else { thumb.style.background = 'linear-gradient(135deg,' + (CUR_EVENT.gradStr || IP_GRAD[CUR_EVENT.ip] || '#5B9BE8,#3A6FB5') + ')'; thumb.style.display = 'grid'; thumb.style.placeItems = 'center'; thumb.style.color = '#fff'; thumb.style.fontWeight = '800'; thumb.style.fontSize = '15px'; thumb.textContent = CUR_EVENT.ini || (CUR_EVENT.t || '').slice(0, 2); }
     }
-    // 집합 시간 기본값(행사 시작 시각 있으면 그 시각, 없으면 10:00)
-    const tEl = document.getElementById('pcMeetTime');
-    if (tEl) {
-      let hh = 10, mm = 0;
-      if (CUR_EVENT && CUR_EVENT._start && !isNaN(CUR_EVENT._start) && (CUR_EVENT._start.getHours() || CUR_EVENT._start.getMinutes())) { hh = CUR_EVENT._start.getHours(); mm = CUR_EVENT._start.getMinutes(); }
-      tEl.value = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
-    }
-    // 만나는 날 칩 구성 (행사 기간의 날짜들; 단일일이면 자동 선택)
+    // 집합 시간 기본값(행사 시작 시각 있으면 5분 단위로 스냅, 없으면 10:00)
+    let hh = 10, mm = 0;
+    if (CUR_EVENT && CUR_EVENT._start && !isNaN(CUR_EVENT._start) && (CUR_EVENT._start.getHours() || CUR_EVENT._start.getMinutes())) { hh = CUR_EVENT._start.getHours(); mm = Math.round(CUR_EVENT._start.getMinutes() / 5) * 5; if (mm === 60) { mm = 0; hh = (hh + 1) % 24; } }
+    PC_MEET_TIME = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+    PC_TP_OPEN = false;
+    // 만나는 날: 행사 기간 미니 달력(단일일이면 자동 선택·달력 숨김)
     PC_MEET_KEY = null;
-    const chips = document.getElementById('pcMeetChips');
-    const field = document.getElementById('pcMeetField');
-    if (chips && CUR_EVENT) {
-      const days = eventDayKeys(CUR_EVENT);
-      if (days.length <= 1) { PC_MEET_KEY = days[0] || null; if (field) field.style.display = 'none'; }
-      else {
-        if (field) field.style.display = '';
-        if (days.length > 21) {   // 아주 긴 행사: 날짜 입력
-          chips.innerHTML = '<input type="date" min="' + keyToIso(days[0]) + '" max="' + keyToIso(days[days.length - 1]) + '" onchange="setMeetFromInput(this)" style="padding:7px 10px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:12.5px;background:var(--bg);color:var(--text);"><span class="gd-s" id="pcMeetSel" style="align-self:center;margin-left:8px;">날짜를 선택하세요</span>';
-        } else {
-          chips.innerHTML = days.map(k => '<span class="gd-chip" data-k="' + k + '" onclick="setMeetDay(\'' + k + '\')">' + fmtDayKey(k) + '</span>').join('');
-        }
-      }
+    const field = document.getElementById('pcMeetField'), days = CUR_EVENT ? eventDayKeys(CUR_EVENT) : [];
+    if (days.length <= 1) { PC_MEET_KEY = days[0] || null; if (field) field.style.display = 'none'; }
+    else {
+      if (field) field.style.display = '';
+      const f = keyToDate(days[0]); PC_MEET_MONTH = { y: f.getFullYear(), m: f.getMonth() + 1 };
+      renderMeetCal();
     }
+    renderPcTime();
     goto('screen-post-create');
   }
-  function setMeetDay(key) {
-    PC_MEET_KEY = key;
-    document.querySelectorAll('#pcMeetChips .gd-chip').forEach(c => c.classList.toggle('on', c.dataset.k === key));
+  function renderMeetCal() {
+    const days = eventDayKeys(CUR_EVENT), sel = new Set(PC_MEET_KEY ? [PC_MEET_KEY] : []);
+    document.getElementById('pcMeetChips').innerHTML = calMonthHTML(PC_MEET_MONTH.y, PC_MEET_MONTH.m, days, sel, 'setMeetDay', 'pcMonthShift');
   }
-  function setMeetFromInput(input) {
-    if (!input.value) return;
-    const p = input.value.split('-'); PC_MEET_KEY = (+p[0]) + '-' + (+p[1]) + '-' + (+p[2]);
-    const sel = document.getElementById('pcMeetSel'); if (sel) sel.textContent = fmtDayKey(PC_MEET_KEY) + ' 선택됨';
+  function pcMonthShift(d) {
+    const days = eventDayKeys(CUR_EVENT); if (!days.length) return;
+    const first = keyToDate(days[0]), last = keyToDate(days[days.length - 1]), cmp = (yy, mm) => yy * 12 + mm;
+    let y = PC_MEET_MONTH.y, m = PC_MEET_MONTH.m + d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
+    if (cmp(y, m) < cmp(first.getFullYear(), first.getMonth() + 1)) return;
+    if (cmp(y, m) > cmp(last.getFullYear(), last.getMonth() + 1)) return;
+    PC_MEET_MONTH = { y, m }; renderMeetCal();
   }
+  function setMeetDay(key) { PC_MEET_KEY = key; renderMeetCal(); }
+  function renderPcTime() {
+    const wrap = document.getElementById('pcTimeWrap'); if (!wrap) return;
+    let h = '<button class="gp-timebtn set" data-k="pc" onclick="pcToggleTP()">' + PC_MEET_TIME + ' ▾</button>';
+    if (PC_TP_OPEN) { const p = PC_MEET_TIME.split(':'); h += '<div class="gp-tp" style="margin-top:8px;">' + wheelHTML('pc', parseInt(p[0], 10), p[1]) + '</div>'; }
+    wrap.innerHTML = h;
+    if (PC_TP_OPEN) mountWheels(wrap, () => PC_MEET_TIME, (_, v) => { PC_MEET_TIME = v; const b = wrap.querySelector('.gp-timebtn'); if (b) b.textContent = v + ' ▾'; });
+  }
+  function pcToggleTP() { PC_TP_OPEN = !PC_TP_OPEN; renderPcTime(); }
   async function submitPost() {
     if (LIVE && sb && CUR_EVENT && CUR_EVENT.dbid) {
       const u = await requireLogin(); if (!u) return;
@@ -4539,8 +4542,7 @@
       if (!text.trim()) { toast('내용을 입력해주세요'); return; }
       const days = eventDayKeys(CUR_EVENT);
       if (days.length > 1 && !PC_MEET_KEY) { toast('만나는 날을 선택해주세요'); return; }
-      const tEl = document.getElementById('pcMeetTime');
-      const timeStr = (tEl && tEl.value) ? tEl.value : '10:00';   // 'HH:MM'
+      const timeStr = PC_MEET_TIME || '10:00';   // 'HH:MM'
       const meetAt = PC_MEET_KEY ? (keyToIso(PC_MEET_KEY) + 'T' + timeStr + ':00+09:00') : null;
       const { data, error } = await sb.rpc('create_companion_room', { p_event: CUR_EVENT.dbid, p_body: text, p_capacity: cap, p_meet_at: meetAt });
       if (error) { toast('등록 실패: ' + error.message); return; }
@@ -6001,11 +6003,24 @@
     const btn = document.querySelector('.gp-timebtn[data-k="' + key + '"]');
     if (btn) { const t = GP_TIMES[key]; btn.textContent = (t || '시간 선택') + ' ▾'; btn.classList.toggle('set', !!t); }
   }
-  function initWheels() {  // iOS식 휠: 스크롤 스냅 + 중앙 항목 표시 (전체 리렌더 없이 시간 갱신)
-    document.querySelectorAll('.gp-wheels').forEach(w => {
+  // ── 공용 컴포넌트(갈래요·동행 모집글·방 설정 공통 UX) ──
+  // iOS식 시:분 휠 마크업
+  function wheelHTML(storeKey, hh, mm) {
+    let hrs = ''; for (let i = 0; i < 24; i++) hrs += '<div class="gp-witem' + (i === hh ? ' on' : '') + '">' + String(i).padStart(2, '0') + '</div>';
+    let mns = ''; GP_MINS.forEach(mn => { mns += '<div class="gp-witem' + (mn === mm ? ' on' : '') + '">' + mn + '</div>'; });
+    return '<div class="gp-wheels" data-key="' + storeKey + '">'
+      + '<div class="gp-wheel-band"></div>'
+      + '<div class="gp-wcol" data-unit="h"><div class="gp-wpad"></div>' + hrs + '<div class="gp-wpad"></div></div>'
+      + '<div class="gp-wsep">:</div>'
+      + '<div class="gp-wcol" data-unit="m"><div class="gp-wpad"></div>' + mns + '<div class="gp-wpad"></div></div>'
+      + '</div>';
+  }
+  // 휠 동작 부착: getTime(key)→'HH:MM', setTime(key,'HH:MM') 콜백으로 라우팅 (전체 리렌더 없이 갱신)
+  function mountWheels(root, getTime, setTime) {
+    root.querySelectorAll('.gp-wheels').forEach(w => {
       const key = w.dataset.key;
       w.querySelectorAll('.gp-wcol').forEach(col => {
-        const unit = col.dataset.unit, t = GP_TIMES[key] || '19:00';
+        const unit = col.dataset.unit, t = getTime(key) || '19:00';
         let idx;
         if (unit === 'h') idx = parseInt(t.split(':')[0], 10) || 0;
         else { idx = GP_MINS.indexOf(t.split(':')[1]); if (idx < 0) idx = Math.round((parseInt(t.split(':')[1], 10) || 0) / 5) % 12; }
@@ -6018,19 +6033,17 @@
           mark(i);
           clearTimeout(tid);
           tid = setTimeout(() => {
-            const p = (GP_TIMES[key] || '19:00').split(':');
+            const p = (getTime(key) || '19:00').split(':');
             if (unit === 'h') p[0] = String(i).padStart(2, '0'); else p[1] = GP_MINS[i];
-            GP_TIMES[key] = p[0] + ':' + p[1];
-            updateTimeBtn(key);
+            setTime(key, p[0] + ':' + p[1]);
           }, 90);
         }, { passive: true });
       });
     });
   }
-  function gpClearTime(key) { delete GP_TIMES[key]; GP_TPOPEN = null; renderGoPlan(); }
-  function renderGpCal(days) {
-    const inSet = new Set(days), y = GP_MONTH.y, m = GP_MONTH.m;
-    const first = keyToDate(days[0]), last = keyToDate(days[days.length - 1]), cmp = (yy, mm) => yy * 12 + mm;
+  // 행사 기간 미니 달력 마크업: selSet=선택 Set, clickFn(key)·navFn(±1) 핸들러명
+  function calMonthHTML(y, m, days, selSet, clickFn, navFn) {
+    const inSet = new Set(days), first = keyToDate(days[0]), last = keyToDate(days[days.length - 1]), cmp = (yy, mm) => yy * 12 + mm;
     const canPrev = cmp(y, m) > cmp(first.getFullYear(), first.getMonth() + 1);
     const canNext = cmp(y, m) < cmp(last.getFullYear(), last.getMonth() + 1);
     const startDow = new Date(y, m - 1, 1).getDay(), dim = new Date(y, m, 0).getDate();
@@ -6038,35 +6051,29 @@
     for (let i = 0; i < startDow; i++) cells += '<div class="gpd empty"></div>';
     for (let d = 1; d <= dim; d++) {
       const key = y + '-' + m + '-' + d, dow = new Date(y, m - 1, d).getDay(), inRange = inSet.has(key);
-      const cls = ['gpd']; cls.push(inRange ? 'rng' : 'dim');
+      const cls = ['gpd'];
+      if (inRange) { cls.push('rng'); if (dow === 0 || key === days[0]) cls.push('rs'); if (dow === 6 || key === days[days.length - 1]) cls.push('re'); } else cls.push('dim');
       if (dow === 0 || HOLIDAYS[key]) cls.push('sun'); else if (dow === 6) cls.push('sat');
-      if (GP_DATES.has(key)) cls.push('sel');
+      if (selSet.has(key)) cls.push('sel');
       const hol = HOLIDAYS[key] ? '<span class="gpd-h">' + holShort(HOLIDAYS[key]) + '</span>' : '';
-      let bar = '';
-      if (inRange) { const bc = ['gpd-bar']; if (dow === 0 || key === days[0]) bc.push('s'); if (dow === 6 || key === days[days.length - 1]) bc.push('e'); bar = '<span class="' + bc.join(' ') + '"></span>'; }
-      cells += '<div class="' + cls.join(' ') + '"' + (inRange ? ' onclick="toggleGpDay(\'' + key + '\')"' : '') + '><span class="gpd-n">' + d + '</span>' + hol + bar + '</div>';
+      cells += '<div class="' + cls.join(' ') + '"' + (inRange ? ' onclick="' + clickFn + '(\'' + key + '\')"' : '') + '><span class="gpd-n">' + d + '</span>' + hol + '</div>';
     }
     return '<div class="gp-cal"><div class="gp-calhead">'
-      + '<button class="gp-nav' + (canPrev ? '' : ' off') + '"' + (canPrev ? ' onclick="gpMonthShift(-1)"' : '') + '>‹</button>'
+      + '<button class="gp-nav' + (canPrev ? '' : ' off') + '"' + (canPrev ? ' onclick="' + navFn + '(-1)"' : '') + '>‹</button>'
       + '<span class="gp-calttl">' + y + '년 ' + m + '월</span>'
-      + '<button class="gp-nav' + (canNext ? '' : ' off') + '"' + (canNext ? ' onclick="gpMonthShift(1)"' : '') + '>›</button></div>'
+      + '<button class="gp-nav' + (canNext ? '' : ' off') + '"' + (canNext ? ' onclick="' + navFn + '(1)"' : '') + '>›</button></div>'
       + '<div class="gp-calwd"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="sat">토</span></div>'
       + '<div class="gp-calgrid">' + cells + '</div></div>';
   }
+  function gpClearTime(key) { delete GP_TIMES[key]; GP_TPOPEN = null; renderGoPlan(); }
+  function renderGpCal(days) { return calMonthHTML(GP_MONTH.y, GP_MONTH.m, days, GP_DATES, 'toggleGpDay', 'gpMonthShift'); }
   function renderGpTimeRow(k) {
     const t = GP_TIMES[k];
     let row = '<div class="gp-trow"><span class="gp-d">' + fmtDayKey(k) + '</span>'
       + '<button class="gp-timebtn' + (t ? ' set' : '') + '" data-k="' + k + '" onclick="gpToggleTP(\'' + k + '\')">' + (t || '시간 선택') + ' ▾</button></div>';
     if (GP_TPOPEN === k) {
       const t2 = t || '19:00', hh = parseInt(t2.split(':')[0], 10), mm = t2.split(':')[1];
-      let hrs = ''; for (let i = 0; i < 24; i++) hrs += '<div class="gp-witem' + (i === hh ? ' on' : '') + '">' + String(i).padStart(2, '0') + '</div>';
-      let mns = ''; GP_MINS.forEach(mn => { mns += '<div class="gp-witem' + (mn === mm ? ' on' : '') + '">' + mn + '</div>'; });
-      row += '<div class="gp-tp"><div class="gp-wheels" data-key="' + k + '">'
-        + '<div class="gp-wheel-band"></div>'
-        + '<div class="gp-wcol" data-unit="h"><div class="gp-wpad"></div>' + hrs + '<div class="gp-wpad"></div></div>'
-        + '<div class="gp-wsep">:</div>'
-        + '<div class="gp-wcol" data-unit="m"><div class="gp-wpad"></div>' + mns + '<div class="gp-wpad"></div></div>'
-        + '</div>'
+      row += '<div class="gp-tp">' + wheelHTML(k, hh, mm)
         + '<button class="gp-tclear" onclick="gpClearTime(\'' + k + '\')">시간 미정으로</button></div>';
     }
     return row;
@@ -6087,7 +6094,7 @@
       h += '<div class="gp-empty">위 달력에서 가는 날을 골라주세요</div>';
     }
     document.getElementById('goPlanBody').innerHTML = h;
-    initWheels();
+    mountWheels(document.getElementById('goPlanBody'), key => GP_TIMES[key], (key, v) => { GP_TIMES[key] = v; updateTimeBtn(key); });
   }
   async function confirmGoPlan() {
     const ev = GP_EV; if (!ev || !ev.dbid) { closeGoPlan(); return; }
@@ -7659,16 +7666,18 @@
       RS = { room: roomId, postId: data.id, filled: data.filled || 1, eventId: data.event_id, cap: data.capacity || 2, meetKey: null };
       const ev = EV_BY_ID['db' + data.event_id];
       document.getElementById('rsEvent').textContent = ev ? ev.t : '동행';
-      // 만나는 날
-      const chips = document.getElementById('rsMeetChips'), field = document.getElementById('rsMeetDayField');
+      // 만나는 날: 행사 기간 미니 달력
+      const field = document.getElementById('rsMeetDayField');
       const days = ev ? eventDayKeys(ev) : [];
-      const curKey = data.meet_at ? calKey(new Date(data.meet_at)) : (days[0] || null);
-      RS.meetKey = curKey;
-      if (days.length <= 1) { field.style.display = 'none'; }
-      else { field.style.display = ''; chips.innerHTML = days.map(k => '<span class="gd-chip' + (k === curKey ? ' on' : '') + '" data-k="' + k + '" onclick="setRsDay(\'' + k + '\')">' + fmtDayKey(k) + '</span>').join(''); }
-      // 집합 시간
-      const t = document.getElementById('rsMeetTime');
-      if (t) { if (data.meet_at) { const m = new Date(data.meet_at); t.value = String(m.getHours()).padStart(2, '0') + ':' + String(m.getMinutes()).padStart(2, '0'); } else t.value = '10:00'; }
+      RS.meetKey = data.meet_at ? calKey(new Date(data.meet_at)) : (days[0] || null);
+      // 집합 시간 기본값(저장값 있으면 5분 스냅, 없으면 10:00)
+      let rh = 10, rm = 0;
+      if (data.meet_at) { const md = new Date(data.meet_at); rh = md.getHours(); rm = Math.round(md.getMinutes() / 5) * 5; if (rm === 60) { rm = 0; rh = (rh + 1) % 24; } }
+      RS.meetTime = String(rh).padStart(2, '0') + ':' + String(rm).padStart(2, '0');
+      RS.tpOpen = false;
+      if (days.length <= 1) { field.style.display = 'none'; RS.meetMonth = null; }
+      else { field.style.display = ''; const f = keyToDate(days[0]); RS.meetMonth = { y: f.getFullYear(), m: f.getMonth() + 1 }; renderRsCal(); }
+      renderRsTime();
       // 모집 인원 (현재 인원 미만 비활성)
       document.getElementById('rsCapHint').textContent = '현재 ' + RS.filled + '명 참여 중';
       const caps = [2, 3, 4, 5, 6, 8]; let cg = '';
@@ -7678,7 +7687,29 @@
       goto('screen-room-settings');
     } catch (e) { toast('불러오기 실패: ' + (e.message || e)); }
   }
-  function setRsDay(k) { RS.meetKey = k; document.querySelectorAll('#rsMeetChips .gd-chip').forEach(c => c.classList.toggle('on', c.dataset.k === k)); }
+  function setRsDay(k) { RS.meetKey = k; renderRsCal(); }
+  function rsEv() { return EV_BY_ID['db' + RS.eventId]; }
+  function renderRsCal() {
+    const ev = rsEv(); if (!ev) return;
+    const days = eventDayKeys(ev), sel = new Set(RS.meetKey ? [RS.meetKey] : []);
+    document.getElementById('rsMeetChips').innerHTML = calMonthHTML(RS.meetMonth.y, RS.meetMonth.m, days, sel, 'setRsDay', 'rsMonthShift');
+  }
+  function rsMonthShift(d) {
+    const ev = rsEv(); if (!ev) return; const days = eventDayKeys(ev); if (!days.length) return;
+    const first = keyToDate(days[0]), last = keyToDate(days[days.length - 1]), cmp = (yy, mm) => yy * 12 + mm;
+    let y = RS.meetMonth.y, m = RS.meetMonth.m + d; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
+    if (cmp(y, m) < cmp(first.getFullYear(), first.getMonth() + 1)) return;
+    if (cmp(y, m) > cmp(last.getFullYear(), last.getMonth() + 1)) return;
+    RS.meetMonth = { y, m }; renderRsCal();
+  }
+  function renderRsTime() {
+    const wrap = document.getElementById('rsTimeWrap'); if (!wrap) return;
+    let h = '<button class="gp-timebtn set" data-k="rs" onclick="rsToggleTP()">' + RS.meetTime + ' ▾</button>';
+    if (RS.tpOpen) { const p = RS.meetTime.split(':'); h += '<div class="gp-tp" style="margin-top:8px;">' + wheelHTML('rs', parseInt(p[0], 10), p[1]) + '</div>'; }
+    wrap.innerHTML = h;
+    if (RS.tpOpen) mountWheels(wrap, () => RS.meetTime, (_, v) => { RS.meetTime = v; const b = wrap.querySelector('.gp-timebtn'); if (b) b.textContent = v + ' ▾'; });
+  }
+  function rsToggleTP() { RS.tpOpen = !RS.tpOpen; renderRsTime(); }
   function setRsCap(n) {
     RS.cap = n;
     document.querySelectorAll('#rsCapChips .gd-chip').forEach(c => {
@@ -7689,7 +7720,7 @@
   async function saveRoomSettings() {
     if (!RS.room) return;
     const u = await requireLogin(); if (!u) return;
-    const t = document.getElementById('rsMeetTime'); const timeStr = (t && t.value) ? t.value : '10:00';
+    const timeStr = RS.meetTime || '10:00';
     const meetAt = RS.meetKey ? (keyToIso(RS.meetKey) + 'T' + timeStr + ':00+09:00') : null;
     try {
       const { error } = await sb.rpc('update_companion_room', { p_room: RS.room, p_capacity: RS.cap, p_meet_at: meetAt });
