@@ -1812,29 +1812,36 @@
   .gp-calwd span { text-align: center; font-size: 10.5px; font-weight: 700; color: var(--text-dim); padding: 3px 0; }
   .gp-calwd .sun { color: #FF6B6B; } .gp-calwd .sat { color: #5AA6EC; }
   .gp-calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-  .gpd { aspect-ratio: 1 / 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border-radius: 9px; cursor: pointer; }
+  .gpd { aspect-ratio: 1 / 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border-radius: 9px; cursor: pointer; position: relative; }
   .gpd.empty { cursor: default; }
-  .gpd.dim { opacity: .26; pointer-events: none; }
-  .gpd-n { font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .gpd.dim { opacity: .32; pointer-events: none; }              /* 행사 기간 밖: 흐림·비활성 */
+  .gpd.rng { background: var(--accent-bg); }                     /* 행사 기간: 옅은 배경 블록 */
+  .gpd-n { font-size: 12.5px; font-weight: 600; color: var(--text); position: relative; z-index: 1; }
   .gpd.sun .gpd-n { color: #FF6B6B; } .gpd.sat .gpd-n { color: #5AA6EC; }
   .gpd.sel { background: #16C060; }
   .gpd.sel .gpd-n { color: #fff; font-weight: 800; }
-  .gpd-h { font-size: 6.5px; font-weight: 700; color: #FF6B6B; line-height: 1; }
+  .gpd-h { font-size: 6.5px; font-weight: 700; color: #FF6B6B; line-height: 1; position: relative; z-index: 1; }
   .gpd.sel .gpd-h { color: rgba(255,255,255,.92); }
+  /* 행사 기간 연결 띠(작대기) — 연속된 기간 날짜를 가로로 잇는다(기간 밖과 확 구별) */
+  .gpd-bar { position: absolute; left: -2px; right: -2px; bottom: 3px; height: 5px; background: var(--accent); }
+  .gpd-bar.s { left: 4px; border-radius: 3px 0 0 3px; }
+  .gpd-bar.e { right: 4px; border-radius: 0 3px 3px 0; }
+  .gpd-bar.s.e { border-radius: 3px; }
+  .gpd.sel .gpd-bar { background: rgba(255,255,255,.92); }       /* 선택일 위에선 흰 띠로 대비 */
   /* 가는 시간: 커스텀 선택기(네이티브 시계 X) */
   .gp-trow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; margin-top: 7px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
   .gp-trow .gp-d { font-size: 13px; font-weight: 700; color: var(--text); }
   .gp-timebtn { border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px; font-family: inherit; font-size: 13px; font-weight: 700; background: var(--bg); color: var(--text-sub); cursor: pointer; font-variant-numeric: tabular-nums; }
   .gp-timebtn.set { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
   .gp-tp { margin: 5px 2px 0; padding: 9px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
-  .gp-tp-l { font-size: 11px; font-weight: 700; color: var(--text-dim); margin: 2px 0 5px; }
-  .gp-hrs { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .gp-hrs::-webkit-scrollbar { display: none; }
-  .gp-hr { flex: 0 0 auto; min-width: 32px; text-align: center; padding: 7px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font-size: 12.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; font-variant-numeric: tabular-nums; }
-  .gp-hr.on { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .gp-mins { display: flex; gap: 6px; margin-top: 6px; }
-  .gp-min { flex: 1; text-align: center; padding: 7px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font-size: 12.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; }
-  .gp-min.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .gp-wheels { position: relative; display: flex; align-items: stretch; justify-content: center; gap: 4px; height: 120px; }
+  .gp-wheel-band { position: absolute; left: 6px; right: 6px; top: 40px; height: 40px; border-radius: 10px; background: var(--accent-bg); border: 1px solid var(--accent); pointer-events: none; }
+  .gp-wcol { width: 70px; height: 120px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .gp-wcol::-webkit-scrollbar { display: none; }
+  .gp-wpad { height: 40px; }
+  .gp-witem { height: 40px; line-height: 40px; text-align: center; font-size: 18px; font-weight: 700; color: var(--text-dim); scroll-snap-align: center; font-variant-numeric: tabular-nums; transition: color .12s; }
+  .gp-witem.on { color: var(--accent); font-weight: 800; }
+  .gp-wsep { align-self: center; font-size: 20px; font-weight: 800; color: var(--text-sub); padding: 0 2px; }
   .gp-tclear { margin-top: 9px; width: 100%; padding: 8px; border-radius: 9px; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
   /* 행사 상세: 내 일정 요약 카드 */
   .godates-card .gd-t { font-size: 13px; font-weight: 800; color: var(--text); }
@@ -5984,9 +5991,42 @@
     if (cmp(y, m) > cmp(last.getFullYear(), last.getMonth() + 1)) return;
     GP_MONTH = { y, m }; renderGoPlan();
   }
-  function gpToggleTP(key) { GP_TPOPEN = (GP_TPOPEN === key ? null : key); renderGoPlan(); }
-  function gpSetHour(key, hh) { const mm = (GP_TIMES[key] || '').split(':')[1] || '00'; GP_TIMES[key] = String(hh).padStart(2, '0') + ':' + mm; renderGoPlan(); }
-  function gpSetMin(key, mn) { const hh = (GP_TIMES[key] || '').split(':')[0] || '12'; GP_TIMES[key] = String(hh).padStart(2, '0') + ':' + mn; renderGoPlan(); }
+  const GP_MINS = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'], GP_WH = 40;
+  function gpToggleTP(key) {
+    if (GP_TPOPEN === key) GP_TPOPEN = null;
+    else { GP_TPOPEN = key; if (!GP_TIMES[key]) GP_TIMES[key] = '19:00'; }
+    renderGoPlan();
+  }
+  function updateTimeBtn(key) {
+    const btn = document.querySelector('.gp-timebtn[data-k="' + key + '"]');
+    if (btn) { const t = GP_TIMES[key]; btn.textContent = (t || '시간 선택') + ' ▾'; btn.classList.toggle('set', !!t); }
+  }
+  function initWheels() {  // iOS식 휠: 스크롤 스냅 + 중앙 항목 표시 (전체 리렌더 없이 시간 갱신)
+    document.querySelectorAll('.gp-wheels').forEach(w => {
+      const key = w.dataset.key;
+      w.querySelectorAll('.gp-wcol').forEach(col => {
+        const unit = col.dataset.unit, t = GP_TIMES[key] || '19:00';
+        let idx;
+        if (unit === 'h') idx = parseInt(t.split(':')[0], 10) || 0;
+        else { idx = GP_MINS.indexOf(t.split(':')[1]); if (idx < 0) idx = Math.round((parseInt(t.split(':')[1], 10) || 0) / 5) % 12; }
+        col.scrollTop = idx * GP_WH;
+        const items = col.querySelectorAll('.gp-witem'), mark = i => items.forEach((el, j) => el.classList.toggle('on', j === i));
+        mark(idx);
+        let tid = null;
+        col.addEventListener('scroll', () => {
+          const i = Math.max(0, Math.min(items.length - 1, Math.round(col.scrollTop / GP_WH)));
+          mark(i);
+          clearTimeout(tid);
+          tid = setTimeout(() => {
+            const p = (GP_TIMES[key] || '19:00').split(':');
+            if (unit === 'h') p[0] = String(i).padStart(2, '0'); else p[1] = GP_MINS[i];
+            GP_TIMES[key] = p[0] + ':' + p[1];
+            updateTimeBtn(key);
+          }, 90);
+        }, { passive: true });
+      });
+    });
+  }
   function gpClearTime(key) { delete GP_TIMES[key]; GP_TPOPEN = null; renderGoPlan(); }
   function renderGpCal(days) {
     const inSet = new Set(days), y = GP_MONTH.y, m = GP_MONTH.m;
@@ -5998,11 +6038,13 @@
     for (let i = 0; i < startDow; i++) cells += '<div class="gpd empty"></div>';
     for (let d = 1; d <= dim; d++) {
       const key = y + '-' + m + '-' + d, dow = new Date(y, m - 1, d).getDay(), inRange = inSet.has(key);
-      const cls = ['gpd']; if (!inRange) cls.push('dim');
+      const cls = ['gpd']; cls.push(inRange ? 'rng' : 'dim');
       if (dow === 0 || HOLIDAYS[key]) cls.push('sun'); else if (dow === 6) cls.push('sat');
       if (GP_DATES.has(key)) cls.push('sel');
       const hol = HOLIDAYS[key] ? '<span class="gpd-h">' + holShort(HOLIDAYS[key]) + '</span>' : '';
-      cells += '<div class="' + cls.join(' ') + '"' + (inRange ? ' onclick="toggleGpDay(\'' + key + '\')"' : '') + '><span class="gpd-n">' + d + '</span>' + hol + '</div>';
+      let bar = '';
+      if (inRange) { const bc = ['gpd-bar']; if (dow === 0 || key === days[0]) bc.push('s'); if (dow === 6 || key === days[days.length - 1]) bc.push('e'); bar = '<span class="' + bc.join(' ') + '"></span>'; }
+      cells += '<div class="' + cls.join(' ') + '"' + (inRange ? ' onclick="toggleGpDay(\'' + key + '\')"' : '') + '><span class="gpd-n">' + d + '</span>' + hol + bar + '</div>';
     }
     return '<div class="gp-cal"><div class="gp-calhead">'
       + '<button class="gp-nav' + (canPrev ? '' : ' off') + '"' + (canPrev ? ' onclick="gpMonthShift(-1)"' : '') + '>‹</button>'
@@ -6014,13 +6056,18 @@
   function renderGpTimeRow(k) {
     const t = GP_TIMES[k];
     let row = '<div class="gp-trow"><span class="gp-d">' + fmtDayKey(k) + '</span>'
-      + '<button class="gp-timebtn' + (t ? ' set' : '') + '" onclick="gpToggleTP(\'' + k + '\')">' + (t || '시간 선택') + ' ▾</button></div>';
+      + '<button class="gp-timebtn' + (t ? ' set' : '') + '" data-k="' + k + '" onclick="gpToggleTP(\'' + k + '\')">' + (t || '시간 선택') + ' ▾</button></div>';
     if (GP_TPOPEN === k) {
-      const hh = t ? parseInt(t.split(':')[0], 10) : -1, mm = t ? t.split(':')[1] : '';
-      let hrs = ''; for (let i = 0; i < 24; i++) hrs += '<span class="gp-hr' + (i === hh ? ' on' : '') + '" onclick="gpSetHour(\'' + k + '\',' + i + ')">' + String(i).padStart(2, '0') + '</span>';
-      let mins = ''; ['00', '15', '30', '45'].forEach(mn => { mins += '<span class="gp-min' + (mm === mn ? ' on' : '') + '" onclick="gpSetMin(\'' + k + '\',\'' + mn + '\')">' + mn + '분</span>'; });
-      row += '<div class="gp-tp"><div class="gp-tp-l">시</div><div class="gp-hrs">' + hrs + '</div><div class="gp-tp-l">분</div><div class="gp-mins">' + mins + '</div>'
-        + (t ? '<button class="gp-tclear" onclick="gpClearTime(\'' + k + '\')">시간 미정으로</button>' : '') + '</div>';
+      const t2 = t || '19:00', hh = parseInt(t2.split(':')[0], 10), mm = t2.split(':')[1];
+      let hrs = ''; for (let i = 0; i < 24; i++) hrs += '<div class="gp-witem' + (i === hh ? ' on' : '') + '">' + String(i).padStart(2, '0') + '</div>';
+      let mns = ''; GP_MINS.forEach(mn => { mns += '<div class="gp-witem' + (mn === mm ? ' on' : '') + '">' + mn + '</div>'; });
+      row += '<div class="gp-tp"><div class="gp-wheels" data-key="' + k + '">'
+        + '<div class="gp-wheel-band"></div>'
+        + '<div class="gp-wcol" data-unit="h"><div class="gp-wpad"></div>' + hrs + '<div class="gp-wpad"></div></div>'
+        + '<div class="gp-wsep">:</div>'
+        + '<div class="gp-wcol" data-unit="m"><div class="gp-wpad"></div>' + mns + '<div class="gp-wpad"></div></div>'
+        + '</div>'
+        + '<button class="gp-tclear" onclick="gpClearTime(\'' + k + '\')">시간 미정으로</button></div>';
     }
     return row;
   }
@@ -6040,6 +6087,7 @@
       h += '<div class="gp-empty">위 달력에서 가는 날을 골라주세요</div>';
     }
     document.getElementById('goPlanBody').innerHTML = h;
+    initWheels();
   }
   async function confirmGoPlan() {
     const ev = GP_EV; if (!ev || !ev.dbid) { closeGoPlan(); return; }
